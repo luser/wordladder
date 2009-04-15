@@ -1,0 +1,30 @@
+$def with(game)
+$code
+  def finished():
+    if game.done:
+      return "(finished)"
+    return ""
+$def form(m):
+  $if not game.done:
+    <form method="POST" action="/game/${game}/play"><input type="hidden" name="moveid" value="$m.id"><input type="text" name="word"></input></form>
+$def word(w):
+  $if w == game.end:
+    <span class="end">$w</span>
+  $else:
+    $w
+$def move(m):
+  <ul>$:word(m.word) $:form(m)
+  $if m.children:
+    $for c in m.children:
+      <li>$:move(c)
+  </ul>
+
+<html><head><title>Word Ladder: $game.start &rarr; $game.end $finished()</title>
+<link rel="stylesheet" type="text/css" href="/static/site.css">
+</head>
+<body>
+<h1>$game.start &rarr; $game.end $finished()</h1>
+$:move(game.moves[1])
+<p><a href="/">Back to game list</a>
+</body>
+</html>
