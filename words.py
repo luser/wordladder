@@ -4,7 +4,7 @@ import sys
 from random import choice
 import readline
 
-WORDLIST = "/home/luser/word3up.lst"
+from config import WORDLIST
 
 def randomword():
   """Return a random word from the dictionary."""

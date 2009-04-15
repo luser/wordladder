@@ -1,0 +1,6 @@
+# Path to a dictionary containing one word per line
+WORDLIST = "/path/to/word.lst"
+
+# Path to a file writable by the user running the server.
+# Used to store persistent state.
+DATA = "/path/to/DATA"

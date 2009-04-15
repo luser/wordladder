@@ -4,10 +4,16 @@ import web, pickle, sys, os, os.path
 # not portable, but i don't care
 import fcntl
 
-DATA = '/home/luser/ladder-data/DATA'
-data = None
-sys.path.append('/home/luser/ladder')
 from game import Game
+
+try:
+  from config import DATA
+except ImportError:
+  print >>sys.stderr, "You probably didn't copy config.py.dist to config.py and edit the settings correctly. Please do so."
+  sys.exit(1)
+
+
+data = None
 
 def saveData(data):
   f = open(DATA, 'wb')
