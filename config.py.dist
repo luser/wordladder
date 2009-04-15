@@ -1,5 +1,9 @@
-# Path to a dictionary containing one word per line
-WORDLIST = "/path/to/word.lst"
+# Both are a path to a dictionary containing one word per line
+# This is the list of words that can be used as the start -> end pair
+# for a game
+GAME_WORDLIST = "/path/to/game_word.lst"
+# This is the list of words that can be entered by users.
+PLAY_WORDLIST = "/path/to/play_word.lst"
 
 # Path to a file writable by the user running the server.
 # Used to store persistent state.

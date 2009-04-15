@@ -4,13 +4,13 @@ import sys
 from random import choice
 import readline
 
-from config import WORDLIST
+from config import GAME_WORDLIST, PLAY_WORDLIST
 
 def randomword():
   """Return a random word from the dictionary."""
   # lame, should know the length of the file in advance and
   # just pick a random number from that length
-  return choice(open(WORDLIST, "r").readlines()).rstrip()
+  return choice(open(GAME_WORDLIST, "r").readlines()).rstrip()
 
 def getgame():
   """Return two random words (start, end) to be used for a game."""
@@ -22,7 +22,7 @@ def getgame():
 
 def validword(word):
   """Return True if |word| is in the dictionary."""
-  return any(x.rstrip() == word for x in open(WORDLIST, "r"))
+  return any(x.rstrip() == word for x in open(PLAY_WORDLIST, "r"))
 
 def LevenshteinDistance(s, t):
   """Calculate the Levenshtein distance between |s| and |t| per
