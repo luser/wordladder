@@ -86,8 +86,7 @@ class play:
       raise web.notfound()
     valid, reason = g.addmove(mid, d.word, 'user')
     if not valid:
-      #XXX: template
-      return "%s is not a valid word there: %s" % (d.word, reason)
+      return render.play(g, d.word, reason)
     saveData(data)
     raise web.seeother("/game/%s" % str(g))
   

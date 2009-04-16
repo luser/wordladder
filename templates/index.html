@@ -1,11 +1,16 @@
 $def with(games)
+$code
+  def finished(game):
+    if game.done:
+      return ", finished"
+    return ""
 <html><head><title>Word Ladder</title>
 </head>
 <body>
 <h1>Games:</h1>
 <ul>
 $for k, g in games.iteritems():
-  <li><a href="/game/$k">$g.start &rarr; $g.end</a>
+  <li><a href="/game/$k">$g.start &rarr; $g.end (${len(g.moves)} moves$finished(g))</a>
 </ul>
 <a href="new">New Game</a>
 </body>
