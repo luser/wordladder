@@ -60,6 +60,8 @@ def wantsJSON():
 def sendJSON(game, lastid, error=None):
   web.header('Content-Type', 'text/plain')
   j = {'moves': [], 'lastmove': game.lastmove}
+  if game.done:
+    j['done'] = True
   for id in sorted(game.moves.keys()):
     if id <= lastid:
       continue
@@ -93,7 +95,6 @@ class game:
         lastmove = int(d.lastmove)
       else:
         lastmove = 1
-      print >>sys.stderr, "lastmove: %d" % lastmove
       return sendJSON(g, lastmove)
     else:
       return render.game(g)

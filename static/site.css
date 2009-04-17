@@ -1,6 +1,11 @@
 .end {
   color: red;
 }
+
+.error {
+  background-color: red;
+}
+
 body {
   text-align: center;
   font-size: 10pt;
