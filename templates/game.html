@@ -4,6 +4,8 @@ $code
     if game.done:
       return "(finished)"
     return ""
+$def wire(m):
+  <script type="text/javascript">terminals[${m.id}] = new WireIt.Terminal(document.getElementById('m${m.id}'), {editable: false, offsetPosition: [0,-6]});</script>
 $def form(m):
   $if not game.done:
     <form method="POST" action="/game/${game}/play"><input type="hidden" name="moveid" value="$m.id"><input type="text" name="word"></input></form>
@@ -13,15 +15,18 @@ $def word(m, w):
   $else:
     <span id="m${m.id}" class="move">$w</span>
 $def move(m):
-  <ul>$:word(m, m.word) $:form(m)
+  <ul><li>$:word(m, m.word) $:form(m) $:wire(m)
   $if m.children:
     $for c in m.children:
-      <li>$:move(c)
+      $:move(c) $:wire(c)
   </ul>
 <!DOCTYPE html>
 <html><head><title>Word Ladder: $game.start &rarr; $game.end $finished()</title>
+<link rel="stylesheet" type="text/css" href="/static/wireit/css/WireIt.css">
 <link rel="stylesheet" type="text/css" href="/static/site.css">
 <script type="text/javascript" src="/static/jquery-1.3.2.min.js"></script>
+<script type="text/javascript" src="/static/wireit/lib/yui/utilities/utilities.js"></script>
+<script type="text/javascript" src="/static/wireit/build/wireit-min.js"></script>
 <script type="text/javascript">
 var lastmove = $game.lastmove;
 </script>

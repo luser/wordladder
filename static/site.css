@@ -39,3 +39,16 @@ form {
 .hidden {
   visibility: hidden;
 }
+
+.move {
+  position: relative;
+}
+
+div.WireIt-Terminal {
+  background: none;
+}
+
+canvas.WireIt-Wire {
+  z-index: -1;
+}
+

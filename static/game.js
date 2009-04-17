@@ -3,6 +3,7 @@ var DEFAULT_POLLTIME = 2000;
 var timeout = -1;
 var watchdogtimeout = -1;
 var polltime = DEFAULT_POLLTIME;
+var terminals = [];
 
 function handleSubmit(event)
 {
@@ -53,6 +54,14 @@ function handlePlayError(form, err)
   //TODO: network error icon or something
 }
 
+
+function drawwire(mid, mparent) {
+  terminals[mid] = new WireIt.Terminal(document.getElementById('m' + mid), {editable: false, offsetPosition: [0,-6]});
+  var wire = new WireIt.Wire(terminals[mparent], terminals[mid], document.body, {drawingMethod: 'arrows'});
+  terminals[mparent].redrawAllWires();
+};
+
+
 function handleGameJSON(data)
 {
   timeout = -1;
@@ -65,9 +74,10 @@ function handleGameJSON(data)
   $.each(data.moves, function(i, m)
          {
            // m.id, m.word, m.parent
-           $('#m' + m.parent).parent().append('<li id="l'+m.id+'" style="display:none"><ul><span id="m'+m.id+'" class="move">'+m.word+'</span><form class="hidden" method="POST" action="'+window.location+'/play"><input type="hidden" name="moveid" value="'+m.id+'"><input type="text" name="word"></input></form></ul>');
+           $('#m' + m.parent).parent().append('<li id="l'+m.id+'" style="display:none"><ul><li><span id="m'+m.id+'" class="move">'+m.word+'</span><form class="hidden" method="POST" action="'+window.location+'/play"><input type="hidden" name="moveid" value="'+m.id+'"><input type="text" name="word"></input></form></ul>');
            $('#m' + m.id).attr('title', 'Click to add a word after this word').click(moveClick).next('form').submit(handleSubmit);
            $('#l' + m.id).show('normal');
+           setTimeout('drawwire(' + m.id + ', ' + m.parent + ');', 1000);
          });
   lastmove = data.lastmove;
   // poll again later
