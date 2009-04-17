@@ -1,7 +1,17 @@
 #!/usr/bin/env python
 
 import web, pickle, sys, os, os.path
-import simplejson as json
+try:
+  # python 2.6, simplejson as json
+  from json import dumps as dump_json
+except ImportError:
+  try:
+    # simplejson moduld
+    from simplejson import dumps as dump_json
+  except ImportError:
+    # some other json module I apparently have installed
+    from json import write as dump_json
+
 # not portable, but i don't care
 import fcntl
 
@@ -69,7 +79,7 @@ def sendJSON(game, lastid, error=None):
                        'parent': game.moves[id].parent.id})
   if error:
     j['error'] = error
-  return json.dumps(j)
+  return dump_json(j)
 
 class index:
   def GET(self):
