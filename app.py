@@ -57,7 +57,6 @@ urls = (
   '/', 'index',
   '/new', 'newgame',
   '/game/([^/]*)', 'game',
-  '/game/([^/]*)/play', 'play',
   )
 
 app = web.application(urls, globals())
@@ -109,7 +108,6 @@ class game:
     else:
       return render.game(g)
 
-class play:
   def POST(self, game):
     if not game in data.games:
       raise web.notfound()
@@ -135,6 +133,6 @@ class play:
       raise web.seeother("/game/%s" % str(g))
     else:
       return sendJSON(g, int(d.lastmove))
-  
+
 if __name__ == "__main__":
   app.run()

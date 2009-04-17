@@ -17,7 +17,7 @@ function handleSubmit(event)
     watchdogtimeout = -1;
   }
   $.ajax({type: 'POST',
-          url: document.location.href + '/play',
+          url: document.location.href,
           data: {'lastmove': lastmove,
                    'word': this.word.value,
                    'moveid': this.moveid.value

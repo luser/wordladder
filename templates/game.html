@@ -8,7 +8,7 @@ $def wire(m):
   <script type="text/javascript">terminals[${m.id}] = new WireIt.Terminal(document.getElementById('m${m.id}'), {editable: false, offsetPosition: [0,-6]});</script>
 $def form(m):
   $if not game.done:
-    <form method="POST" action="/game/${game}/play"><input type="hidden" name="moveid" value="$m.id"><input type="text" name="word"></input></form>
+    <form method="POST" action=""><input type="hidden" name="moveid" value="$m.id"><input type="text" name="word"></input></form>
 $def word(m, w):
   $if w == game.end:
     <span id="m${m.id}" class="end move">$w</span>
