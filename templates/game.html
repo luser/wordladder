@@ -7,20 +7,22 @@ $code
 $def form(m):
   $if not game.done:
     <form method="POST" action="/game/${game}/play"><input type="hidden" name="moveid" value="$m.id"><input type="text" name="word"></input></form>
-$def word(w):
+$def word(m, w):
   $if w == game.end:
-    <span class="end">$w</span>
+    <span id="m${m.id}" class="end move">$w</span>
   $else:
-    $w
+    <span id="m${m.id}" class="move">$w</span>
 $def move(m):
-  <ul>$:word(m.word) $:form(m)
+  <ul>$:word(m, m.word) $:form(m)
   $if m.children:
     $for c in m.children:
       <li>$:move(c)
   </ul>
-
+<!DOCTYPE html>
 <html><head><title>Word Ladder: $game.start &rarr; $game.end $finished()</title>
 <link rel="stylesheet" type="text/css" href="/static/site.css">
+<script type="text/javascript" src="/static/jquery-1.3.2.min.js"></script>
+<script type="text/javascript" src="/static/game.js"></script>
 </head>
 <body>
 <h1>$game.start &rarr; $game.end $finished()</h1>

@@ -30,3 +30,7 @@ input {
 form {
   margin: 0 1px;
 }
+
+.hidden {
+  visibility: hidden;
+}
