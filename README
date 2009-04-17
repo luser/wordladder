@@ -1,0 +1,12 @@
+To get started:
+1) Get a dictionary file from somewhere. I use ENABLE (which I
+   can no longer find a decent reference for online). You'll want
+   to post-process it into two separate files: one with 3-6 letter
+   words (the "game" dictionary, used for picking start/end words),
+   and one with 3+ letter words (the "play" dictionary, used to
+   determine if a player may play a word).
+2) Copy config.py.dist to config.py, and edit it, setting the paths
+   to the two dictionary files above, and a path to a file within
+   a writable directory for the app to store its data file.
+3) python app.py <port>. The default port is 8080.
+4) Visit http://localhost:<port>/
