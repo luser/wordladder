@@ -70,18 +70,20 @@ function handleGameJSON(data)
     clearTimeout(watchdogtimeout);
     watchdogtimeout = -1;
   }
-  //TODO: handle data.done for end-of-game
+  if ('done' in data)
+      done = data.done;
+  //TODO: display notification when done
   $.each(data.moves, function(i, m)
          {
            // m.id, m.word, m.parent
-           $('#m' + m.parent).parent().append('<li id="l'+m.id+'" style="display:none"><ul><li><span id="m'+m.id+'" class="move">'+m.word+'</span><form class="hidden" method="POST" action="'+window.location+'/play"><input type="hidden" name="moveid" value="'+m.id+'"><input type="text" name="word"></input></form></ul>');
+           $('#m' + m.parent).parent().append('<li id="l'+m.id+'" style="display:none"><ul><li><a id="m'+m.id+'" class="move">'+m.word+'</a><form class="hidden" method="POST" action="'+window.location+'/play"><input type="hidden" name="moveid" value="'+m.id+'"><input type="text" name="word"></input></form></ul>');
            $('#m' + m.id).attr('title', 'Click to add a word after this word').click(moveClick).next('form').submit(handleSubmit);
            $('#l' + m.id).show('normal');
            setTimeout('drawwire(' + m.id + ', ' + m.parent + ');', 1000);
          });
   lastmove = data.lastmove;
   // poll again later
-  if (!debug)
+  if (!debug && !done)
     pollJSON();
 }
 
@@ -113,16 +115,18 @@ $(document).ready(function()
   $(document.body).click(function() {
                            $('form').addClass('hidden');
                          });
-  $('form').addClass('hidden')
-    .submit(handleSubmit);
-  $('.move').attr('title', 'Click to add a word after this word')
-    .click(moveClick);
-  // poll JSON
-  if (!debug) {
-    pollJSON();
-  }
-  else {
-    $(document.body).append('<button id="load">Load JSON</button>');
-    $('#load').click(pollJSON);
+  if (!done) {
+      $('form').addClass('hidden')
+	  .submit(handleSubmit);
+      $('.move').attr('title', 'Click to add a word after this word')
+	  .click(moveClick);
+      // poll JSON
+      if (!debug) {
+	  pollJSON();
+      }
+      else {
+	  $(document.body).append('<button id="load">Load JSON</button>');
+	  $('#load').click(pollJSON);
+      }
   }
 });

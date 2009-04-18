@@ -9,11 +9,13 @@ $def wire(m):
 $def form(m):
   $if not game.done:
     <form method="POST" action=""><input type="hidden" name="moveid" value="$m.id"><input type="text" name="word"></input></form>
+  $else:
+    <div class="placeholder"></div>
 $def word(m, w):
   $if w == game.end:
-    <span id="m${m.id}" class="end move">$w</span>
+    <a id="m${m.id}" class="end move">$w</a>
   $else:
-    <span id="m${m.id}" class="move">$w</span>
+    <a id="m${m.id}" class="move">$w</a>
 $def move(m):
   <ul><li>$:word(m, m.word) $:form(m) $:wire(m)
   $if m.children:
@@ -30,6 +32,7 @@ $def move(m):
 <script type="text/javascript" src="/static/wireit/build/wireit-min.js"></script>
 <script type="text/javascript">
 var lastmove = $game.lastmove;
+var done = $(game.done and "true" or "false");
 </script>
 <script type="text/javascript" src="/static/game.js"></script>
 </head>
