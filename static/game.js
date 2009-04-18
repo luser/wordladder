@@ -70,14 +70,23 @@ function handleGameJSON(data)
     clearTimeout(watchdogtimeout);
     watchdogtimeout = -1;
   }
-  if ('done' in data)
+  if ('done' in data) {
       done = data.done;
-  //TODO: display notification when done
+  }
+  if (done) {
+      //TODO: fancy this up
+      document.title += " (finished)";
+      $('h1').append(" (finished)");
+  }
   $.each(data.moves, function(i, m)
          {
            // m.id, m.word, m.parent
            $('#m' + m.parent).parent().append('<li id="l'+m.id+'" style="display:none"><ul><li><a id="m'+m.id+'" class="move">'+m.word+'</a><form class="hidden" method="POST" action="'+window.location+'/play"><input type="hidden" name="moveid" value="'+m.id+'"><input type="text" name="word"></input></form></ul>');
            $('#m' + m.id).attr('title', 'Click to add a word after this word').click(moveClick).next('form').submit(handleSubmit);
+	   if (done && m.id == data.lastmove) {
+	       // this is the winning move
+	       $('#m' + m.id).addClass('end');
+	   }
            $('#l' + m.id).show('normal');
            setTimeout('drawwire(' + m.id + ', ' + m.parent + ');', 1000);
          });
