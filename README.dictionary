@@ -1,0 +1,26 @@
+There are two dictionaries checked into this repository:
+game.dict - a list of 3-6 letter words suitable for use as the start
+            and end words of a word ladder game
+play.dict - a list of 3+ letter words that users can play in word
+            ladder games
+
+Both dictionaries were built from ENABLE's word.lst. Below is a description
+of how they were built, in steps.
+
+1) I decided to restrict words to 3-6 letters to keep games
+ simple. I used a tiny one-off Python script to produce a reduced
+ dictionary from ENABLE.
+2) A friend pointed out that users should be able to play words >6
+ letters, so I used the same Python script to produce a dictionary
+ of words with 3 or more letters.
+3) I realized that there were words in both dictionaries that could
+ not be used in the word ladder game, as they had no possible moves
+ to or from them. I wrote a script (complete.py, in this repository)
+ that produces a complete list of possible moves from each word in the
+ dictionary by brute force. It outputs one file per word, each
+ containing the list of possible moves from that word, in a directory
+ structure like: '/solution/a/d/advantage'. I then used a find|grep chain
+ to get a list of words with zero moves:
+ find /solution/ -type f | xargs wc -l | grep "^\s*0 " | awk '{ print $2 }' | xargs -L1 basename > zero-moves
+ I then wrote and used another script (mungedict.py, in this repository)
+ to remove the words in this list from both dictionaries.
