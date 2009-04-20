@@ -76,8 +76,10 @@ def sendJSON(game, lastid, error=None):
   for id in sorted(game.moves.keys()):
     if id <= lastid:
       continue
-    j['moves'].append({'id': id, 'word': game.moves[id].word,
-                       'parent': game.moves[id].parent.id})
+    d = {'id': id, 'word': game.moves[id].word}
+    if game.moves[id].parent:
+      d['parent'] = game.moves[id].parent.id
+    j['moves'].append(d)
   if error:
     j['error'] = error
   return dump_json(j)
