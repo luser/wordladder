@@ -24,3 +24,7 @@ of how they were built, in steps.
  find /solution/ -type f | xargs wc -l | grep "^\s*0 " | awk '{ print $2 }' | xargs -L1 basename > zero-moves
  I then wrote and used another script (mungedict.py, in this repository)
  to remove the words in this list from both dictionaries.
+4) There were still pairs of words in the dictionary whose only legal
+ move was each other. I wrote findislands.py (in this repository) to
+ generate a list of those words, and used mungedict.py to remove them
+ from the dictionaries.

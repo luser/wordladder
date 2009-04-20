@@ -1,4 +1,4 @@
-#/usr/bin/env python
+#!/usr/bin/env python
 # given a dictionary and a list of words, produce a reduced dictionary
 # with the list of words removed on stdout
 from __future__ import with_statement

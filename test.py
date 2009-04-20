@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from words import *
 import sys
 

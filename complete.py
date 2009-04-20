@@ -1,4 +1,4 @@
-#/usr/bin/env python
+#!/usr/bin/env python
 # build a list of possible moves for every word in the dictionary
 from __future__ import with_statement
 from words import *
