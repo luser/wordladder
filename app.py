@@ -16,6 +16,7 @@ except ImportError:
 import fcntl
 
 from game import Game
+from words import validword
 
 try:
   from config import DATA
@@ -56,6 +57,7 @@ else:
 urls = (
   '/', 'index',
   '/new', 'newgame',
+  '/new/([^/]*)', 'newgame',
   '/game/([^/]*)', 'game',
   )
 
@@ -85,10 +87,23 @@ class index:
     return render.index(data.games)
 
 class newgame:
-  def GET(self):
-    g = Game()
-    while str(g) in data.games:
+  def GET(self, game=None):
+    if game:
+      if game in data.games:
+        # already exists
+        raise web.badrequest()
+      words = game.split('-')
+      if len(words) != 2 or (words[0].strip() == '' or words[1].strip == ''):
+        # bad format
+        raise web.badrequest()
+      if not validword(words[0]) or not validword(words[1]):
+        # not valid words
+        raise web.badrequest()
+      g = Game(start=words[0], end=words[1])
+    else:
       g = Game()
+      while str(g) in data.games:
+        g = Game()
     data.games[str(g)] = g
     saveData(data)
     raise web.seeother("/game/%s" % str(g))
