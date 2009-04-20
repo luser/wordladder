@@ -74,6 +74,7 @@ def validmove(start, end):
   return (validword(end), 'Not a word in the dictionary')
 
 if __name__ == '__main__':
+  # play a simple console version of word ladder
     start, end = getgame()
     done = False
     words = [start]

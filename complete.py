@@ -38,7 +38,8 @@ def writelegalmoves(path, word, words):
     if (diff == 0 and sorted(word) == sorted(x)) or (diff <= 1 and LevenshteinDistance(word, x) == 1):
       moves.append(x)
   with open(fn, 'w') as f:
-    f.write("\n".join(moves) + "\n")
+    if len(moves) != 0:
+      f.write("\n".join(moves) + "\n")
 
 def main(*args):
   words = readwords()
