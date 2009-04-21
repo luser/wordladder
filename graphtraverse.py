@@ -4,7 +4,7 @@
 from __future__ import with_statement
 
 import sys, os, os.path, mmap, pickle
-from random import sample
+from random import choice, sample, randint
 from time import sleep
 from config import GAME_WORDLIST, PLAY_WORDLIST, SOLUTION_PATH, DISTANCE_MATRIX
 
@@ -18,6 +18,12 @@ def solutionpath(path, word):
 def getmoves(w):
   return readwords(solutionpath(SOLUTION_PATH, w))
 
+def setchoice(s):
+  index = randint(0, len(s)-1)
+  for i, name in enumerate(s):
+    if i == index:
+      return name
+
 def find_path(start, end):
   global graph, wordmap
   queue = [(start, [start])]
@@ -30,6 +36,23 @@ def find_path(start, end):
       if i not in visited:
         visited.add(i)
         queue.append((i, path[:] + [i]))
+
+def find_words(start):
+  global graph, wordmap
+  queue = [(start, [start])]
+  visited = set([start])
+  ends = set()
+  while queue:
+    x, path = queue.pop(0)
+    for i in graph[x].neighbors:
+      if i not in visited:
+        visited.add(i)
+        if graph[i].start:
+          # save this as an end
+          ends.add(i)
+          sys.stdout.write('.')
+        queue.append((i, path[:] + [i]))
+  return ends
 
 # read the full set of possible words first
 words = readwords(PLAY_WORDLIST)
@@ -65,15 +88,22 @@ print "Done"
 # No point in keeping this around
 words = None
 
-#start, end = sys.argv[1:3]
 while True:
-  start, end = sample(gamewords, 2)
-  path = find_path(wordmap[start], wordmap[end])
-  if path:
-    print " -> ".join([graph[i].word for i in path])
-  else:
-    print "No path from %s to %s" % (start, end)
+  start = setchoice(gamewords)
+  print "Traversing graph from %s" % start,
+  words = find_words(wordmap[start])
+  print "Done"
+  print "%s has %d reachable words:" % (start, len(words))
+  if len(words) > len(gamewords)/2:
+    # well-connected
+    with open("connected.dict", 'w') as f:
+      # add the start back in
+      words.add(wordmap[start])
+      f.write("\n".join(graph[i].word for i in sorted(words))+"\n")
+    break
   sleep(1)
+
+print "Done"
 
 # Create a mmapped file to store distance between words
 # Fill with 0xFF first
