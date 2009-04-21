@@ -41,7 +41,7 @@ def find_words(start):
   global graph, wordmap
   queue = [(start, [start])]
   visited = set([start])
-  ends = set()
+  ends = {}
   while queue:
     x, path = queue.pop(0)
     for i in graph[x].neighbors:
@@ -49,8 +49,8 @@ def find_words(start):
         visited.add(i)
         if graph[i].start:
           # save this as an end
-          ends.add(i)
-          sys.stdout.write('.')
+          # don't count the first word in the path
+          ends[i] = len(path) - 1
         queue.append((i, path[:] + [i]))
   return ends
 
@@ -88,37 +88,29 @@ print "Done"
 # No point in keeping this around
 words = None
 
-while True:
-  start = setchoice(gamewords)
-  print "Traversing graph from %s" % start,
-  words = find_words(wordmap[start])
+# Create a mmapped file to store distance between words
+if not os.path.exists(DISTANCE_MATRIX) or os.stat(DISTANCE_MATRIX).st_size != len(gamewords) * len(gamewords):
+  # Fill with 0x0 first if file doesn't exist
+  print "Creating empty distance matrix..."
+  with open(DISTANCE_MATRIX, 'w') as f:
+     for i in xrange(len(gamewords) * len(gamewords)):
+       f.write('\0')
   print "Done"
-  print "%s has %d reachable words:" % (start, len(words))
-  if len(words) > len(gamewords)/2:
-    # well-connected
-    with open("connected.dict", 'w') as f:
-      # add the start back in
-      words.add(wordmap[start])
-      f.write("\n".join(graph[i].word for i in sorted(words))+"\n")
-    break
-  sleep(1)
+f = os.open(DISTANCE_MATRIX, os.O_RDWR)
+m = mmap.mmap(f, len(gamewords) * len(gamewords))
+
+for i, word in enumerate(gamewords):
+  print "[%5d/%5d] Traversing graph from %s..." % (i+1, len(gamewords), word),
+  words = find_words(wordmap[word])
+  print "Done (max %d)" % max(words.values())
+  gwid = gamewordmap[word]
+  for wid, pathlen in words.iteritems():
+    # need a different kind of index into the connection matrix
+    gwid2 = gamewordmap[graph[wid].word]
+    m[gwid * len(gamewords) + gwid2] = chr(pathlen)
 
 print "Done"
 
-# Create a mmapped file to store distance between words
-# Fill with 0xFF first
-# with open(DISTANCE_MATRIX, 'w') as f:
-#   for i in xrange(len(gamewords) * len(gamewords)):
-#     f.write('\xFF')
-
-# print "Traversing graph..."
-# f = os.open(DISTANCE_MATRIX, os.O_RDWR)
-# m = mmap.mmap(f, len(gamewords) * len(gamewords))
-# for w in gamewords:
-#   gid = gamewordmap[w]
-#   id = wordmap[w]
-#   dft(graph, id, gid, m, [], set())
-# print "Done"
-# m.flush()
-# m.close()
-# os.close(f)
+m.flush()
+m.close()
+os.close(f)
