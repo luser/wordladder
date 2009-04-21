@@ -28,3 +28,12 @@ of how they were built, in steps.
  move was each other. I wrote findislands.py (in this repository) to
  generate a list of those words, and used mungedict.py to remove them
  from the dictionaries.
+5) After writing a graph traversal of the dictionary, it was readily
+ apparent that there was a large, well-connected set of words, and some
+ other small islands of connectivity. It turned out that 96% of the
+ dictionary was connected, and the other 4% not connected to that set.
+ I wrote graphtraversal.py (in this repo) to produce the set of
+ well-connected words, then diffed that against the original game
+ dictionary to produce a list of unconnected words:
+ diff game.dict connected.dict | grep "^<" | sed "s/^< //" > unconnected
+ and used mungedict.py to remove them from the dictionary.
