@@ -42,6 +42,8 @@ function handlePlayResponse(form, data)
   }
   else {
     // success
+    // unfocus textbox
+    form.word.blur();
     form.word.value = '';
     $(form.word).removeClass('error');
     $(form).addClass('hidden');
@@ -81,7 +83,7 @@ function handleGameJSON(data)
   $.each(data.moves, function(i, m)
          {
            // m.id, m.word, m.parent
-           $('#m' + m.parent).parent().append('<li id="l'+m.id+'" style="display:none"><ul><li><a id="m'+m.id+'" class="move">'+m.word+'</a><form class="hidden" method="POST" action="'+window.location+'/play"><input type="hidden" name="moveid" value="'+m.id+'"><input type="text" name="word"></input></form></ul>');
+           $('#m' + m.parent).parent().append('<li id="l'+m.id+'" style="display:none"><ul><li><a id="m'+m.id+'" class="move">'+m.word+'</a><form class="hidden" method="POST" action="'+window.location+'/play"><input type="hidden" name="moveid" value="'+m.id+'"><input type="text" name="word" autocomplete="off" autocorrect="off" autocapitalize="off"></input></form></ul>');
            $('#m' + m.id).attr('title', 'Click to add a word after this word').click(moveClick).next('form').submit(handleSubmit);
 	   if (done && m.id == data.lastmove) {
 	       // this is the winning move
@@ -113,8 +115,17 @@ function pollJSON()
 
 function moveClick(event)
 {
-  $('form').addClass('hidden');
-  $(this).next('form').removeClass('hidden').children('input').get(1).focus();
+  var washidden = $(this).next('form').hasClass('hidden');
+  // hide all inputs first
+  $('form').addClass('hidden');      
+  if (washidden) {
+      $(this).next('form').removeClass('hidden').children('input').get(1).focus();      
+  }
+  else {
+      // hidden now, blur it
+      $(this).next('form').children('input').get(1).blur();
+  }
+
   event.stopPropagation();
 }
 
