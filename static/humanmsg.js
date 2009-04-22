@@ -19,7 +19,7 @@ var humanMsg = {
 			humanMsg.msgOpacity = parseFloat(msgOpacity);
 
 		// Inject the message structure
-		jQuery(appendTo).append('<div id="'+humanMsg.msgID+'" class="humanMsg"><div class="round"></div><p></p><div class="round"></div></div>')
+		jQuery(appendTo).append('<div id="'+humanMsg.msgID+'" class="humanMsg"><p></p></div>')
 	},
 
 	displayMsg: function(msg) {
