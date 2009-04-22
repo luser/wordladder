@@ -32,8 +32,12 @@ ul li {
 input, .placeholder {
   width: 9em;
 }
+.placeholder {
+  margin-top: 0.5em;
+  height: 1em;
+}
 form {
-  margin: 0 1px;
+  margin: 0.6em 1px;
 }
 
 .hidden {
@@ -42,6 +46,13 @@ form {
 
 .move {
   position: relative;
+  border: 1px solid gray;
+  padding: 0.5em;
+  background: white;
+  -moz-border-radius: 10px;
+  -webkit-border-radius: 10px;
+  -moz-box-shadow: 2px 2px 2px gray;
+  -webkit-box-shadow: 2px 2px 2px gray;
 }
 
 div.WireIt-Terminal {
