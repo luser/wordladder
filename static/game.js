@@ -38,7 +38,7 @@ function handlePlayResponse(form, data)
   if ('error' in data) {
     //TODO: something more subtle, maybe fade in too
     $(form.word).addClass('error');
-    //TODO: show data.error as text somewhere
+    humanMsg.displayMsg(data.error);
   }
   else {
     // success
