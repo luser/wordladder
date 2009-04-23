@@ -11,6 +11,10 @@ def readwords(f):
 def minpath(start, end):
   gamewords = readwords(GAME_WORDLIST)
   gamewordmap =  dict(zip(gamewords, range(len(gamewords))))
+  if start not in gamewordmap:
+    raise Exception("%s not in dictionary" % start)
+  if end not in gamewordmap:
+    raise Exception("%s not in dictionary" % end)
   swid, ewid = gamewordmap[start], gamewordmap[end]
   f = os.open(DISTANCE_MATRIX, os.O_RDONLY)
   m = mmap.mmap(f, len(gamewordmap) * len(gamewordmap), access=mmap.ACCESS_READ)
@@ -28,4 +32,4 @@ if __name__ == '__main__':
     print minpath(start, end)
   except:
     print "400 Bad Request\n"
-    print "%s" % sys.exc_info()[0]
+    print "%s" % sys.exc_info()[1]
