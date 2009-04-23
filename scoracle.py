@@ -9,8 +9,8 @@ def readwords(f):
     return [x.rstrip() for x in wordlist.readlines()]
 
 def minpath(start, end):
-  with open('wordmap', 'r') as f:
-    gamewordmap = dict((x, int(y)) for x,y in [l.rstrip().split(',') for l in f])
+  gamewords = readwords(GAME_WORDLIST)
+  gamewordmap =  dict(zip(gamewords, range(len(gamewords))))
   swid, ewid = gamewordmap[start], gamewordmap[end]
   f = os.open(DISTANCE_MATRIX, os.O_RDWR)
   m = mmap.mmap(f, len(gamewordmap) * len(gamewordmap))
