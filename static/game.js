@@ -91,8 +91,7 @@ function handleGameJSON(data)
 	       // this is the winning move
 	       $('#m' + m.id).addClass('end');
 	   }
-           $('#l' + m.id).show('normal');
-           setTimeout('drawwire(' + m.id + ', ' + m.parent + ');', 1000);
+           $('#l' + m.id).show('normal', function() { drawwire(m.id, m.parent); });
          });
   lastmove = data.lastmove;
   // poll again later
