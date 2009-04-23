@@ -5,7 +5,10 @@ $code
       return "(finished)"
     return ""
 $def wire(m):
-  <script type="text/javascript">terminals[${m.id}] = new WireIt.Terminal(document.getElementById('m${m.id}'), {editable: false, offsetPosition: [0,-6]});</script>
+  <script type="text/javascript">terminals[${m.id}] = new WireIt.Terminal(document.getElementById('m${m.id}'), {editable: false, offsetPosition: [0,-6]});
+  $if m.parent:
+    var wire = new WireIt.Wire(terminals[${m.parent.id}], terminals[${m.id}], document.body, {drawingMethod: 'arrows'});
+  </script>
 $def form(m):
   $if not game.done:
     <form method="POST" action=""><input type="hidden" name="moveid" value="$m.id"><input type="text" name="word" autocomplete="off" autocorrect="off" autocapitalize="off"></input></form>
@@ -42,6 +45,11 @@ var done = $(game.done and "true" or "false");
 <body>
 <h1>$game.start &rarr; $game.end $finished()</h1>
 $:move(game.moves[1])
+<script type="text/javascript">
+  for (var aaa in terminals) {
+    terminals[aaa].redrawAllWires();
+  };
+</script>
 <p><a href="/">Back to game list</a>
 </body>
 </html>

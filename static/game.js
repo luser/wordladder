@@ -60,7 +60,9 @@ function handlePlayError(form, err)
 function drawwire(mid, mparent) {
   terminals[mid] = new WireIt.Terminal(document.getElementById('m' + mid), {editable: false, offsetPosition: [0,-6]});
   var wire = new WireIt.Wire(terminals[mparent], terminals[mid], document.body, {drawingMethod: 'arrows'});
-  terminals[mparent].redrawAllWires();
+  for (var aaa in terminals) {
+    terminals[aaa].redrawAllWires();
+  };
 };
 
 
