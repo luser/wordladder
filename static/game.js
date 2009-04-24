@@ -74,10 +74,9 @@ function handleGameJSON(data)
     clearTimeout(watchdogtimeout);
     watchdogtimeout = -1;
   }
-  if ('done' in data) {
+
+  if ('done' in data && !done) {
       done = data.done;
-  }
-  if (done) {
       //TODO: fancy this up
       document.title += " (finished)";
       $('h1').append(" (finished)");
