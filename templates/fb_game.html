@@ -1,0 +1,48 @@
+$def with(game)
+$code
+  def finished():
+    if game.done:
+      return "(finished)"
+    return ""
+$def wire(m):
+  <script type="text/javascript">terminals[${m.id}] = new WireIt.Terminal(document.getElementById('m${m.id}'), {editable: false, offsetPosition: [0,-6]});
+  $if m.parent:
+    var wire = new WireIt.Wire(terminals[${m.parent.id}], terminals[${m.id}], document.body, {drawingMethod: 'arrows'});
+  </script>
+$def form(m):
+  $if not game.done:
+    <form method="POST" action=""><input type="hidden" name="moveid" value="$m.id"><input type="text" name="word" autocomplete="off" autocorrect="off" autocapitalize="off"></input></form>
+  $else:
+    <div class="placeholder"></div>
+$def word(m, w):
+  $if w == game.end:
+    <a id="m${m.id}" class="end move">$w</a>
+  $else:
+    <a id="m${m.id}" class="move">$w</a>
+$def move(m):
+  <ul><li>$:word(m, m.word) $:form(m) $:wire(m)
+  $if m.children:
+    $for c in m.children:
+      $:move(c) $:wire(c)
+  </ul>
+<fb:header>Word Ladder: $game.start &rarr; $game.end $finished()</fb:header>
+<link rel="stylesheet" type="text/css" href="http://mavra.perilith.com:8666/static/wireit/css/WireIt.css?v=0.01">
+<link rel="stylesheet" type="text/css" href="http://mavra.perilith.com:8666/static/site.css?v=0.01">
+<link rel="stylesheet" type="text/css" href="http://mavra.perilith.com:8666/static/humanmsg.css?v=0.01">
+<script type="text/javascript" src="http://mavra.perilith.com:8666/static/jquery-1.3.2.min.js?v=0.01"></script>
+<script type="text/javascript" src="http://mavra.perilith.com:8666/static/humanmsg.js?v=0.01"></script>
+<script type="text/javascript" src="http://mavra.perilith.com:8666/static/wireit/lib/yui/utilities/utilities.js?v=0.01"></script>
+<script type="text/javascript" src="http://mavra.perilith.com:8666/static/wireit/build/wireit-min.js?v=0.01"></script>
+<script type="text/javascript">
+var lastmove = $game.lastmove;
+var done = $(game.done and "true" or "false");
+</script>
+<script type="text/javascript" src="http://mavra.perilith.com:8666/static/game.js?v=0.01"></script>
+<h1>$game.start &rarr; $game.end $finished()</h1>
+$:move(game.moves[1])
+<script type="text/javascript">
+  for (var aaa in terminals) {
+    terminals[aaa].redrawAllWires();
+  };
+</script>
+<p><a href="$_CanvasURL">Back to game list</a>
