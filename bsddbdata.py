@@ -4,6 +4,7 @@
 # function is called with the db as the first argument, and
 # the rest of the arguments you passed after that.
 
+import sys
 import bsddb.db
 
 try:
