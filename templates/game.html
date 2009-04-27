@@ -19,8 +19,13 @@ $def word(m, w):
     <a id="m${m.id}" class="end move">$w</a>
   $else:
     <a id="m${m.id}" class="move">$w</a>
+$def user(m):
+  $if m.user:
+    <span class="username">${m.user}</span>
+  $else:
+    <span class="no_user"></span>
 $def move(m):
-  <ul><li>$:word(m, m.word) $:form(m) $:wire(m)
+  <ul><li>$:user(m) $:word(m, m.word) $:form(m) $:wire(m)
   $if m.children:
     $for c in m.children:
       $:move(c) $:wire(c)

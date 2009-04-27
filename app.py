@@ -11,19 +11,23 @@ except ImportError:
   except ImportError:
     # some other json module I apparently have installed
     from json import write as dump_json
+  import openid
+except ImportError:
+  sys.stderr.write("Couldn't import the OpenID module. Please install python-openid.")
+  sys.exit(1)
 
 # not portable, but i don't care
 import fcntl
 
 from game import Game
 from words import validword
+from user import User
 
 try:
   from config import DATA
 except ImportError:
   print >>sys.stderr, "You probably didn't copy config.py.dist to config.py and edit the settings correctly. Please do so."
   sys.exit(1)
-
 
 data = None
 
@@ -42,7 +46,7 @@ def readData():
   fcntl.lockf(f, fcntl.LOCK_UN)
   f.close()
   return data
-  
+
 class Data(object):
   def __init__(self):
     self.games = {}
@@ -53,12 +57,15 @@ if os.path.exists(DATA):
 else:
   data = Data()
   saveData(data)
-  
+
 urls = (
   '/', 'index',
   '/new', 'newgame',
   '/new/([^/]*)', 'newgame',
   '/game/([^/]*)', 'game',
+  '/user/login', 'web.webopenid.host',
+  '/user/logout', 'web.webopenid.host',
+	'/user/account', 'account',
   )
 
 app = web.application(urls, globals())
@@ -79,6 +86,10 @@ def sendJSON(game, lastid, error=None):
     d = {'id': id, 'word': game.moves[id].word}
     if game.moves[id].parent:
       d['parent'] = game.moves[id].parent.id
+    if game.moves[id].user.username:
+      d['username'] = game.moves[id].user.username
+    else:
+      d['username'] = game.moves[id].user.openid
     j['moves'].append(d)
   if error:
     j['error'] = error
@@ -86,7 +97,8 @@ def sendJSON(game, lastid, error=None):
 
 class index:
   def GET(self):
-    return render.index(data.games)
+    user = currentUser()
+    return render.index(data.games, user)
 
 class newgame:
   def GET(self, game=None):
@@ -126,6 +138,7 @@ class game:
       return render.game(g)
 
   def POST(self, game):
+    user = currentUser()
     if not game in data.games:
       raise web.notfound()
     g = data.games[game]
@@ -139,7 +152,7 @@ class game:
     if json:
       if d.lastmove is None or not d.lastmove.isdigit():
         raise web.badrequest()
-    valid, reason = g.addmove(mid, d.word, 'user')
+    valid, reason = g.addmove(mid, d.word, user)
     if not valid:
       if not json:
         return render.play(g, d.word, reason)
@@ -150,6 +163,32 @@ class game:
       raise web.seeother("/game/%s" % str(g))
     else:
       return sendJSON(g, int(d.lastmove))
+
+def currentUser():
+  openid = web.openid.status()
+  if not openid:
+    user = None
+  else :
+    if not openid in data.users:
+      data.users[openid] = User(openid, None)
+      saveData(data)
+    user = data.users[openid]
+  return user
+
+class account:
+  def POST(self):
+    user = currentUser()
+    i = web.input('username', return_to='/')
+    if user:
+      user.username = i.username
+      data.users[user.openid] = user
+      saveData(data)
+    else:
+      raise web.badrequest()
+    return web.redirect(i.return_to)
+  def GET(self):
+    user = currentUser()
+    return render.user(user)
 
 if __name__ == "__main__":
   app.run()

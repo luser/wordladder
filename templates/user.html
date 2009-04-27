@@ -1,0 +1,23 @@
+$def with(user)
+<!DOCTYPE html>
+<html><head><title>Word Ladder: Your Account</title>
+<body>
+<h1>Your Account</h1>
+$if user:
+  <p>Your OpenID provider is <img src="http://openid.net/login-bg.gif" alt="OpenID" />$user.openid</p>
+  $if user.username:
+    <p>Your username is <span class="username">$user.username</span>. You can change it using the form below.</p>
+  $else:
+    <p>You have not chosen a username yet. You can choose one using the form below.</p>
+  <form action="/user/account" method="post">
+    <label for="username">Username: <input type="text" name="username" id="username" size="23" maxlength="32" /></label>
+    <input type="hidden" name="return_to" value="/user/account" />
+    <button type="submit">Set Username</button>
+  </form>
+$else:
+  <p>You are not logged in. Please log in using OpenID.</p>
+  <form method="post" action="/user/login">
+    <label for="openid">Open ID: <input type="text" name="openid" id="openid" value="" /></label>
+    <input type="hidden" name="return_to" value="/user/account" />
+    <button type="submit">Login</button>
+  </form>
