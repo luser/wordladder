@@ -74,10 +74,9 @@ function handleGameJSON(data)
     clearTimeout(watchdogtimeout);
     watchdogtimeout = -1;
   }
-  if ('done' in data) {
+
+  if ('done' in data && !done) {
       done = data.done;
-  }
-  if (done) {
       //TODO: fancy this up
       document.title += " (finished)";
       $('h1').append(" (finished)");
@@ -85,14 +84,20 @@ function handleGameJSON(data)
   $.each(data.moves, function(i, m)
          {
            // m.id, m.word, m.parent
-           $('#m' + m.parent).parent().append('<li id="l'+m.id+'" style="display:none"><ul><li><span class="username">'+m.username+'</span> <a id="m'+m.id+'" class="move">'+m.word+'</a><form class="hidden" method="POST" action="'+window.location+'/play"><input type="hidden" name="moveid" value="'+m.id+'"><input type="text" name="word" autocomplete="off" autocorrect="off" autocapitalize="off"></input></form></ul>');
+	     if ('username' in m) {
+		 username = m.username;
+	     }
+	     else {
+		 //FIXME
+		 username = "user";
+	     }
+           $('#m' + m.parent).parent().append('<li id="l'+m.id+'" style="display:none"><ul><li><span class="username">'+username+'</span> <a id="m'+m.id+'" class="move">'+m.word+'</a><form class="hidden" method="POST" action="'+window.location+'/play"><input type="hidden" name="moveid" value="'+m.id+'"><input type="text" name="word" autocomplete="off" autocorrect="off" autocapitalize="off"></input></form></ul>');
            $('#m' + m.id).attr('title', 'Click to add a word after this word').click(moveClick).next('form').submit(handleSubmit);
 	   if (done && m.id == data.lastmove) {
 	       // this is the winning move
 	       $('#m' + m.id).addClass('end');
 	   }
-           $('#l' + m.id).show('normal');
-           setTimeout('drawwire(' + m.id + ', ' + m.parent + ');', 1000);
+           $('#l' + m.id).show('normal', function() { drawwire(m.id, m.parent); });
          });
   lastmove = data.lastmove;
   // poll again later

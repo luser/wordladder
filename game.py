@@ -1,6 +1,16 @@
 #!/usr/bin/env python
 
 from words import *
+try:
+  # python 2.6, simplejson as json
+  from json import dumps as dump_json, loads as load_json
+except ImportError:
+  try:
+    # simplejson moduld
+    from simplejson import dumps as dump_json, loads as load_json
+  except ImportError:
+    # some other json module I apparently have installed
+    from json import write as dump_json, read as load_json
 
 class Move(object):
   def __init__(self, word, user, id, parent=None, children=[]):
@@ -14,7 +24,23 @@ class Move(object):
 
   def __repr__(self):
     return "Move('%s', '%s', %d, %s, %s)" % (self.word, self.user, self.id, self.parent, self.children)
-    
+
+  def _obj(self):
+    return {"id": self.id,
+            "word": self.word,
+            "user": self.user,
+            "children": [c.id for c in self.children]}
+
+  def json(self):
+    return dump_json(self._obj())
+
+def processmoves(movedata, moves, i, parent=None):
+  md = movedata[str(i)]
+  m = Move(md['word'], md['user'], i, parent)
+  moves[i] = m
+  for ci in md['children']:
+    processmoves(movedata, moves, ci, m)
+
 class Game(object):
   def __init__(self, start=None, end=None, done=False, moves={}):
     if start and end:
@@ -33,6 +59,23 @@ class Game(object):
   
   def __str__(self):
     return "%s-%s" % (self.start, self.end)
+
+  @staticmethod
+  def fromJSON(json):
+    """Return a Game object from a JSON string. The inverse of the json
+    instance method."""
+    data = load_json(json)
+    moves = {}
+    processmoves(data['moves'], moves, 1)
+    return Game(data['start'], data['end'], data['done'], moves)
+    
+  def json(self):
+    """Return a JSON string representing this instance. The inverse of the
+    fromJSON static method."""
+    return dump_json({"start": self.start,
+                      "end": self.end,
+                      "done": self.done,
+                      "moves": dict((str(i), m._obj()) for i,m in self.moves.iteritems())})
 
   def addmove(self, fromid, word, user):
     if self.done:

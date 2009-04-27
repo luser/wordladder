@@ -59,7 +59,7 @@ words = readwords(PLAY_WORDLIST)
 wordmap =  dict(zip(words, range(len(words))))
 gamewords = set(readwords(GAME_WORDLIST))
 # separate ids here to index into the distance matrix
-gamewordmap =  dict(zip(gamewords, range(len(gamewords))))
+gamewordmap =  dict(zip(sorted(gamewords), range(len(gamewords))))
 
 class Node(object):
   def __init__(self, word, start, neighbors):
@@ -75,14 +75,15 @@ print "Reading graph...",
 graph = {}
 GRAPH_PICKLE = "/home/luser/solution.pickle"
 if os.path.exists(GRAPH_PICKLE):
+  print "(pickled)",
   with open(GRAPH_PICKLE, 'rb') as f:
     graph = pickle.load(f)
 else:
+  print "(from files)",
   for w, id in wordmap.iteritems():
     graph[id] = Node(w, w in gamewords, [wordmap[n] for n in getmoves(w)])
   with open(GRAPH_PICKLE, 'wb') as f:
     pickle.dump(graph, f, -1)
-
 print "Done"
 
 # No point in keeping this around
@@ -98,19 +99,20 @@ else:
   # Create a mmapped file to store distance between words
   if not os.path.exists(DISTANCE_MATRIX) or os.stat(DISTANCE_MATRIX).st_size != len(gamewords) * len(gamewords):
     # Fill with 0x0 first if file doesn't exist
-    print "Creating empty distance matrix..."
+    print "Creating empty distance matrix...",
     with open(DISTANCE_MATRIX, 'w') as f:
-       for i in xrange(len(gamewords) * len(gamewords)):
-         f.write('\0')
+       for i in xrange(len(gamewords)):
+         f.write('\0' * len(gamewords))
     print "Done"
   f = os.open(DISTANCE_MATRIX, os.O_RDWR)
   m = mmap.mmap(f, len(gamewords) * len(gamewords))
 
-  for i, word in enumerate(gamewords):
-    print "[%5d/%5d] Traversing graph from %s..." % (i+1, len(gamewords), word),
+  for i, word in enumerate(sorted(gamewords)):
+    gwid = gamewordmap[word]
+    print "[%5d/%5d] Traversing graph from %s (%d)..." % (i+1, len(gamewords), word, gwid),
     words = find_words(wordmap[word])
     print "Done (max %d)" % max(words.values())
-    gwid = gamewordmap[word]
+
     for wid, pathlen in words.iteritems():
       # need a different kind of index into the connection matrix
       gwid2 = gamewordmap[graph[wid].word]

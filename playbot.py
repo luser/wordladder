@@ -60,7 +60,7 @@ while not done:
     while True:
       # pick a random one that's not already in play
       next = choice(potentials)
-      if next not in words:
+      if next not in [w for w,i in words]:
         break
       potentials.remove(next)
       if not potentials:
