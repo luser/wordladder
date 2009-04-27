@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 from words import *
+from user import User
+
 try:
   # python 2.6, simplejson as json
   from json import dumps as dump_json, loads as load_json
@@ -11,6 +13,14 @@ except ImportError:
   except ImportError:
     # some other json module I apparently have installed
     from json import write as dump_json, read as load_json
+
+def usertojson(u):
+  if type(u) is str:
+    return {'openid':None, 'username':u}
+  elif type(u) is User:
+    return u._obj()
+  #FIXME
+  return {'openid':None, 'username':'user'}
 
 class Move(object):
   def __init__(self, word, user, id, parent=None, children=[]):
@@ -28,7 +38,7 @@ class Move(object):
   def _obj(self):
     return {"id": self.id,
             "word": self.word,
-            "user": self.user,
+            "user": usertojson(self.user),
             "children": [c.id for c in self.children]}
 
   def json(self):
@@ -36,7 +46,14 @@ class Move(object):
 
 def processmoves(movedata, moves, i, parent=None):
   md = movedata[str(i)]
-  m = Move(md['word'], md['user'], i, parent)
+  if md['user']:
+    if type(md['user']) is dict:
+      user = User(md['user']['openid'], md['user']['username'])
+    else:
+      user = User(None, md['user'])
+  else:
+    user = 'user'
+  m = Move(md['word'], user, i, parent)
   moves[i] = m
   for ci in md['children']:
     processmoves(movedata, moves, ci, m)

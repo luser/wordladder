@@ -4,11 +4,15 @@
 
 from bsddbdata import run_in_transaction
 from game import Game
+from user import User
 
 class GameDoesNotExist(Exception):
   pass
 
 class GameAlreadyExists(Exception):
+  pass
+
+class UserDoesNotExist(Exception):
   pass
 
 def gameFromDB(db, gamename):
@@ -76,4 +80,18 @@ def currentuser_in_txn(db, openid):
   return u
 
 def getcurrentuser(openid):
-   return run_in_transaction(currentuser_in_txn, openid, dbname="user.db")
+  return run_in_transaction(currentuser_in_txn, openid, dbname="user.db")
+
+def setusername_in_txn(db, openid, username):
+  u = db.get(openid)
+  if not u:
+    raise UserDoesNotExist("That user does not exist")
+
+  user = User.fromJSON(u)
+  user.username = username
+  db.put(openid, user.json())
+  return user
+
+def setusername(openid, username):
+   return run_in_transaction(setusername_in_txn, openid, username, dbname="user.db")
+  

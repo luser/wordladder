@@ -25,11 +25,15 @@ class User(object):
 			return "%s" % (self.username)
 		else:
 			return "%s" % (self.openid)
+
+        def _obj(self):
+          return {'openid': self.openid,
+                  'username': self.username}
+
 	def json(self):
-		return dump_json({'openid': self.openid,
-				  'username': self.username})
+          return dump_json(self._obj())
+
 	@staticmethod
 	def fromJSON(json):
-		j = load_json(json)
-		return User(j['openid'], j['username'])
-
+          j = load_json(json)
+          return User(j['openid'], j['username'])

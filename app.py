@@ -155,15 +155,19 @@ def currentUser():
     return None
   return getcurrentuser(openid)
 
+def setcurrentUsername(username):
+  openid = web.openid.status()
+  if not openid:
+    #TODO: support anonymous users
+    return None
+  return setusername(openid, username)
+
 class account:
   def POST(self):
-    user = currentUser()
     i = web.input('username', return_to='/')
-    if user:
-      user.username = i.username
-      data.users[user.openid] = user
-      saveData(data)
-    else:
+    try:
+      setcurrentUsername(i.username)
+    except UserDoesNotExist:
       raise web.badrequest()
     return web.redirect(i.return_to)
   def GET(self):
