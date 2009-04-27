@@ -2,7 +2,6 @@
 
 import sys
 from random import choice
-import readline
 
 from config import GAME_WORDLIST, PLAY_WORDLIST
 
