@@ -62,6 +62,8 @@ def sendJSON(game, lastid, error=None):
     d = {'id': id, 'word': game.moves[id].word}
     if game.moves[id].parent:
       d['parent'] = game.moves[id].parent.id
+    if game.moves[id].bottom:
+      d['bottom'] = True
     if game.moves[id].user:
       if game.moves[id].user.username:
         d['username'] = game.moves[id].user.username

@@ -9,6 +9,8 @@ $def wire(m):
   $if m.parent:
     var wire = new WireIt.Wire(terminals[${m.parent.id}], terminals[${m.id}], document.body, {drawingMethod: 'arrows'});
   </script>
+  $for c in m.children:
+    $:wire(c)
 $def form(m):
   $if not game.done:
     <form method="POST" action=""><input type="hidden" name="moveid" value="$m.id"><input type="text" name="word" autocomplete="off" autocorrect="off" autocapitalize="off"></input></form>
@@ -16,11 +18,22 @@ $def form(m):
     <div class="placeholder"></div>
 $def word(m, w):
     <a id="m${m.id}" class="move">$w</a>
-$def move(m):
-  <ul><li>$:word(m, m.word) $:form(m) $:wire(m)
+$def move(m, s):
+  $if not m.bottom:
+    <ul>
+  $elif not s:
+    <ul>
+  $else:
+    <ul bottom>
+  $if not m.bottom:
+    <li>$:word(m, m.word) $:form(m)
   $if m.children:
     $for c in m.children:
-      $:move(c) $:wire(c)
+      $:move(c, False)
+  $if m.bottom:
+    <li bottom>$:word(m, m.word) $:form(m)
+  $if s:
+    $:wire(m)
   </ul>
 <!DOCTYPE html>
 <html><head><title>Word Ladder: $game.start &rarr; $game.end $finished()</title>
@@ -41,8 +54,8 @@ var done = $(game.done and "true" or "false");
 </head>
 <body>
 <h1>$game.start &rarr; $game.end $finished()</h1>
-$:move(game.moves[1])
-$:move(game.moves[2])
+$:move(game.moves[1], True)
+$:move(game.moves[2], True)
 <script type="text/javascript">
   for (var aaa in terminals) {
     terminals[aaa].redrawAllWires();
