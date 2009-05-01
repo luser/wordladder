@@ -23,6 +23,15 @@ def validword(word):
   """Return True if |word| is in the dictionary."""
   return any(x.rstrip() == word for x in open(PLAY_WORDLIST, "r"))
 
+def validwordreason(word):
+  """Return (valid, explanation) where |valid| is True or False if
+  |word| is a word in the dictionary, and |explanation| is some explanatory
+  text otherwise."""
+  v = validword(word)
+  if v:
+    return (True, "")
+  return (False, "%s is not a word in the dictionary" % word)
+
 def LevenshteinDistance(s, t):
   """Calculate the Levenshtein distance between |s| and |t| per
   http://en.wikipedia.org/wiki/Levenshtein_distance#The_algorithm """
@@ -58,19 +67,19 @@ def validmove(start, end):
   if len(start) == len(end):
     if sorted(start) == sorted(end):
       # permutation, ok if it's a valid word
-      return (validword(end), 'Not a word in the dictionary')
+      return validwordreason(end)
     if len(filter(lambda x: x[0] != x[1], zip(start, end))) > 1:
       # more than one letter changed
       return (False, "Can't change more than one letter at a time")
     # same length, one letter changed, ok if it's a valid word
-    return (validword(end), 'Not a word in the dictionary')
+    return validwordreason(end)
   if abs(len(start) - len (end)) != 1:
     # more than one letter added/removed, no good
     return (False, "Can't add or remove more than one letter at a time")
   if LevenshteinDistance(start, end) != 1:
     return (False, "Too many letter changes")
   # passed all other tests, ok if it's a valid word
-  return (validword(end), 'Not a word in the dictionary')
+  return validwordreason(end)
 
 if __name__ == '__main__':
   # play a simple console version of word ladder
