@@ -19,12 +19,7 @@ $def form(m):
 $def word(m, w):
     <a id="m${m.id}" class="move">$w</a>
 $def move(m, s):
-  $if not m.bottom:
-    <ul>
-  $elif not s:
-    <ul>
-  $else:
-    <ul bottom>
+  <ul>
   $if not m.bottom:
     <li>$:word(m, m.word) $:form(m)
   $if m.children:
@@ -55,6 +50,7 @@ var done = $(game.done and "true" or "false");
 <body>
 <h1>$game.start &rarr; $game.end $finished()</h1>
 $:move(game.moves[1], True)
+<br style="clear: left">
 $:move(game.moves[2], True)
 <script type="text/javascript">
   for (var aaa in terminals) {
