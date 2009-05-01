@@ -1,3 +1,4 @@
 \.pyc$
 ^config\.py$
 ~$
+^\.openid_secret_key$
