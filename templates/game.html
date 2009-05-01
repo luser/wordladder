@@ -15,9 +15,6 @@ $def form(m):
   $else:
     <div class="placeholder"></div>
 $def word(m, w):
-  $if w == game.end:
-    <a id="m${m.id}" class="end move">$w</a>
-  $else:
     <a id="m${m.id}" class="move">$w</a>
 $def move(m):
   <ul><li>$:word(m, m.word) $:form(m) $:wire(m)
@@ -45,6 +42,7 @@ var done = $(game.done and "true" or "false");
 <body>
 <h1>$game.start &rarr; $game.end $finished()</h1>
 $:move(game.moves[1])
+$:move(game.moves[2])
 <script type="text/javascript">
   for (var aaa in terminals) {
     terminals[aaa].redrawAllWires();

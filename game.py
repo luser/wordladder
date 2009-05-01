@@ -23,22 +23,24 @@ def usertojson(u):
   return {'openid':None, 'username':'user'}
 
 class Move(object):
-  def __init__(self, word, user, id, parent=None, children=[]):
+  def __init__(self, word, user, id, parent=None, bottom=False, children=[]):
     self.word = word
     self.user = user
     self.id = id
     self.parent = parent
+    self.bottom = bottom
     if parent:
       parent.children.append(self)
     self.children = children[:]
 
   def __repr__(self):
-    return "Move('%s', '%s', %d, %s, %s)" % (self.word, self.user, self.id, self.parent, self.children)
+    return "Move('%s', '%s', %d, %s, %s, %s)" % (self.word, self.user, self.id, self.parent, self.bottom, [c.id for c in self.children])
 
   def _obj(self):
     return {"id": self.id,
             "word": self.word,
             "user": usertojson(self.user),
+            "bottom": self.bottom,
             "children": [c.id for c in self.children]}
 
   def json(self):
@@ -53,7 +55,7 @@ def processmoves(movedata, moves, i, parent=None):
       user = User(None, md['user'])
   else:
     user = 'user'
-  m = Move(md['word'], user, i, parent)
+  m = Move(md['word'], user, i, parent, md['bottom'])
   moves[i] = m
   for ci in md['children']:
     processmoves(movedata, moves, ci, m)
@@ -67,7 +69,7 @@ class Game(object):
     if moves:
       self.moves = moves
     else:
-      self.moves = {1: Move(self.start, '', 1)}
+      self.moves = {1: Move(self.start, '', 1), 2: Move(self.end, '', 2, bottom=True)}
     self.lastmove = max(m.id for m in self.moves.values())
     self.done = done
 
@@ -84,6 +86,7 @@ class Game(object):
     data = load_json(json)
     moves = {}
     processmoves(data['moves'], moves, 1)
+    processmoves(data['moves'], moves, 2)
     return Game(data['start'], data['end'], data['done'], moves)
     
   def json(self):
@@ -114,9 +117,14 @@ class Game(object):
     if not valid:
       return (False, reason)
 
+    # see if this completes a chain
+    wmap = dict((m.word, m) for id, m in self.moves.iteritems())
+    if word in wmap:
+      if wmap[word].bottom != m.bottom:
+        # completed a chain
+        self.done = True
+
     self.lastmove += 1
-    newmove = Move(word, user, self.lastmove, m)
+    newmove = Move(word, user, self.lastmove, m, m.bottom)
     self.moves[self.lastmove] = newmove
-    if word == self.end:
-      self.done = True
     return (True, '')
