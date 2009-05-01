@@ -1,4 +1,3 @@
-var debug = false;
 var DEFAULT_POLLTIME = 2000;
 var timeout = -1;
 var watchdogtimeout = -1;
@@ -107,7 +106,7 @@ function handleGameJSON(data)
          });
   lastmove = data.lastmove;
   // poll again later
-  if (!debug && !done)
+  if (!done)
     pollJSON();
 }
 
@@ -153,13 +152,6 @@ $(document).ready(function()
 	  .submit(handleSubmit);
       $('.move').attr('title', 'Click to add a word after this word')
 	  .click(moveClick);
-      // poll JSON
-      if (!debug) {
-	  pollJSON();
-      }
-      else {
-	  $(document.body).append('<button id="load">Load JSON</button>');
-	  $('#load').click(pollJSON);
-      }
+      pollJSON();
   }
 });
