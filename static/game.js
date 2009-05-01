@@ -91,7 +91,7 @@ function handleGameJSON(data)
 		 //FIXME
 		 username = "user";
 	     }
-           $('#m' + m.parent).parent().append('<li id="l'+m.id+'" style="display:none"><ul><li><span class="username">'+username+'</span> <a id="m'+m.id+'" class="move">'+m.word+'</a><form class="hidden" method="POST" action="'+window.location+'/play"><input type="hidden" name="moveid" value="'+m.id+'"><input type="text" name="word" autocomplete="off" autocorrect="off" autocapitalize="off"></input></form></ul>');
+           $('#m' + m.parent).parent().append('<li id="l'+m.id+'" style="display:none"><ul><li><a id="m'+m.id+'" class="move">'+m.word+'</a><form class="hidden" method="POST" action="'+window.location+'/play"><input type="hidden" name="moveid" value="'+m.id+'"><input type="text" name="word" autocomplete="off" autocorrect="off" autocapitalize="off"></input></form></ul>');
            $('#m' + m.id).attr('title', 'Click to add a word after this word').click(moveClick).next('form').submit(handleSubmit);
 	   if (done && m.id == data.lastmove) {
 	       // this is the winning move
