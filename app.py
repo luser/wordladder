@@ -18,7 +18,7 @@ except ImportError:
   sys.exit(1)
 
 from words import validword
-from user import User
+from user import *
 from data import *
 from bsddbdata import run_in_transaction
 
@@ -29,7 +29,8 @@ urls = (
   '/game/([^/]*)', 'game',
   '/user/login', 'web.webopenid.host',
   '/user/logout', 'web.webopenid.host',
-  '/user/account', 'account',  '/fb/', 'fb_index',
+  '/user/account', 'account',
+  '/fb/', 'fb_index',
   '/fb/add', 'fb_add',
   '/fb/remove', 'fb_remove',
   '/fb/new', 'fb_newgame',
@@ -153,15 +154,13 @@ class game:
 def currentUser():
   openid = web.openid.status()
   if not openid:
-    #TODO: support anonymous users
-    return None
+    return run_in_transaction(makeAnonUser, None, dbname='user.db')
   return getcurrentuser(openid)
 
 def setcurrentUsername(username):
   openid = web.openid.status()
   if not openid:
-    #TODO: support anonymous users
-    return None
+    openid = run_in_transaction(makeAnonUser, None, dbname='user.db')
   return setusername(openid, username)
 
 class account:
@@ -174,8 +173,21 @@ class account:
     return web.redirect(i.return_to)
   def GET(self):
     user = currentUser()
+    if (user.isAnonymous()):
+      return render.user(None)
     return render.user(user)
-    
+
+class login:
+  def POST(self):
+    u = currentUser()
+    n = _random_session()
+    sessions[n] = {'score': u.score}
+    web.setcookie('ladder_session', web.webopenid._hmac(n) + ',' + n)
+    return web.openid.host()
+  def GET(self):
+    u = currentUser()
+    return render.user(u)
+
 class fb_add:
   def POST(self):
     args = minival(web.input())

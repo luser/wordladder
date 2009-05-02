@@ -4,7 +4,7 @@
 
 from bsddbdata import run_in_transaction
 from game import Game
-from user import User
+from user import *
 
 class GameDoesNotExist(Exception):
   pass
@@ -27,7 +27,9 @@ def getallgames(db):
   cur = db.cursor()
   data = cur.first()
   while data:
-    games[data[0]] = Game.fromJSON(data[1])
+    g = Game.fromJSON(data[1])
+    if g:
+      games[data[0]] = g
     data = cur.next()
   cur.close()
   return games
@@ -76,6 +78,9 @@ def currentuser_in_txn(db, openid):
   if u:
     return User.fromJSON(u)
   u = User(openid, None)
+  score = getSessionScore()
+  if score:
+    u.score += score
   db.put(openid, u.json())
   return u
 
@@ -94,4 +99,4 @@ def setusername_in_txn(db, openid, username):
 
 def setusername(openid, username):
    return run_in_transaction(setusername_in_txn, openid, username, dbname="user.db")
-  
+

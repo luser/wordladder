@@ -17,6 +17,15 @@ $if not user:
 	  <input type="hidden" name="return_to" value="/" />
 	  <button type="submit">Login</button>
 	</form>
+$elif user.isAnonymous():
+  <h2>Welcome to Word Ladder!</h2>
+  <p>You are anonymous user <span class="username">$user</span>.</p>
+  <p>To save your score and be able to use all of the game's functions, log in with OpenID:</p>
+  <form method="post" action="/user/login">
+	  <label for="openid">Open ID: <input type="text" name="openid" id="openid" value="" /></label>
+	  <input type="hidden" name="return_to" value="/" />
+	  <button type="submit">Login</button>
+	</form>
 $else:
   <h2>You are logged in as <span class="username">$user</span></h2>
   <form method="post" action="/user/logout">

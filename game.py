@@ -75,7 +75,7 @@ class Game(object):
 
   def __repr__(self):
     return "Game('%s', '%s', %s, %s)" % (self.start, self.end, self.done, self.moves)
-  
+
   def __str__(self):
     return "%s-%s" % (self.start, self.end)
 
@@ -84,11 +84,13 @@ class Game(object):
     """Return a Game object from a JSON string. The inverse of the json
     instance method."""
     data = load_json(json)
+    if not 'moves' in data:
+      return None
     moves = {}
     processmoves(data['moves'], moves, 1)
     processmoves(data['moves'], moves, 2)
     return Game(data['start'], data['end'], data['done'], moves)
-    
+
   def json(self):
     """Return a JSON string representing this instance. The inverse of the
     fromJSON static method."""
