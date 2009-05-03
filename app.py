@@ -57,6 +57,7 @@ def sendJSON(game, lastid, error=None):
   j = {'moves': [], 'lastmove': game.lastmove}
   if game.done:
     j['done'] = True
+    j['winningchain'] = game.winningchain
   for id in sorted(game.moves.keys()):
     if id <= lastid:
       continue

@@ -104,6 +104,11 @@ function handleGameJSON(data)
 	   }
            $('#l' + m.id).show('normal', function() { drawwire(m.id, m.parent); });
          });
+  if ('done' in data) {
+      $.each(data.winningchain, function(i, mid) {
+	      $('#m' + mid).addClass('win');
+	  });
+  }
   lastmove = data.lastmove;
   // poll again later
   if (!done)

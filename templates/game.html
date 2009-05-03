@@ -17,7 +17,7 @@ $def form(m):
   $else:
     <div class="placeholder"></div>
 $def word(m, w):
-    <a id="m${m.id}" class="move">$w</a>
+    <a id="m${m.id}" class="move$(m.id in game.winningchain and ' win' or '')">$w</a>
 $def move(m, s):
   <ul>
   $if not m.bottom:
@@ -44,6 +44,7 @@ $def move(m, s):
 <script type="text/javascript">
 var lastmove = $game.lastmove;
 var done = $(game.done and "true" or "false");
+var winningchain = $(game.done and game.winningchain or []);
 </script>
 <script type="text/javascript" src="/static/game.js"></script>
 </head>

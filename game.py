@@ -72,6 +72,10 @@ class Game(object):
       self.moves = {1: Move(self.start, '', 1), 2: Move(self.end, '', 2, bottom=True)}
     self.lastmove = max(m.id for m in self.moves.values())
     self.done = done
+    if done:
+      self.winningchain = self._findwinningchain()
+    else:
+      self.winningchain = []
 
   def __repr__(self):
     return "Game('%s', '%s', %s, %s)" % (self.start, self.end, self.done, self.moves)
@@ -129,4 +133,38 @@ class Game(object):
     self.lastmove += 1
     newmove = Move(word, user, self.lastmove, m, m.bottom)
     self.moves[self.lastmove] = newmove
+    if self.done:
+      self.winningchain = self._findwinningchain()
     return (True, '')
+
+  def _findwinningchain(self):
+    """Return a list of move ids representing the chain that won this
+    game, starting from move 1 (the top) and ending at move 2 (the bottom).
+    If the game is not finished, returns an empty list."""
+    if not self.done:
+      return []
+
+    # winning move
+    wm = self.moves[self.lastmove]
+    # move on the opposite side of the ladder with the same word
+    om  = filter(lambda m: m.word == wm.word and m.id != wm.id, self.moves.values())[0]
+    m = wm
+    l = [wm.id]
+    # get chain from the winning move up to the root
+    while m.parent:
+      m = m.parent
+      l.append(m.id)
+    m = om
+    l2 = [om.id]
+    # get chain from the other side up to the root
+    while m.parent:
+      m = m.parent
+      l2.append(m.id)
+    # concatenate them
+    if wm.bottom:
+      l2.reverse()
+      l = l2 + l
+    else:
+      l.reverse()
+      l = l + l2
+    return l
