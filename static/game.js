@@ -55,16 +55,6 @@ function handlePlayError(form, err)
   //TODO: network error icon or something
 }
 
-
-function drawwire(mid, mparent) {
-  terminals[mid] = new WireIt.Terminal(document.getElementById('m' + mid), {editable: false, offsetPosition: [0,-6]});
-  var wire = new WireIt.Wire(terminals[mparent], terminals[mid], document.body, {drawingMethod: 'arrows'});
-  for (var aaa in terminals) {
-    terminals[aaa].redrawAllWires();
-  };
-};
-
-
 function handleGameJSON(data)
 {
   timeout = -1;
@@ -79,6 +69,11 @@ function handleGameJSON(data)
       //TODO: fancy this up
       document.title += " (finished)";
       $('h1').append(" (finished)");
+  }
+  var animTimer = -1;
+  var numAnims = 0;
+  if (data.moves.length > 0) {
+      animTimer = setInterval(redrawwires, 100);
   }
   $.each(data.moves, function(i, m)
          {
@@ -98,17 +93,24 @@ function handleGameJSON(data)
              $('#m' + m.parent).parent().before(html);
            }
            $('#m' + m.id).attr('title', 'Click to add a word after this word').click(moveClick).next('form').submit(handleSubmit);
-	   if (done && m.id == data.lastmove) {
-	       // this is the winning move
-	       $('#m' + m.id).addClass('end');
-	   }
-           $('#l' + m.id).show('normal', function() { drawwire(m.id, m.parent); });
+	   addLink(m.id, m.parent, 'blue');
+	   numAnims++;
+           $('#l' + m.id).show('normal', function() {
+		   numAnims--;
+		   if (numAnims <= 0) {
+		       clearInterval(animTimer);
+		       redrawwires();
+		   }
+	       });
 	   $('#playinfo').prepend('<span class="log">'+username + " plays " + m.word+"</span>");
          });
   if ('done' in data) {
       $.each(data.winningchain, function(i, mid) {
 	      $('#m' + mid).addClass('win');
 	  });
+      for (var i=0; i<data.winningchain.length-1; i++) {
+	  changeLinkColor(data.winningchain[i], data.winningchain[i+1], 'red');
+      }
   }
   lastmove = data.lastmove;
   // poll again later
