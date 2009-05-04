@@ -103,6 +103,7 @@ function handleGameJSON(data)
 	       $('#m' + m.id).addClass('end');
 	   }
            $('#l' + m.id).show('normal', function() { drawwire(m.id, m.parent); });
+	   $('#playinfo').prepend('<span class="log">'+username + " plays " + m.word+"</span>");
          });
   if ('done' in data) {
       $.each(data.winningchain, function(i, mid) {

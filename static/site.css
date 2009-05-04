@@ -68,3 +68,16 @@ canvas.WireIt-Wire {
   z-index: -1;
 }
 
+#playinfo {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  width: 20em;
+  height: 1.5em;
+  overflow: auto;
+  overflow-x: auto;
+}
+
+.log {
+  padding: 0.25em;
+}
