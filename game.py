@@ -35,16 +35,18 @@ class Move(object):
         try:
           self.played = strptime(played)
         except ValueError:
-          print played + " is not a valid datetime."
+          print played + " is not a valid time string."
           raise
-      elif type(played) is int:
+      elif type(played) is int or type(played) is float:
         try:
           self.played = localtime(played)
         except ValueError:
           print played + " is not a valid timestamp."
           raise
-      elif type(played) is struct_time:
+      elif type(played) is tuple:
         self.played = played
+      else:
+        raise ValueError
     else:
       self.played = localtime()
     if parent:
@@ -52,7 +54,7 @@ class Move(object):
     self.children = children[:]
 
   def __repr__(self):
-    return "Move('%s', '%s', '%s', %d, %s, %s, %s)" % (self.word, self.user, self.id, self.played, self.parent, self.bottom, [c.id for c in self.children])
+    return "Move('%s', '%s', %d, %s, %s, %s, %s)" % (self.word, self.user, self.id, self.played, self.parent, self.bottom, [c.id for c in self.children])
 
   def _obj(self):
     return {"id": self.id,
