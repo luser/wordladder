@@ -4,8 +4,7 @@ function initwires()
 {
   var c = document.createElement("canvas");
   c.id = "wirecanvas";
-  c.width = document.documentElement.clientWidth;
-  c.height = document.documentElement.scrollHeight;
+  resizeCanvas(c);
   $(c).css({'position': 'absolute',
 	    'left': 0,
 	    'top': 0,
@@ -45,9 +44,16 @@ function elementCenter(e)
   };
 }
 
+function resizeCanvas(c)
+{
+  c.width = document.documentElement.clientWidth;
+  c.height = document.documentElement.scrollHeight;
+}
+
 function redrawwires()
 {
   var c = $("#wirecanvas").get(0);
+  resizeCanvas(c);
   var ctx = c.getContext('2d');
   ctx.clearRect(0,0, c.width, c.height);
   $.each(links, function(i, l) {
@@ -60,6 +66,7 @@ function redrawwires()
 	   ctx.lineWidth = 2.0;
 	   ctx.stroke();
 	 });
+
 }
 
 $(document).ready(function()
@@ -67,3 +74,5 @@ $(document).ready(function()
   initwires();
   redrawwires();
 });
+
+$(window).resize(redrawwires);
