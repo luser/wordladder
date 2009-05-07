@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 import web, sys, os, os.path, minifb
+from web.template import TEMPLATE_BUILTINS
+
 try:
   # python 2.6, simplejson as json
   from json import dumps as dump_json
@@ -39,7 +41,9 @@ urls = (
   )
 
 app = web.application(urls, globals())
-render = web.template.render('templates/')
+# stupid incomplete list of builtins!
+TEMPLATE_BUILTINS['sorted'] = __builtins__['sorted']
+render = web.template.render('templates/', builtins=TEMPLATE_BUILTINS)
 
 _FbApiKey = '605bd3fd951affff9fd423bf6ecccf18'
 _FbSecret = minifb.FacebookSecret('a89f16f3d4605b4e920430234d1a7b29')

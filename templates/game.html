@@ -4,6 +4,8 @@ $code
     if game.done:
       return "(finished)"
     return ""
+  def lasttenmoves(g):
+    return [g.moves[i] for i in sorted(g.moves.keys(), reverse=True)[:10]]
 $def form(m):
   $if not game.done:
     <form method="POST" action=""><input type="hidden" name="moveid" value="$m.id"><input type="text" name="word" autocomplete="off" autocorrect="off" autocapitalize="off"></input></form>
@@ -23,6 +25,9 @@ $def move(m, s):
   $if m.bottom:
     <li bottom>$:word(m, m.word) $:form(m)
   </ul>
+$def plays():
+  $for m in lasttenmoves(game):
+    <span class="log">$m.user played $m.word</span>
 <!DOCTYPE html>
 <html><head><title>Word Ladder: $game.start &rarr; $game.end $finished()</title>
 <link rel="stylesheet" type="text/css" href="/static/site.css">
@@ -52,6 +57,6 @@ $:move(game.moves[1], True)
 <br style="clear: left">
 $:move(game.moves[2], True)
 <p><a href="/">Back to game list</a>
-<div id="playinfo"></div>
+<div id="playinfo">$:plays()</div>
 </body>
 </html>
