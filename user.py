@@ -53,7 +53,7 @@ class User(object):
     return {'openid': self.openid,
             'username': self.username,
             'score': self.score,
-            'created': self.created}
+            'created': mktime(self.created)}
 
   def isAnonymous(self):
     user = self.openid

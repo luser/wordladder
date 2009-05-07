@@ -60,7 +60,7 @@ class Move(object):
     return {"id": self.id,
             "word": self.word,
             "user": usertojson(self.user),
-            "played": self.played,
+            "played": self.ts(),
             "bottom": self.bottom,
             "children": [c.id for c in self.children]}
 
@@ -72,14 +72,18 @@ class Move(object):
 
 def processmoves(movedata, moves, i, parent=None):
   md = movedata[str(i)]
-  if md['user']:
+  if 'user' in md and md['user']:
     if type(md['user']) is dict:
       user = User(md['user']['openid'], md['user']['username'])
     else:
       user = User(None, md['user'])
   else:
     user = 'user'
-  m = Move(md['word'], user, i, None, parent, md['bottom'])
+  if 'played' in md:
+    played = md['played']
+  else:
+    played = None
+  m = Move(md['word'], user, i, played, parent, md['bottom'])
   moves[i] = m
   for ci in md['children']:
     processmoves(movedata, moves, ci, m)

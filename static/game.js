@@ -92,7 +92,7 @@ function handleGameJSON(data)
            else {
              $('#m' + m.parent).parent().before(html);
            }
-           $('#m' + m.id).attr('title', 'Click to add a word after this word').click(moveClick).next('form').submit(handleSubmit);
+           $('#m' + m.id).attr('title', 'Click to add a word after this word').click(moveClick).nextAll('form').submit(handleSubmit);
 	   addLink(m.id, m.parent, 'blue');
 	   numAnims++;
            $('#l' + m.id).show('normal', function() {
@@ -135,15 +135,15 @@ function pollJSON()
 
 function moveClick(event)
 {
-  var washidden = $(this).next('form').hasClass('hidden');
+  var washidden = $(this).nextAll('form').hasClass('hidden');
   // hide all inputs first
   $('form').addClass('hidden');
   if (washidden) {
-      $(this).next('form').removeClass('hidden').children('input').get(1).focus();
+      $(this).nextAll('form').removeClass('hidden').children('input').get(1).focus();
   }
   else {
       // hidden now, blur it
-      $(this).next('form').children('input').get(1).blur();
+      $(this).nextAll('form').children('input').get(1).blur();
   }
 
   event.stopPropagation();
