@@ -1,9 +1,10 @@
 $def with(games, user)
-$code
-  def finished(game):
-    if game.done:
-      return ", finished"
-    return ""
+$def gamelist(gl, active):
+  <ul>
+    $for k, g in gl.iteritems():
+      $if g.done != active:
+        <li><a href="/game/$k">$g.start &rarr; $g.end (${len(g.moves)} moves)</a>
+  </ul>
 <!DOCTYPE html>
 <html><head><title>Word Ladder</title>
 <link rel="icon" href="/static/favicon.png">
@@ -44,11 +45,10 @@ $else:
       <input type="hidden" name="return_to" value="/" />
       <button type="submit">Set Username</button>
     </form>
-<h1>Games:</h1>
-<ul>
-$for k, g in games.iteritems():
-  <li><a href="/game/$k">$g.start &rarr; $g.end (${len(g.moves)} moves$finished(g))</a>
-</ul>
+<h1>Active Games:</h1>
+$:gamelist(games, True)
+<h2>Finished Games:</h2>
+$:gamelist(games, False)
 <a href="new">New Game</a>
 </body>
 </html>
