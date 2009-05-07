@@ -2,6 +2,7 @@
 
 import web
 import os
+from time import *
 
 try:
   # python 2.6, simplejson as json
@@ -15,13 +16,32 @@ except ImportError:
     from json import write as dump_json, read as load_json
 
 class User(object):
-  def __init__(self, openid, username=None, score=0):
+  def __init__(self, openid, username=None, score=0, created=None):
     self.openid = openid
     self.username = username
     self.score = score
+    if created:
+      if type(created) is str:
+        try:
+          self.created = strptime(created)
+        except ValueError:
+          print created + " is not a valid time string."
+          raise
+      elif type(created) is int or type(created) is float:
+        try:
+          self.created = localtime(created)
+        except ValueError:
+          print created + " is not a valid timestamp."
+          raise
+      elif type(created) is tuple:
+        self.created = created
+      else:
+        raise ValueError
+    else:
+      self.created = localtime()
 
   def __repr__(self):
-    return "User('%s', '%s', %d)" % (self.openid, self.username, self.score)
+    return "User('%s', '%s', %d, %s)" % (self.openid, self.username, self.score, self.created)
 
   def __str__(self):
     if self.username:
@@ -32,7 +52,8 @@ class User(object):
   def _obj(self):
     return {'openid': self.openid,
             'username': self.username,
-            'score': self.score}
+            'score': self.score,
+            'created': self.created}
 
   def isAnonymous(self):
     user = self.openid

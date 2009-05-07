@@ -54,6 +54,9 @@ form {
   -moz-box-shadow: 2px 2px 2px gray;
   -webkit-box-shadow: 2px 2px 2px gray;
 }
+.timestamp {
+  display: none;
+}
 
 .win {
   border: 1px solid red;

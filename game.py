@@ -2,6 +2,7 @@
 
 from words import *
 from user import User
+from time import *
 
 try:
   # python 2.6, simplejson as json
@@ -23,28 +24,51 @@ def usertojson(u):
   return {'openid':None, 'username':'user'}
 
 class Move(object):
-  def __init__(self, word, user, id, parent=None, bottom=False, children=[]):
+  def __init__(self, word, user, id, played=None, parent=None, bottom=False, children=[]):
     self.word = word
     self.user = user
     self.id = id
     self.parent = parent
     self.bottom = bottom
+    if played:
+      if type(played) is str:
+        try:
+          self.played = strptime(played)
+        except ValueError:
+          print played + " is not a valid time string."
+          raise
+      elif type(played) is int or type(played) is float:
+        try:
+          self.played = localtime(played)
+        except ValueError:
+          print played + " is not a valid timestamp."
+          raise
+      elif type(played) is tuple:
+        self.played = played
+      else:
+        raise ValueError
+    else:
+      self.played = localtime()
     if parent:
       parent.children.append(self)
     self.children = children[:]
 
   def __repr__(self):
-    return "Move('%s', '%s', %d, %s, %s, %s)" % (self.word, self.user, self.id, self.parent, self.bottom, [c.id for c in self.children])
+    return "Move('%s', '%s', %d, %s, %s, %s, %s)" % (self.word, self.user, self.id, self.played, self.parent, self.bottom, [c.id for c in self.children])
 
   def _obj(self):
     return {"id": self.id,
             "word": self.word,
             "user": usertojson(self.user),
+            "played": self.played,
             "bottom": self.bottom,
             "children": [c.id for c in self.children]}
 
   def json(self):
     return dump_json(self._obj())
+
+  def ts(self):
+    return mktime(self.played)
 
 def processmoves(movedata, moves, i, parent=None):
   md = movedata[str(i)]
@@ -55,7 +79,7 @@ def processmoves(movedata, moves, i, parent=None):
       user = User(None, md['user'])
   else:
     user = 'user'
-  m = Move(md['word'], user, i, parent, md['bottom'])
+  m = Move(md['word'], user, i, None, parent, md['bottom'])
   moves[i] = m
   for ci in md['children']:
     processmoves(movedata, moves, ci, m)
@@ -131,7 +155,7 @@ class Game(object):
         self.done = True
 
     self.lastmove += 1
-    newmove = Move(word, user, self.lastmove, m, m.bottom)
+    newmove = Move(word, user, self.lastmove, None, m, m.bottom)
     self.moves[self.lastmove] = newmove
     if self.done:
       self.winningchain = self._findwinningchain()
