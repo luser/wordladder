@@ -114,7 +114,7 @@ class game:
     if type(game) is unicode:
       game = game.encode("ascii")
     g = run_in_transaction(gameFromDB, game)
-    if not game:
+    if not g:
       raise web.notfound()
     if wantsJSON():
       d = web.input(lastmove="1")
