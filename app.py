@@ -42,7 +42,7 @@ urls = (
 
 app = web.application(urls, globals())
 # stupid incomplete list of builtins!
-TEMPLATE_BUILTINS['sorted'] = __builtins__['sorted']
+TEMPLATE_BUILTINS['sorted'] = sorted
 render = web.template.render('templates/', builtins=TEMPLATE_BUILTINS)
 
 _FbApiKey = '605bd3fd951affff9fd423bf6ecccf18'
