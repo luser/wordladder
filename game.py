@@ -1,19 +1,11 @@
 #!/usr/bin/env python
 
-from words import *
+from google.appengine.ext import db
+from words import getgame, validmove
 from user import User
 from time import *
 
-try:
-  # python 2.6, simplejson as json
-  from json import dumps as dump_json, loads as load_json
-except ImportError:
-  try:
-    # simplejson moduld
-    from simplejson import dumps as dump_json, loads as load_json
-  except ImportError:
-    # some other json module I apparently have installed
-    from json import write as dump_json, read as load_json
+from json import dump_json, load_json
 
 def usertojson(u):
   if type(u) is str:
@@ -23,52 +15,41 @@ def usertojson(u):
   #FIXME
   return {'openid':None, 'username':'user'}
 
-class Move(object):
-  def __init__(self, word, user, id, played=None, parent=None, bottom=False, children=[]):
-    self.word = word
-    self.user = user
-    self.id = id
-    self.parent = parent
-    self.bottom = bottom
-    if played:
-      if type(played) is str:
-        try:
-          self.played = strptime(played)
-        except ValueError:
-          print played + " is not a valid time string."
-          raise
-      elif type(played) is int or type(played) is float:
-        try:
-          self.played = localtime(played)
-        except ValueError:
-          print played + " is not a valid timestamp."
-          raise
-      elif type(played) is tuple:
-        self.played = played
-      else:
-        raise ValueError
-    else:
-      self.played = localtime()
-    if parent:
-      parent.children.append(self)
-    self.children = children[:]
+class Move(db.Model):
+  word = db.StringProperty(required=True)
+  user = db.UserProperty()
+  id = db.IntegerProperty(required=True)
+  parent_ = db.SelfReferenceProperty()
+  bottom = db.BooleanProperty(default=False)
+  played = db.DateTimeProperty(auto_now_add=True)
 
-  def __repr__(self):
-    return "Move('%s', '%s', %d, %s, %s, %s, %s)" % (self.word, self.user, self.id, self.played, self.parent, self.bottom, [c.id for c in self.children])
+  def __str__(self):
+    return self.word
+
+  @property
+  def children(self):
+    """
+    Return a list of moves that are direct children of this move.
+    """
+    if hasattr(self, '_children'):
+      return self._children
+
+    self._children = []
+    q = db.GqlQuery('SELECT * FROM Move WHERE ANCESTOR IS :1 AND parent_ = :2', self.parent_key(), self.key())
+    for m in q:
+      self._children.append(m)
+    return self._children
 
   def _obj(self):
     return {"id": self.id,
             "word": self.word,
             "user": usertojson(self.user),
-            "played": self.ts(),
+            "played": self.played,
             "bottom": self.bottom,
             "children": [c.id for c in self.children]}
 
   def json(self):
     return dump_json(self._obj())
-
-  def ts(self):
-    return mktime(self.played)
 
 def processmoves(movedata, moves, i, parent=None):
   md = movedata[str(i)]
@@ -88,46 +69,72 @@ def processmoves(movedata, moves, i, parent=None):
   for ci in md['children']:
     processmoves(movedata, moves, ci, m)
 
-class Game(object):
-  def __init__(self, start=None, end=None, done=False, moves={}):
-    if start and end:
-      self.start, self.end = start, end
-    else:
-      self.start, self.end = getgame()
-    if moves:
-      self.moves = moves
-    else:
-      self.moves = {1: Move(self.start, '', 1), 2: Move(self.end, '', 2, bottom=True)}
-    self.lastmove = max(m.id for m in self.moves.values())
-    self.done = done
-    if done:
-      self.winningchain = self._findwinningchain()
-    else:
-      self.winningchain = []
-
-  def __repr__(self):
-    return "Game('%s', '%s', %s, %s)" % (self.start, self.end, self.done, self.moves)
-
-  def __str__(self):
-    return "%s-%s" % (self.start, self.end)
+class Game(db.Model):
+  done = db.BooleanProperty(default=False)
+  start = db.ReferenceProperty(Move, collection_name="start_set")
+  end = db.ReferenceProperty(Move, collection_name="end_set")
+  #XXX: do this more intelligently?
+  lastmove = db.IntegerProperty(required=True)
 
   @staticmethod
-  def fromJSON(json):
-    """Return a Game object from a JSON string. The inverse of the json
-    instance method."""
-    data = load_json(json)
-    if not 'moves' in data:
-      return None
-    moves = {}
-    processmoves(data['moves'], moves, 1)
-    processmoves(data['moves'], moves, 2)
-    return Game(data['start'], data['end'], data['done'], moves)
+  def new(start, end):
+    """
+    Create and return a new Game object. Optionally provide
+    a start and end word for the game. If not provided random
+    words will be selected.
+    """
+    g = Game(key_name="%s-%s" % (start, end), lastmove=2)
+    start_move = Move(parent=g, word=start, id=1)
+    start_move.put()
+    g.start = start_move
+    end_move = Move(parent=g, word=end, id=2, bottom=True)
+    end_move.put()
+    g.end = end_move
+    g.put()
+    return g
+
+  @property
+  def moves(self):
+    """
+    Return a dict of move id -> move for all moves in this game.
+    """
+    if hasattr(self, '_moves'):
+      return self._moves
+
+    self._moves = {}
+    q = db.GqlQuery('SELECT * FROM Move WHERE ANCESTOR IS :1', self.key())
+    for m in q:
+      self._moves[m.id] = m
+    return self._moves
+
+  @property
+  def winningchain(self):
+    """
+    Return a list of moves representing the chain of words
+    that won the game.
+    """
+    if hasattr(self, '_winningchain'):
+      return self._winningchain
+    if self.done:
+      self._winningchain = self._findwinningchain()
+      return self._winningchain
+    else:
+      return []
+
+  def __repr__(self):
+    return "Game('%s', '%s', %s, %s)" % (self.start.word,
+                                         self.end.word,
+                                         self.done)
+
+  def __str__(self):
+    return "%s-%s" % (self.start.word, self.end.word)
 
   def json(self):
-    """Return a JSON string representing this instance. The inverse of the
-    fromJSON static method."""
-    return dump_json({"start": self.start,
-                      "end": self.end,
+    """
+    Return a JSON string representing this instance.
+    """
+    return dump_json({"start": self.start.word,
+                      "end": self.end.word,
                       "done": self.done,
                       "moves": dict((str(i), m._obj()) for i,m in self.moves.iteritems())})
 
@@ -145,7 +152,7 @@ class Game(object):
     while mi is not None:
       if mi.word == word:
         return (False, "Your word has already been played in this chain")
-      mi = mi.parent
+      mi = mi.parent_
     # see if it's a valid move (valid word, valid transition)
     valid, reason = validmove(m.word, word)
     if not valid:
@@ -159,10 +166,15 @@ class Game(object):
         self.done = True
 
     self.lastmove += 1
-    newmove = Move(word, user, self.lastmove, None, m, m.bottom)
+    newmove = Move(parent=self,
+                   word=word,
+                   parent_=m,
+                   id=self.lastmove,
+                   bottom=m.bottom)
+    newmove.put()
     self.moves[self.lastmove] = newmove
     if self.done:
-      self.winningchain = self._findwinningchain()
+      self._winningchain = self._findwinningchain()
     return (True, '')
 
   def _findwinningchain(self):
@@ -179,14 +191,14 @@ class Game(object):
     m = wm
     l = [wm.id]
     # get chain from the winning move up to the root
-    while m.parent:
-      m = m.parent
+    while m.parent_:
+      m = m.parent_
       l.append(m.id)
     m = om
     l2 = [om.id]
     # get chain from the other side up to the root
-    while m.parent:
-      m = m.parent
+    while m.parent_:
+      m = m.parent_
       l2.append(m.id)
     # concatenate them
     if wm.bottom:

@@ -4,16 +4,7 @@ import web
 import os
 from time import *
 
-try:
-  # python 2.6, simplejson as json
-  from json import dumps as dump_json, loads as load_json
-except ImportError:
-  try:
-    # simplejson moduld
-    from simplejson import dumps as dump_json, loads as load_json
-  except ImportError:
-    # some other json module I apparently have installed
-    from json import write as dump_json, read as load_json
+from json import dump_json, load_json
 
 class User(object):
   def __init__(self, openid, username=None, score=0, created=None):
@@ -69,7 +60,9 @@ class User(object):
     j = load_json(json)
     return User(j['openid'], j['username'])
 
-def makeAnonUser(db, discard=None):
+def makeAnonUser():
+  return User('user')
+  #fix this all
   anonString = 'anon-'
   maxAnon = 0
   for k in db.keys():

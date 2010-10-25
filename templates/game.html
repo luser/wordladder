@@ -18,7 +18,7 @@ $def ts(t):
 $def move(m, s):
   <ul>
   $if not m.bottom:
-    <li>$:word(m, m.word) $:ts(m.ts()) $:form(m)
+    <li>$:word(m, m.word) $:ts(m.played) $:form(m)
   $if m.children:
     $for c in m.children:
       $:move(c, False)
