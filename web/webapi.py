@@ -10,11 +10,22 @@ __all__ = [
     "setcookie", "cookies",
     "ctx", 
     "HTTPError", 
-    "BadRequest", "NotFound", "Gone", "InternalError",
-    "badrequest", "notfound", "gone", "internalerror",
-    "Redirect", "Found", "SeeOther", "TempRedirect",
-    "redirect", "found", "seeother", "tempredirect", 
-    "NoMethod", "nomethod",
+
+    # 200, 201, 202
+    "OK", "Created", "Accepted",    
+    "ok", "created", "accepted",
+    
+    # 301, 302, 303, 304, 307
+    "Redirect", "Found", "SeeOther", "NotModified", "TempRedirect", 
+    "redirect", "found", "seeother", "notmodified", "tempredirect",
+
+    # 400, 401, 403, 404, 405, 406, 409, 410, 412
+    "BadRequest", "Unauthorized", "Forbidden", "NotFound", "NoMethod", "NotAcceptable", "Conflict", "Gone", "PreconditionFailed",
+    "badrequest", "unauthorized", "forbidden", "notfound", "nomethod", "notacceptable", "conflict", "gone", "preconditionfailed",
+
+    # 500
+    "InternalError", 
+    "internalerror",
 ]
 
 import sys, cgi, Cookie, pprint, urlparse, urllib
@@ -29,52 +40,31 @@ A configuration object for various aspects of web.py.
 """
 
 class HTTPError(Exception):
-    def __init__(self, status, headers, data=""):
+    def __init__(self, status, headers={}, data=""):
         ctx.status = status
         for k, v in headers.items():
             header(k, v)
         self.data = data
         Exception.__init__(self, status)
+        
+def _status_code(status, data=None, classname=None, docstring=None):
+    if data is None:
+        data = status.split(" ", 1)[1]
+    classname = status.split(" ", 1)[1].replace(' ', '') # 304 Not Modified -> NotModified    
+    docstring = docstring or '`%s` status' % status
 
-class BadRequest(HTTPError):
-    """`400 Bad Request` error."""
-    message = "bad request"
-    def __init__(self):
-        status = "400 Bad Request"
-        headers = {'Content-Type': 'text/html'}
-        HTTPError.__init__(self, status, headers, self.message)
+    def __init__(self, data=data, headers={}):
+        HTTPError.__init__(self, status, headers, data)
+        
+    # trick to create class dynamically with dynamic docstring.
+    return type(classname, (HTTPError, object), {
+        '__doc__': docstring,
+        '__init__': __init__
+    })
 
-badrequest = BadRequest
-
-class _NotFound(HTTPError):
-    """`404 Not Found` error."""
-    message = "not found"
-    def __init__(self, message=None):
-        status = '404 Not Found'
-        headers = {'Content-Type': 'text/html'}
-        HTTPError.__init__(self, status, headers, message or self.message)
-
-def NotFound(message=None):
-    """Returns HTTPError with '404 Not Found' error from the active application.
-    """
-    if message:
-        return _NotFound(message)
-    elif ctx.get('app_stack'):
-        return ctx.app_stack[-1].notfound()
-    else:
-        return _NotFound()
-
-notfound = NotFound
-
-class Gone(HTTPError):
-    """`410 Gone` error."""
-    message = "gone"
-    def __init__(self):
-        status = '410 Gone'
-        headers = {'Content-Type': 'text/html'}
-        HTTPError.__init__(self, status, headers, self.message)
-
-gone = Gone
+ok = OK = _status_code("200 OK", data="")
+created = Created = _status_code("201 Created")
+accepted = Accepted = _status_code("202 Accepted")
 
 class Redirect(HTTPError):
     """A `301 Moved Permanently` redirect."""
@@ -115,12 +105,55 @@ class SeeOther(Redirect):
     
 seeother = SeeOther
 
+class NotModified(HTTPError):
+    """A `304 Not Modified` status."""
+    def __init__(self):
+        HTTPError.__init__(self, "304 Not Modified")
+
+notmodified = NotModified
+
 class TempRedirect(Redirect):
     """A `307 Temporary Redirect` redirect."""
     def __init__(self, url, absolute=False):
         Redirect.__init__(self, url, '307 Temporary Redirect', absolute=absolute)
 
 tempredirect = TempRedirect
+
+class BadRequest(HTTPError):
+    """`400 Bad Request` error."""
+    message = "bad request"
+    def __init__(self):
+        status = "400 Bad Request"
+        headers = {'Content-Type': 'text/html'}
+        HTTPError.__init__(self, status, headers, self.message)
+
+badrequest = BadRequest
+
+class _NotFound(HTTPError):
+    """`404 Not Found` error."""
+    message = "not found"
+    def __init__(self, message=None):
+        status = '404 Not Found'
+        headers = {'Content-Type': 'text/html'}
+        HTTPError.__init__(self, status, headers, message or self.message)
+
+def NotFound(message=None):
+    """Returns HTTPError with '404 Not Found' error from the active application.
+    """
+    if message:
+        return _NotFound(message)
+    elif ctx.get('app_stack'):
+        return ctx.app_stack[-1].notfound()
+    else:
+        return _NotFound()
+
+notfound = NotFound
+
+unauthorized = Unauthorized = _status_code("401 Unauthorized")
+forbidden = Forbidden = _status_code("403 Forbidden")
+notacceptable = NotAcceptable = _status_code("406 Not Acceptable")
+conflict = Conflict = _status_code("409 Conflict")
+preconditionfailed = PreconditionFailed = _status_code("412 Precondition Failed")
 
 class NoMethod(HTTPError):
     """A `405 Method Not Allowed` error."""
@@ -138,6 +171,16 @@ class NoMethod(HTTPError):
         HTTPError.__init__(self, status, headers, data)
         
 nomethod = NoMethod
+
+class Gone(HTTPError):
+    """`410 Gone` error."""
+    message = "gone"
+    def __init__(self):
+        status = '410 Gone'
+        headers = {'Content-Type': 'text/html'}
+        HTTPError.__init__(self, status, headers, self.message)
+
+gone = Gone
 
 class _InternalError(HTTPError):
     """500 Internal Server Error`."""
@@ -177,13 +220,13 @@ def header(hdr, value, unique=False):
             if h.lower() == hdr.lower(): return
     
     ctx.headers.append((hdr, value))
-
-def input(*requireds, **defaults):
+    
+def rawinput(method=None):
+    """Returns storage object with GET or POST arguments.
     """
-    Returns a `storage` object with the GET and POST arguments. 
-    See `storify` for how `requireds` and `defaults` work.
-    """
+    method = method or "both"
     from cStringIO import StringIO
+
     def dictify(fs): 
         # hack to make web.input work with enctype='text/plain.
         if fs.list is None:
@@ -191,12 +234,10 @@ def input(*requireds, **defaults):
 
         return dict([(k, fs[k]) for k in fs.keys()])
     
-    _method = defaults.pop('_method', 'both')
-    
     e = ctx.env.copy()
     a = b = {}
     
-    if _method.lower() in ['both', 'post', 'put']:
+    if method.lower() in ['both', 'post', 'put']:
         if e['REQUEST_METHOD'] in ['POST', 'PUT']:
             if e.get('CONTENT_TYPE', '').lower().startswith('multipart/'):
                 # since wsgi.input is directly passed to cgi.FieldStorage, 
@@ -212,11 +253,27 @@ def input(*requireds, **defaults):
                 a = cgi.FieldStorage(fp=fp, environ=e, keep_blank_values=1)
             a = dictify(a)
 
-    if _method.lower() in ['both', 'get']:
+    if method.lower() in ['both', 'get']:
         e['REQUEST_METHOD'] = 'GET'
         b = dictify(cgi.FieldStorage(environ=e, keep_blank_values=1))
 
-    out = dictadd(b, a)
+    def process_fieldstorage(fs):
+        if isinstance(fs, list):
+            return [process_fieldstorage(x) for x in fs]
+        elif fs.filename is None:
+            return fs.value
+        else:
+            return fs
+
+    return storage([(k, process_fieldstorage(v)) for k, v in dictadd(b, a).items()])
+
+def input(*requireds, **defaults):
+    """
+    Returns a `storage` object with the GET and POST arguments. 
+    See `storify` for how `requireds` and `defaults` work.
+    """
+    _method = defaults.pop('_method', 'both')
+    out = rawinput(_method)
     try:
         defaults.setdefault('_unicode', True) # force unicode conversion by default.
         return storify(out, *requireds, **defaults)

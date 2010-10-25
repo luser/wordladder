@@ -5,7 +5,6 @@ from utils import re_compile
 from net import htmlunquote
 
 import httplib, urllib, urllib2
-import cookielib
 import copy
 from StringIO import StringIO
 
@@ -22,6 +21,7 @@ class BrowserError(Exception):
 
 class Browser:
     def __init__(self):
+        import cookielib
         self.cookiejar = cookielib.CookieJar()
         self._cookie_processor = urllib2.HTTPCookieProcessor(self.cookiejar)
         self.form = None
@@ -165,11 +165,11 @@ class Browser:
         else:
             raise BrowserError("No form selected.")
         
-    def submit(self):
+    def submit(self, **kw):
         """submits the currently selected form."""
         if self.form is None:
             raise BrowserError("No form selected.")
-        req = self.form.click()
+        req = self.form.click(**kw)
         return self.do_request(req)
 
     def __getitem__(self, key):
@@ -220,8 +220,12 @@ class AppHandler(urllib2.HTTPHandler):
 
     def https_open(self, req):
         return self.http_open(req)
-
-    https_request = urllib2.HTTPHandler.do_request_
+    
+    try:
+        https_request = urllib2.HTTPHandler.do_request_
+    except AttributeError:
+        # for python 2.3
+        pass
 
     def _make_response(self, result, url):
         data = "\r\n".join(["%s: %s" % (k, v) for k, v in result.header_items])

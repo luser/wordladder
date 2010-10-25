@@ -6,18 +6,21 @@ General Utilities
 
 __all__ = [
   "Storage", "storage", "storify", 
+  "Counter", "counter",
   "iters", 
   "rstrips", "lstrips", "strips", 
   "safeunicode", "safestr", "utf8",
   "TimeoutError", "timelimit",
   "Memoize", "memoize",
   "re_compile", "re_subm",
-  "group",
+  "group", "uniq", "iterview",
   "IterBetter", "iterbetter",
+  "safeiter", "safewrite",
   "dictreverse", "dictfind", "dictfindall", "dictincr", "dictadd",
+  "requeue", "restack",
   "listget", "intget", "datestr",
   "numify", "denumify", "commify", "dateify",
-  "nthstr",
+  "nthstr", "cond",
   "CaptureStdout", "capturestdout", "Profile", "profile",
   "tryall",
   "ThreadedDict", "threadeddict",
@@ -27,7 +30,7 @@ __all__ = [
   "sendmail"
 ]
 
-import re, sys, time, threading
+import re, sys, time, threading, itertools, traceback, os
 
 try:
     import subprocess
@@ -36,6 +39,10 @@ except ImportError:
 
 try: import datetime
 except ImportError: pass
+
+try: set
+except NameError:
+    from sets import Set as set
 
 class Storage(dict):
     """
@@ -124,7 +131,9 @@ def storify(mapping, *requireds, **defaults):
         else: return s
         
     def getvalue(x):
-        if hasattr(x, 'value'):
+        if hasattr(x, 'file') and hasattr(x, 'value'):
+            return x.value
+        elif hasattr(x, 'value'):
             return unicodify(x.value)
         else:
             return unicodify(x)
@@ -152,6 +161,91 @@ def storify(mapping, *requireds, **defaults):
         setattr(stor, key, result)
     
     return stor
+
+class Counter(storage):
+    """Keeps count of how many times something is added.
+        
+        >>> c = counter()
+        >>> c.add('x')
+        >>> c.add('x')
+        >>> c.add('x')
+        >>> c.add('x')
+        >>> c.add('x')
+        >>> c.add('y')
+        >>> c
+        <Counter {'y': 1, 'x': 5}>
+        >>> c.most()
+        ['x']
+    """
+    def add(self, n):
+        self.setdefault(n, 0)
+        self[n] += 1
+    
+    def most(self):
+        """Returns the keys with maximum count."""
+        m = max(self.itervalues())
+        return [k for k, v in self.iteritems() if v == m]
+        
+    def least(self):
+        """Returns the keys with mininum count."""
+        m = min(self.itervalues())
+        return [k for k, v in self.iteritems() if v == m]
+
+    def percent(self, key):
+       """Returns what percentage a certain key is of all entries.
+
+           >>> c = counter()
+           >>> c.add('x')
+           >>> c.add('x')
+           >>> c.add('x')
+           >>> c.add('y')
+           >>> c.percent('x')
+           0.75
+           >>> c.percent('y')
+           0.25
+       """
+       return float(self[key])/sum(self.values())
+             
+    def sorted_keys(self):
+        """Returns keys sorted by value.
+             
+             >>> c = counter()
+             >>> c.add('x')
+             >>> c.add('x')
+             >>> c.add('y')
+             >>> c.sorted_keys()
+             ['x', 'y']
+        """
+        return sorted(self.keys(), key=lambda k: self[k], reverse=True)
+    
+    def sorted_values(self):
+        """Returns values sorted by value.
+            
+            >>> c = counter()
+            >>> c.add('x')
+            >>> c.add('x')
+            >>> c.add('y')
+            >>> c.sorted_values()
+            [2, 1]
+        """
+        return [self[k] for k in self.sorted_keys()]
+    
+    def sorted_items(self):
+        """Returns items sorted by value.
+            
+            >>> c = counter()
+            >>> c.add('x')
+            >>> c.add('x')
+            >>> c.add('y')
+            >>> c.sorted_items()
+            [('x', 2), ('y', 1)]
+        """
+        return [(k, self[k]) for k in self.sorted_keys()]
+    
+    def __repr__(self):
+        return '<Counter ' + dict.__repr__(self) + '>'
+       
+counter = Counter
 
 iters = [list, tuple]
 import __builtin__
@@ -225,10 +319,13 @@ def safeunicode(obj, encoding='utf-8'):
         >>> safeunicode('\xe1\x88\xb4')
         u'\u1234'
     """
-    if isinstance(obj, unicode):
+    t = type(obj)
+    if t is unicode:
         return obj
-    elif isinstance(obj, str):
+    elif t is str:
         return obj.decode(encoding)
+    elif t in [int, float, bool]:
+        return unicode(obj)
     else:
         if hasattr(obj, '__unicode__'):
             return unicode(obj)
@@ -250,6 +347,8 @@ def safestr(obj, encoding='utf-8'):
         return obj.encode('utf-8')
     elif isinstance(obj, str):
         return obj
+    elif hasattr(obj, 'next') and hasattr(obj, '__iter__'): # iterator
+        return itertools.imap(safestr, obj)
     else:
         return str(obj)
 
@@ -309,32 +408,80 @@ def timelimit(timeout):
 class Memoize:
     """
     'Memoizes' a function, caching its return values for each input.
+    If `expires` is specified, values are recalculated after `expires` seconds.
+    If `background` is specified, values are recalculated in a separate thread.
     
+        >>> calls = 0
+        >>> def howmanytimeshaveibeencalled():
+        ...     global calls
+        ...     calls += 1
+        ...     return calls
+        >>> fastcalls = memoize(howmanytimeshaveibeencalled)
+        >>> howmanytimeshaveibeencalled()
+        1
+        >>> howmanytimeshaveibeencalled()
+        2
+        >>> fastcalls()
+        3
+        >>> fastcalls()
+        3
         >>> import time
-        >>> def meaningoflife():
-        ...     time.sleep(.2)
-        ...     return 42
-        >>> fastlife = memoize(meaningoflife)
-        >>> meaningoflife()
-        42
-        >>> timelimit(.1)(meaningoflife)()
-        Traceback (most recent call last):
-            ...
-        TimeoutError: took too long
-        >>> fastlife()
-        42
-        >>> timelimit(.1)(fastlife)()
-        42
-    
+        >>> fastcalls = memoize(howmanytimeshaveibeencalled, .1, background=False)
+        >>> fastcalls()
+        4
+        >>> fastcalls()
+        4
+        >>> time.sleep(.2)
+        >>> fastcalls()
+        5
+        >>> def slowfunc():
+        ...     time.sleep(.1)
+        ...     return howmanytimeshaveibeencalled()
+        >>> fastcalls = memoize(slowfunc, .2, background=True)
+        >>> fastcalls()
+        6
+        >>> timelimit(.05)(fastcalls)()
+        6
+        >>> time.sleep(.2)
+        >>> timelimit(.05)(fastcalls)()
+        6
+        >>> timelimit(.05)(fastcalls)()
+        6
+        >>> time.sleep(.2)
+        >>> timelimit(.05)(fastcalls)()
+        7
+        >>> fastcalls = memoize(slowfunc, None, background=True)
+        >>> threading.Thread(target=fastcalls).start()
+        >>> time.sleep(.01)
+        >>> fastcalls()
+        9
     """
-    def __init__(self, func): 
+    def __init__(self, func, expires=None, background=True): 
         self.func = func
         self.cache = {}
+        self.expires = expires
+        self.background = background
+        self.running = {}
+    
     def __call__(self, *args, **keywords):
         key = (args, tuple(keywords.items()))
+        if not self.running.get(key):
+            self.running[key] = threading.Lock()
+        def update(block=False):
+            if self.running[key].acquire(block):
+                try:
+                    self.cache[key] = (self.func(*args, **keywords), time.time())
+                finally:
+                    self.running[key].release()
+        
         if key not in self.cache: 
-            self.cache[key] = self.func(*args, **keywords)
-        return self.cache[key]
+            update(block=True)
+        elif self.expires and (time.time() - self.cache[key][1]) > self.expires:
+            if self.background:
+                threading.Thread(target=update).start()
+            else:
+                update()
+        return self.cache[key][0]
 
 memoize = Memoize
 
@@ -371,11 +518,84 @@ def group(seq, size):
 
         >>> list(group([1,2,3,4], 2))
         [[1, 2], [3, 4]]
+        >>> list(group([1,2,3,4,5], 2))
+        [[1, 2], [3, 4], [5]]
     """
+    def take(seq, n):
+        for i in xrange(n):
+            yield seq.next()
+
     if not hasattr(seq, 'next'):  
         seq = iter(seq)
     while True: 
-        yield [seq.next() for i in xrange(size)]
+        x = list(take(seq, size))
+        if x:
+            yield x
+        else:
+            break
+
+def uniq(seq):
+   """
+   Removes duplicate elements from a list.
+
+       >>> uniq([1,2,3,1,4,5,6])
+       [1, 2, 3, 4, 5, 6]
+   """
+   seen = set()
+   result = []
+   for item in seq:
+       if item in seen: continue
+       seen.add(item)
+       result.append(item)
+   return result
+
+def iterview(x):
+   """
+   Takes an iterable `x` and returns an iterator over it
+   which prints its progress to stderr as it iterates through.
+   """
+   WIDTH = 70
+
+   def plainformat(n, lenx):
+       return '%5.1f%% (%*d/%d)' % ((float(n)/lenx)*100, len(str(lenx)), n, lenx)
+
+   def bars(size, n, lenx):
+       val = int((float(n)*size)/lenx + 0.5)
+       if size - val:
+           spacing = ">" + (" "*(size-val))[1:]
+       else:
+           spacing = ""
+       return "[%s%s]" % ("="*val, spacing)
+
+   def eta(elapsed, n, lenx):
+       if n == 0:
+           return '--:--:--'
+       if n == lenx:
+           secs = int(elapsed)
+       else:
+           secs = int((elapsed/n) * (lenx-n))
+       mins, secs = divmod(secs, 60)
+       hrs, mins = divmod(mins, 60)
+
+       return '%02d:%02d:%02d' % (hrs, mins, secs)
+
+   def format(starttime, n, lenx):
+       out = plainformat(n, lenx) + ' '
+       if n == lenx:
+           end = '     '
+       else:
+           end = ' ETA '
+       end += eta(time.time() - starttime, n, lenx)
+       out += bars(WIDTH - len(out) - len(end), n, lenx)
+       out += end
+       return out
+
+   starttime = time.time()
+   lenx = len(x)
+   for n, y in enumerate(x):
+       sys.stderr.write('\r' + format(starttime, n, lenx))
+       yield y
+   sys.stderr.write('\r' + format(starttime, n+1, lenx) + '\n')
 
 class IterBetter:
     """
@@ -394,13 +614,31 @@ class IterBetter:
         Traceback (most recent call last):
             ...
         IndexError: already passed 3
+
+    For boolean test, IterBetter peeps at first value in the itertor without effecting the iteration.
+
+        >>> c = iterbetter(iter(range(5)))
+        >>> bool(c)
+        True
+        >>> list(c)
+        [0, 1, 2, 3, 4]
+        >>> c = iterbetter(iter([]))
+        >>> bool(c)
+        False
+        >>> list(c)
+        []
     """
     def __init__(self, iterator): 
         self.i, self.c = iterator, 0
+
     def __iter__(self): 
+        if hasattr(self, "_head"):
+            yield self._head
+
         while 1:    
             yield self.i.next()
             self.c += 1
+
     def __getitem__(self, i):
         #todo: slices
         if i < self.c: 
@@ -414,7 +652,46 @@ class IterBetter:
             return self.i.next()
         except StopIteration: 
             raise IndexError, str(i)
+            
+    def __nonzero__(self):
+        if hasattr(self, "__len__"):
+            return len(self) != 0
+        elif hasattr(self, "_head"):
+            return True
+        else:
+            try:
+                self._head = self.i.next()
+            except StopIteration:
+                return False
+            else:
+                return True
+
 iterbetter = IterBetter
+
+def safeiter(it, cleanup=None, ignore_errors=True):
+    """Makes an iterator safe by ignoring the exceptions occured during the iteration.
+    """
+    def next():
+        while True:
+            try:
+                return it.next()
+            except StopIteration:
+                raise
+            except:
+                traceback.print_exc()
+
+    it = iter(it)
+    while True:
+        yield next()
+
+def safewrite(filename, content):
+    """Writes the content to a temp file and then moves the temp file to 
+    given filename to avoid overwriting the existing file in case of errors.
+    """
+    f = file(filename + '.tmp', 'w')
+    f.write(content)
+    f.close()
+    os.rename(f.name, path)
 
 def dictreverse(mapping):
     """
@@ -488,6 +765,32 @@ def dictadd(*dicts):
         result.update(dct)
     return result
 
+def requeue(queue, index=-1):
+    """Returns the element at index after moving it to the beginning of the queue.
+
+        >>> x = [1, 2, 3, 4]
+        >>> requeue(x)
+        4
+        >>> x
+        [4, 1, 2, 3]
+    """
+    x = queue.pop(index)
+    queue.insert(0, x)
+    return x
+
+def restack(stack, index=0):
+    """Returns the element at index after moving it to the top of stack.
+
+           >>> x = [1, 2, 3, 4]
+           >>> restack(x)
+           1
+           >>> x
+           [2, 3, 4, 1]
+    """
+    x = stack.pop(index)
+    stack.append(x)
+    return x
+
 def listget(lst, ind, default=None):
     """
     Returns `lst[ind]` if it exists, `default` otherwise.
@@ -543,6 +846,8 @@ def datestr(then, now=None):
         'January  1, 1969'
         >>> datestr(datetime(1970, 6, 1), now=d)
         'June  1, 1970'
+        >>> datestr(None)
+        ''
     """
     def agohence(n, what, divisor=None):
         if divisor: n = n // divisor
@@ -558,11 +863,15 @@ def datestr(then, now=None):
 
     oneday = 24 * 60 * 60
 
+    if not then: return ""
     if not now: now = datetime.datetime.utcnow()
     if type(now).__name__ == "DateTime":
         now = datetime.datetime.fromtimestamp(now)
     if type(then).__name__ == "DateTime":
         then = datetime.datetime.fromtimestamp(then)
+    elif type(then).__name__ == "date":
+        then = datetime.datetime(then.year, then.month, then.day)
+
     delta = now - then
     deltaseconds = int(delta.days * oneday + delta.seconds + delta.microseconds * 1e-06)
     deltadays = abs(deltaseconds) // oneday
@@ -634,17 +943,34 @@ def commify(n):
         '1,234'
         >>> commify(1234567890)
         '1,234,567,890'
+        >>> commify(123.0)
+        '123.0'
+        >>> commify(1234.5)
+        '1,234.5'
+        >>> commify(1234.56789)
+        '1,234.56789'
+        >>> commify('%.2f' % 1234.5)
+        '1,234.50'
         >>> commify(None)
         >>>
-    
+
     """
     if n is None: return None
+    n = str(n)
+    if '.' in n:
+        dollars, cents = n.split('.')
+    else:
+        dollars, cents = n, None
+
     r = []
-    for i, c in enumerate(reversed(str(n))):
+    for i, c in enumerate(str(dollars)[::-1]):
         if i and (not (i % 3)):
             r.insert(0, ',')
         r.insert(0, c)
-    return ''.join(r)
+    out = ''.join(r)
+    if cents:
+        out += '.' + cents
+    return out
 
 def dateify(datestring):
     """
@@ -731,9 +1057,11 @@ class Profile:
     def __init__(self, func): 
         self.func = func
     def __call__(self, *args): ##, **kw):   kw unused
-        import hotshot, hotshot.stats, tempfile ##, time already imported
-        temp = tempfile.NamedTemporaryFile()
-        prof = hotshot.Profile(temp.name)
+        import hotshot, hotshot.stats, os, tempfile ##, time already imported
+        f, filename = tempfile.mkstemp()
+        os.close(f)
+        
+        prof = hotshot.Profile(filename)
 
         stime = time.time()
         result = prof.runcall(self.func, *args)
@@ -742,7 +1070,7 @@ class Profile:
 
         import cStringIO
         out = cStringIO.StringIO()
-        stats = hotshot.stats.load(temp.name)
+        stats = hotshot.stats.load(filename)
         stats.stream = out
         stats.strip_dirs()
         stats.sort_stats('time', 'calls')
@@ -752,6 +1080,12 @@ class Profile:
         x =  '\n\ntook '+ str(stime) + ' seconds\n'
         x += out.getvalue()
 
+        # remove the tempfile
+        try:
+            os.remove(filename)
+        except IOError:
+            pass
+            
         return result, x
 
 profile = Profile
@@ -820,6 +1154,7 @@ class ThreadedDict:
         1
         >>> import threading
         >>> def f(): d.x = 2
+        ...
         >>> t = threading.Thread(target=f)
         >>> t.start()
         >>> t.join()
@@ -920,97 +1255,173 @@ def sendmail(from_address, to_address, subject, message, headers=None, **kw):
     for from `from_address_` to `to_address` with `subject`. 
     Additional email headers can be specified with the dictionary 
     `headers.
+    
+    Optionally cc, bcc and attachments can be specified as keyword arguments.
+    Attachments must be an iterable and each attachment can be either a 
+    filename or a file object or a dictionary with filename, content and 
+    optionally content_type keys.
 
     If `web.config.smtp_server` is set, it will send the message
     to that SMTP server. Otherwise it will look for 
     `/usr/sbin/sendmail`, the typical location for the sendmail-style
     binary. To use sendmail from a different path, set `web.config.sendmail_path`.
     """
-    try:
-        import webapi
-    except ImportError:
-        webapi = Storage(config=Storage())
-    
-    if headers is None: headers = {}
-    
-    cc = kw.get('cc', [])
-    bcc = kw.get('bcc', [])
-    
-    def listify(x):
-        if not isinstance(x, list):
-            return [safestr(x)]
+    attachments = kw.pop("attachments", [])
+    mail = _EmailMessage(from_address, to_address, subject, message, headers, **kw)
+
+    for a in attachments:
+        if isinstance(a, dict):
+            mail.attach(a['filename'], a['content'], a.get('content_type'))
+        elif hasattr(a, 'read'): # file
+            filename = os.path.basename(getattr(a, "name", ""))
+            content_type = getattr(a, 'content_type', None)
+            mail.attach(filename, a.read(), content_type)
+        elif isinstance(a, basestring):
+            f = open(a, 'rb')
+            content = f.read()
+            f.close()
+            filename = os.path.basename(a)
+            mail.attach(filename, content, None)
         else:
-            return [safestr(a) for a in x]
-
-    from_address = safestr(from_address)
-
-    to_address = listify(to_address)
-    cc = listify(cc)
-    bcc = listify(bcc)
-
-    recipients = to_address + cc + bcc
-    
-    headers = dictadd({
-      'MIME-Version': '1.0',
-      'Content-Type': 'text/plain; charset=UTF-8',
-      'Content-Disposition': 'inline',
-      'From': from_address,
-      'To': ", ".join(to_address),
-      'Subject': subject
-    }, headers)
-
-    if cc:
-        headers['Cc'] = ", ".join(cc)
-    
-    import email.Utils
-    from_address = email.Utils.parseaddr(from_address)[1]
-    recipients = [email.Utils.parseaddr(r)[1] for r in recipients]
-    message = ('\n'.join([safestr('%s: %s' % x) for x in headers.iteritems()])
-      + "\n\n" +  safestr(message))
-
-    if webapi.config.get('smtp_server'):
-        server = webapi.config.get('smtp_server')
-        port = webapi.config.get('smtp_port', 0)
-        username = webapi.config.get('smtp_username') 
-        password = webapi.config.get('smtp_password')
-        debug_level = webapi.config.get('smtp_debuglevel', None)
-        starttls = webapi.config.get('smtp_starttls', False)
-
-        import smtplib
-        smtpserver = smtplib.SMTP(server, port)
-
-        if debug_level:
-            smtpserver.set_debuglevel(debug_level)
-
-        if starttls:
-            smtpserver.ehlo()
-            smtpserver.starttls()
-            smtpserver.ehlo()
-
-        if username and password:
-            smtpserver.login(username, password)
-
-        smtpserver.sendmail(from_address, recipients, message)
-        smtpserver.quit()
-    else:
-        sendmail = webapi.config.get('sendmail_path', '/usr/sbin/sendmail')
+            raise ValueError, "Invalid attachment: %s" % repr(a)
+            
+    mail.send()
         
-        assert not from_address.startswith('-'), 'security'
-        for r in recipients:
-            assert not r.startswith('-'), 'security'
-                
+class _EmailMessage:
+    def __init__(self, from_address, to_address, subject, message, headers=None, **kw):
+        def listify(x):
+            if not isinstance(x, list):
+                return [safestr(x)]
+            else:
+                return [safestr(a) for a in x]
+    
+        subject = safestr(subject)
+        message = safestr(message)
 
-        if subprocess:
-            p = subprocess.Popen(['/usr/sbin/sendmail', '-f', from_address] + recipients, stdin=subprocess.PIPE)
-            p.stdin.write(message)
-            p.stdin.close()
-            p.wait()
+        from_address = safestr(from_address)
+        to_address = listify(to_address)    
+        cc = listify(kw.get('cc', []))
+        bcc = listify(kw.get('bcc', []))
+        recipients = to_address + cc + bcc
+
+        import email.Utils
+        self.from_address = email.Utils.parseaddr(from_address)[1]
+        self.recipients = [email.Utils.parseaddr(r)[1] for r in recipients]        
+    
+        self.headers = dictadd({
+          'From': from_address,
+          'To': ", ".join(to_address),
+          'Subject': subject
+        }, headers or {})
+
+        if cc:
+            self.headers['Cc'] = ", ".join(cc)
+    
+        self.message = self.new_message()
+        self.message.add_header("Content-Transfer-Encoding", "7bit")
+        self.message.add_header("Content-Disposition", "inline")
+        self.message.add_header("MIME-Version", "1.0")
+        self.message.set_payload(message, 'utf-8')
+        self.multipart = False
+        
+    def new_message(self):
+        from email.Message import Message
+        return Message()
+        
+    def attach(self, filename, content, content_type=None):
+        if not self.multipart:
+            msg = self.new_message()
+            msg.add_header("Content-Type", "multipart/mixed")
+            msg.attach(self.message)
+            self.message = msg
+            self.multipart = True
+                        
+        import mimetypes
+        try:
+            from email import encoders
+        except:
+            from email import Encoders as encoders
+            
+        content_type = content_type or mimetypes.guess_type(filename)[0] or "applcation/octet-stream"
+        
+        msg = self.new_message()
+        msg.set_payload(content)
+        msg.add_header('Content-Type', content_type)
+        msg.add_header('Content-Disposition', 'attachment', filename=filename)
+        
+        if not content_type.startswith("text/"):
+            encoders.encode_base64(msg)
+            
+        self.message.attach(msg)
+
+    def prepare_message(self):
+        for k, v in self.headers.iteritems():
+            if k.lower() == "content-type":
+                self.message.set_type(v)
+            else:
+                self.message.add_header(k, v)
+
+        self.headers = {}
+
+    def send(self):
+        try:
+            import webapi
+        except ImportError:
+            webapi = Storage(config=Storage())
+
+        self.prepare_message()
+        message_text = self.message.as_string()
+    
+        if webapi.config.get('smtp_server'):
+            server = webapi.config.get('smtp_server')
+            port = webapi.config.get('smtp_port', 0)
+            username = webapi.config.get('smtp_username') 
+            password = webapi.config.get('smtp_password')
+            debug_level = webapi.config.get('smtp_debuglevel', None)
+            starttls = webapi.config.get('smtp_starttls', False)
+
+            import smtplib
+            smtpserver = smtplib.SMTP(server, port)
+
+            if debug_level:
+                smtpserver.set_debuglevel(debug_level)
+
+            if starttls:
+                smtpserver.ehlo()
+                smtpserver.starttls()
+                smtpserver.ehlo()
+
+            if username and password:
+                smtpserver.login(username, password)
+
+            smtpserver.sendmail(self.from_address, self.recipients, message_text)
+            smtpserver.quit()
         else:
-            i, o = os.popen2(["/usr/lib/sendmail", '-f', from_address] + recipients)
-            i.write(message)
-            i.close()
-            o.close()
-            del i, o
+            sendmail = webapi.config.get('sendmail_path', '/usr/sbin/sendmail')
+        
+            assert not self.from_address.startswith('-'), 'security'
+            for r in self.recipients:
+                assert not r.startswith('-'), 'security'
+                
+            cmd = [sendmail, '-f', self.from_address] + self.recipients
+
+            if subprocess:
+                p = subprocess.Popen(cmd, stdin=subprocess.PIPE)
+                p.stdin.write(message_text)
+                p.stdin.close()
+                p.wait()
+            else:
+                i, o = os.popen2(cmd)
+                i.write(message)
+                i.close()
+                o.close()
+                del i, o
+                
+    def __repr__(self):
+        return "<EmailMessage>"
+    
+    def __str__(self):
+        return self.message.as_string()
 
 if __name__ == "__main__":
     import doctest

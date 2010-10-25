@@ -137,6 +137,8 @@ class Session(utils.ThreadedDict):
 
     def expired(self):
         """Called when an expired session is atime"""
+        self._killed = True
+        self._save()
         raise SessionExpired(self._config.expired_message)
  
     def kill(self):
@@ -148,17 +150,17 @@ class Store:
     """Base class for session stores"""
 
     def __contains__(self, key):
-        raise NotImplemented
+        raise NotImplementedError
 
     def __getitem__(self, key):
-        raise NotImplemented
+        raise NotImplementedError
 
     def __setitem__(self, key, value):
-        raise NotImplemented
+        raise NotImplementedError
 
     def cleanup(self, timeout):
         """removes all the expired sessions"""
-        raise NotImplemented
+        raise NotImplementedError
 
     def encode(self, session_dict):
         """encodes session dict as a string"""
@@ -293,7 +295,7 @@ class ShelfStore:
 
     def __getitem__(self, key):
         atime, v = self.shelf[key]
-        self[k] = v # update atime
+        self[key] = v # update atime
         return v
 
     def __setitem__(self, key, value):
