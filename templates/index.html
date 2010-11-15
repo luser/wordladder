@@ -11,40 +11,10 @@ $def gamelist(gl, active):
 <meta name="viewport" content="width = device-width">
 </head>
 <body>
-$if not user:
-  <h2>Login</h2>
-  <form method="post" action="/user/login">
-    <label for="openid">Open ID: <input type="text" name="openid" id="openid" value="" /></label>
-    <input type="hidden" name="return_to" value="/" />
-    <button type="submit">Login</button>
-  </form>
-$elif user.isAnonymous():
-  <h2>Welcome to Word Ladder!</h2>
-  <p>You are anonymous user <span class="username">$user</span>.</p>
-  <p>To save your score and be able to use all of the game's functions, log in with OpenID:</p>
-  <form method="post" action="/user/login">
-    <label for="openid">Open ID: <input type="text" name="openid" id="openid" value="" /></label>
-    <input type="hidden" name="return_to" value="/" />
-    <button type="submit">Login</button>
-  </form>
+$if user:
+	<p>Hi, $user.username! [<a href="/user/logout">Log out</a>]</p>
 $else:
-  <h2>You are logged in as <span class="username">$user</span></h2>
-  <form method="post" action="/user/logout">
-    <img src="http://openid.net/login-bg.gif" alt="OpenID" />
-    <strong>$user.openid</strong>
-    <input type="hidden" name="action" value="logout" />
-    <input type="hidden" name="return_to" value="/" />
-    <button type="submit">Logout</button>
-  </form>
-  $if user.username:
-    <p>Your username is <span class="username"><a href="/user/account" title="Manage your account">$user.username</a></span>.</p>
-  $else:
-    <p>You have not chosen a username yet. You can choose one using the form below.</p>
-    <form action="/user/account" method="post">
-      <label for="username">Username: <input type="text" name="username" id="username" size="23" maxlength="32" /></label>
-      <input type="hidden" name="return_to" value="/" />
-      <button type="submit">Set Username</button>
-    </form>
+	<p>[<a href="/user/login/facebook">Facebook Login</a>]</p>
 <h1>Active Games:</h1>
 $:gamelist(games, True)
 <h2>Finished Games:</h2>

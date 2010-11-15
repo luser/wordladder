@@ -9,15 +9,18 @@ from json import dump_json, load_json
 from words import validword
 from user import *
 from data import *
+from facebookoauth import *
+from config import HASHKEY
 
 urls = (
   '/', 'index',
   '/new', 'newgame',
   '/new/([^/]*)', 'newgame',
   '/game/([^/]*)', 'game',
-#  '/user/login', 'web.webopenid.host',
-#  '/user/logout', 'web.webopenid.host',
-#  '/user/account', 'account',
+  '/user/login', 'login',
+  '/user/login/([^/]*)', 'login',
+  '/user/logout', 'logout',
+  '/user/account', 'account',
   )
 
 app = web.application(urls, globals())
@@ -57,7 +60,7 @@ def sendJSON(game, lastid, error=None):
 
 class index:
   def GET(self):
-    user = currentUser()
+    user = User.currentUser()
     return render.index(Game.all(), user)
 
 class newgame:
@@ -96,7 +99,7 @@ class game:
       return render.game(g)
 
   def POST(self, game):
-    user = currentUser()
+    user = User.currentUser()
     if type(game) is unicode:
       game = game.encode("ascii")
     d = web.input(moveid=1, word=None, lastmove=None)
@@ -125,12 +128,6 @@ class game:
     else:
       return sendJSON(g, int(d.lastmove))
 
-def currentUser():
-  openid = None #web.openid.status()
-  if not openid:
-    return makeAnonUser()
-  return getcurrentuser(openid)
-
 def setcurrentUsername(username):
   openid = None #web.openid.status()
   if not openid:
@@ -146,18 +143,24 @@ class account:
       raise web.badrequest()
     return web.redirect(i.return_to)
   def GET(self):
-    user = currentUser()
+    user = User.currentUser()
     if (user.isAnonymous()):
       return render.user(None)
     return render.user(user)
 
 class login:
-  def POST(self):
-    u = currentUser()
-    n = _random_session()
-    sessions[n] = {'score': u.score}
-    web.setcookie('ladder_session', web.webopenid._hmac(n) + ',' + n)
-    return web.openid.host()
-  def GET(self):
-    u = currentUser()
-    return render.user(u)
+	def GET(self, service):
+		available_services = dict(facebook = facebookOAuth.authorize)
+		u = User.currentUser()
+		if u:
+			web.seeother("/user/account")
+		elif service in available_services:
+			args = web.input(code = "")
+			return available_services[service](args["code"])
+		else:
+			return render.login()
+
+class logout:
+	def GET(self):
+		web.setcookie("wl_identity", "", expires=mktime(localtime()) - 86400)
+		return web.redirect("/")

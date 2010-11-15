@@ -2,29 +2,6 @@ from web.template import CompiledTemplate, ForLoop, TemplateResult
 
 
 # coding: utf-8
-def play(game, word, reason):
-    __lineoffset__ = -4
-    loop = ForLoop()
-    self = TemplateResult(); extend_ = self.extend
-    extend_([u'<!DOCTYPE html>\n'])
-    extend_([u'<html><head><title>Word Ladder: ', escape_(game.start, True), u' &rarr; ', escape_(game.end, True), u' - Error</title>\n'])
-    extend_([u'<link rel="icon" href="/static/favicon.png">\n'])
-    extend_([u'<meta http-equiv="refresh" content="2;URL=/game/', escape_((game.start), True), u'-', escape_((game.end), True), u'">\n'])
-    extend_([u'<meta name="viewport" content="width = device-width">\n'])
-    extend_([u'</head>\n'])
-    extend_([u'<body>\n'])
-    extend_([u'<h1>You cannot play the word ', escape_(word, True), u' there</h1>\n'])
-    extend_([u'<p>', escape_(reason, True), u'\n'])
-    extend_([u'<p><a href="/game/', escape_((game.start), True), u'-', escape_((game.end), True), u'">Back to the game</a>\n'])
-    extend_([u'</body>\n'])
-    extend_([u'</html>\n'])
-
-    return self
-
-play = CompiledTemplate(play, 'templates/play.html')
-join_ = play._join; escape_ = play._escape
-
-# coding: utf-8
 def game(game):
     __lineoffset__ = -4
     loop = ForLoop()
@@ -112,6 +89,66 @@ game = CompiledTemplate(game, 'templates/game.html')
 join_ = game._join; escape_ = game._escape
 
 # coding: utf-8
+def play(game, word, reason):
+    __lineoffset__ = -4
+    loop = ForLoop()
+    self = TemplateResult(); extend_ = self.extend
+    extend_([u'<!DOCTYPE html>\n'])
+    extend_([u'<html><head><title>Word Ladder: ', escape_(game.start, True), u' &rarr; ', escape_(game.end, True), u' - Error</title>\n'])
+    extend_([u'<link rel="icon" href="/static/favicon.png">\n'])
+    extend_([u'<meta http-equiv="refresh" content="2;URL=/game/', escape_((game.start), True), u'-', escape_((game.end), True), u'">\n'])
+    extend_([u'<meta name="viewport" content="width = device-width">\n'])
+    extend_([u'</head>\n'])
+    extend_([u'<body>\n'])
+    extend_([u'<h1>You cannot play the word ', escape_(word, True), u' there</h1>\n'])
+    extend_([u'<p>', escape_(reason, True), u'\n'])
+    extend_([u'<p><a href="/game/', escape_((game.start), True), u'-', escape_((game.end), True), u'">Back to the game</a>\n'])
+    extend_([u'</body>\n'])
+    extend_([u'</html>\n'])
+
+    return self
+
+play = CompiledTemplate(play, 'templates/play.html')
+join_ = play._join; escape_ = play._escape
+
+# coding: utf-8
+def index(games, user):
+    __lineoffset__ = -4
+    loop = ForLoop()
+    self = TemplateResult(); extend_ = self.extend
+    __lineoffset__ -= 3
+    def gamelist(gl, active):
+        self = TemplateResult(); extend_ = self.extend
+        extend_([u'<ul>\n'])
+        for g in loop.setup(gl):
+            if g.done != active:
+                extend_(['  ', u'<li><a href="/game/', escape_(g.key().name(), True), u'">', escape_(g.start.word, True), u' &rarr; ', escape_(g.end.word, True), u'</a>\n'])
+        extend_([u'</ul>\n'])
+        return self
+    extend_([u'<!DOCTYPE html>\n'])
+    extend_([u'<html><head><title>Word Ladder</title>\n'])
+    extend_([u'<link rel="icon" href="/static/favicon.png">\n'])
+    extend_([u'<meta name="viewport" content="width = device-width">\n'])
+    extend_([u'</head>\n'])
+    extend_([u'<body>\n'])
+    if user:
+        extend_([u'    <p>Hi, ', escape_(user.username, True), u'! [<a href="/user/logout">Log out</a>]</p>\n'])
+    else:
+        extend_([u'    <p>[<a href="/user/login/facebook">Facebook Login</a>]</p>\n'])
+    extend_([u'<h1>Active Games:</h1>\n'])
+    extend_([escape_(gamelist(games, True), False), u'\n'])
+    extend_([u'<h2>Finished Games:</h2>\n'])
+    extend_([escape_(gamelist(games, False), False), u'\n'])
+    extend_([u'<a href="new">New Game</a>\n'])
+    extend_([u'</body>\n'])
+    extend_([u'</html>\n'])
+
+    return self
+
+index = CompiledTemplate(index, 'templates/index.html')
+join_ = index._join; escape_ = index._escape
+
+# coding: utf-8
 def user(user):
     __lineoffset__ = -4
     loop = ForLoop()
@@ -146,71 +183,4 @@ def user(user):
 
 user = CompiledTemplate(user, 'templates/user.html')
 join_ = user._join; escape_ = user._escape
-
-# coding: utf-8
-def index(games, user):
-    __lineoffset__ = -4
-    loop = ForLoop()
-    self = TemplateResult(); extend_ = self.extend
-    __lineoffset__ -= 3
-    def gamelist(gl, active):
-        self = TemplateResult(); extend_ = self.extend
-        extend_([u'<ul>\n'])
-        for g in loop.setup(gl):
-            if g.done != active:
-                extend_(['  ', u'<li><a href="/game/', escape_(g.key().name(), True), u'">', escape_(g.start.word, True), u' &rarr; ', escape_(g.end.word, True), u'</a>\n'])
-        extend_([u'</ul>\n'])
-        return self
-    extend_([u'<!DOCTYPE html>\n'])
-    extend_([u'<html><head><title>Word Ladder</title>\n'])
-    extend_([u'<link rel="icon" href="/static/favicon.png">\n'])
-    extend_([u'<meta name="viewport" content="width = device-width">\n'])
-    extend_([u'</head>\n'])
-    extend_([u'<body>\n'])
-    if not user:
-        extend_([u'<h2>Login</h2>\n'])
-        extend_([u'<form method="post" action="/user/login">\n'])
-        extend_([u'  <label for="openid">Open ID: <input type="text" name="openid" id="openid" value="" /></label>\n'])
-        extend_([u'  <input type="hidden" name="return_to" value="/" />\n'])
-        extend_([u'  <button type="submit">Login</button>\n'])
-        extend_([u'</form>\n'])
-    elif user.isAnonymous():
-        extend_([u'<h2>Welcome to Word Ladder!</h2>\n'])
-        extend_([u'<p>You are anonymous user <span class="username">', escape_(user, True), u'</span>.</p>\n'])
-        extend_([u"<p>To save your score and be able to use all of the game's functions, log in with OpenID:</p>\n"])
-        extend_([u'<form method="post" action="/user/login">\n'])
-        extend_([u'  <label for="openid">Open ID: <input type="text" name="openid" id="openid" value="" /></label>\n'])
-        extend_([u'  <input type="hidden" name="return_to" value="/" />\n'])
-        extend_([u'  <button type="submit">Login</button>\n'])
-        extend_([u'</form>\n'])
-    else:
-        extend_([u'<h2>You are logged in as <span class="username">', escape_(user, True), u'</span></h2>\n'])
-        extend_([u'<form method="post" action="/user/logout">\n'])
-        extend_([u'  <img src="http://openid.net/login-bg.gif" alt="OpenID" />\n'])
-        extend_([u'  <strong>', escape_(user.openid, True), u'</strong>\n'])
-        extend_([u'  <input type="hidden" name="action" value="logout" />\n'])
-        extend_([u'  <input type="hidden" name="return_to" value="/" />\n'])
-        extend_([u'  <button type="submit">Logout</button>\n'])
-        extend_([u'</form>\n'])
-        if user.username:
-            extend_([u'<p>Your username is <span class="username"><a href="/user/account" title="Manage your account">', escape_(user.username, True), u'</a></span>.</p>\n'])
-        else:
-            extend_([u'<p>You have not chosen a username yet. You can choose one using the form below.</p>\n'])
-            extend_([u'<form action="/user/account" method="post">\n'])
-            extend_([u'  <label for="username">Username: <input type="text" name="username" id="username" size="23" maxlength="32" /></label>\n'])
-            extend_([u'  <input type="hidden" name="return_to" value="/" />\n'])
-            extend_([u'  <button type="submit">Set Username</button>\n'])
-            extend_([u'</form>\n'])
-    extend_([u'<h1>Active Games:</h1>\n'])
-    extend_([escape_(gamelist(games, True), False), u'\n'])
-    extend_([u'<h2>Finished Games:</h2>\n'])
-    extend_([escape_(gamelist(games, False), False), u'\n'])
-    extend_([u'<a href="new">New Game</a>\n'])
-    extend_([u'</body>\n'])
-    extend_([u'</html>\n'])
-
-    return self
-
-index = CompiledTemplate(index, 'templates/index.html')
-join_ = index._join; escape_ = index._escape
 
