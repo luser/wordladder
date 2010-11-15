@@ -4,8 +4,6 @@ $def with(user)
 <body>
 <h1>Your Account</h1>
 $if user:
-  <p>Your OpenID provider is <img src="http://openid.net/login-bg.gif" alt="OpenID" />$user.openid</p>
-  <p>Score: $user.score</p>
   $if user.username:
     <p>Your username is <span class="username">$user.username</span>. You can change it using the form below.</p>
   $else:

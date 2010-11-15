@@ -21,12 +21,12 @@ class User(db.Model):
 			return "Unknown"
 
 	def _obj(self):
-		return {'key': self.key(),
+		return {'key': self.key().name(),
 						'username': self.username,
             'created': mktime(self.created)}
 
 	def isAnonymous(self):
-		if not self.services:
+		if self.services.count(1) == 0:
 			return True
 		return False
 
@@ -46,18 +46,17 @@ class User(db.Model):
 			if identity:
 				parts = identity.split("/")
 			else:
-				return None
+				return makeAnonUser()
 			if (hmac.new(HASHKEY, parts[0], hashlib.sha1).hexdigest() == parts[1]):
 				user = User.get_by_key_name(key_names=parts[0])
 				if user:
 					return user
 				else:
-					web.setcookie("wl_identity", "", expires=mktime(localtime()) - 86400)
-					return None
+					return makeAnonUser()
 			else:
 				raise web.badrequest()
 		else:
-			return None
+			return makeAnonUser()
 
 	def setUsername(username):
 		self.username = username
@@ -79,7 +78,7 @@ class UserService(db.Model):
 			return "%s on %s" % self.user_service_id, self.name
 
 	def _obj(self):
-		return {'key': self.key(),
+		return {'key': self.key().name(),
 						'name': self.name,
 						'user': self.user.key(),
 						'user_service_id': self.user_service_id,
@@ -96,20 +95,13 @@ class UserService(db.Model):
 		return UserService(key_name=j['key'], name=j['name'], user=j['user'], user_service_id=j['user_service_id'], access_token=j['access_token'], url=j['url'], created=j['created'])
 
 def makeAnonUser():
-  return User()
-  #fix this all
-  anonString = 'anon-'
-  maxAnon = 0
-  for k in db.keys():
-    if k.startswith(anonString):
-      parts = k.split('-')
-      if int(parts[1]) > maxAnon:
-        maxAnon = int(parts[1])
-  anonString += str(maxAnon + 1)
-  u = User('none', anonString)
-  db.put(anonString, u.json())
-  web.setcookie('wl_identity', 'anonymous-' + anonString + '/' + hmac.new(HASHKEY, anonString, hashlib.sha1), expires=mktime(localtime()) + 30 * 86400)
-  return u
+	user = User(key_name='anon-' + hmac.new(HASHKEY, str(web.ctx.ip) + str(web.ctx.env['HTTP_USER_AGENT'])).hexdigest())
+	user.put()
+	if user:
+		web.setcookie('wl_identity', user.key().name() + '/' + hmac.new(HASHKEY, user.key().name(), hashlib.sha1).hexdigest(), expires=mktime(localtime()) + 30 * 86400)
+		return user
+	else:
+		return None
 
 def getSessionScore():
     session_hash = web.cookies().get('ladder_session', '').split(',', 1)

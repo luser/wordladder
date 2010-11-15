@@ -132,12 +132,25 @@ def index(games, user):
     extend_([u'</head>\n'])
     extend_([u'<body>\n'])
     if user:
-        extend_([u'    <p>Hi, ', escape_(user.username, True), u'! [<a href="/user/logout">Log out</a>]</p>\n'])
-        if user.services:
-            extend_(['    ', u'    <p>You are associated with the following accounts:</p>\n'])
+        extend_([u'    <h1>Hi, <a href="/user/account">\n'])
+        if user.isAnonymous():
+            if user.username:
+                extend_(['        ', u'    ', escape_(user.username, True), u'\n'])
+            else:
+                extend_(['        ', u'    anonymous user\n'])
+            extend_(['    ', u'    </a>!</h1>\n'])
+            extend_(['    ', u'    <p>[<a href="/user/login/facebook">Facebook Login</a>]</p>\n'])
+        else:
+            if user.username:
+                extend_(['        ', u'    ', escape_(user.username, True), u'\n'])
+            else:
+                extend_(['        ', u'    anonymous user\n'])
+            extend_(['    ', u'    </a>!</h1>\n'])
+            extend_(['    ', u'    <p>[<a href="/user/logout">Log out</a>]</p>\n'])
+            extend_(['    ', u'    <p>Your accounts:</p>\n'])
             extend_(['    ', u'    <ul>\n'])
             for s in loop.setup(user.services):
-                extend_(['        ', u'    <li>', escape_(s.name, True), u' (<a href="', escape_(s.url, True), u'">', escape_(s.url, True), u'</a>)</li>\n'])
+                extend_(['        ', u'    <li><a href="', escape_(s.url, True), u'">', escape_(s.name, True), u'</a></li>\n'])
             extend_(['    ', u'    </ul>\n'])
     else:
         extend_([u'    <p>[<a href="/user/login/facebook">Facebook Login</a>]</p>\n'])
@@ -164,8 +177,6 @@ def user(user):
     extend_([u'<body>\n'])
     extend_([u'<h1>Your Account</h1>\n'])
     if user:
-        extend_([u'<p>Your OpenID provider is <img src="http://openid.net/login-bg.gif" alt="OpenID" />', escape_(user.openid, True), u'</p>\n'])
-        extend_([u'<p>Score: ', escape_(user.score, True), u'</p>\n'])
         if user.username:
             extend_([u'<p>Your username is <span class="username">', escape_(user.username, True), u'</span>. You can change it using the form below.</p>\n'])
         else:

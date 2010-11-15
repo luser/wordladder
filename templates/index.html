@@ -12,8 +12,21 @@ $def gamelist(gl, active):
 </head>
 <body>
 $if user:
-	<p>Hi, $user.username! [<a href="/user/logout">Log out</a>]</p>
-	$if user.services:
+	<h1>Hi, <a href="/user/account">
+	$if user.isAnonymous():
+		$if user.username:
+			$user.username
+		$else:
+			anonymous user
+		</a>!</h1>
+		<p>[<a href="/user/login/facebook">Facebook Login</a>]</p>
+	$else:
+		$if user.username:
+			$user.username
+		$else:
+			anonymous user
+		</a>!</h1>
+		<p>[<a href="/user/logout">Log out</a>]</p>
 		<p>Your accounts:</p>
 		<ul>
 		$for s in user.services:

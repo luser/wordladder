@@ -140,15 +140,13 @@ class account:
 		return web.redirect(i.return_to)
 	def GET(self):
 		user = User.currentUser()
-		if (user.isAnonymous()):
-			return render.user(None)
 		return render.user(user)
 
 class login:
 	def GET(self, service):
 		available_services = dict(facebook = facebookOAuth.authorize)
-		u = User.currentUser()
-		if u:
+		user = User.currentUser()
+		if user and not user.isAnonymous() :
 			web.seeother("/user/account")
 		elif service in available_services:
 			args = web.input(code = "")
