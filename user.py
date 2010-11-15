@@ -26,8 +26,7 @@ class User(db.Model):
             'created': mktime(self.created)}
 
 	def isAnonymous(self):
-		user = self.username
-		if user.startswith('anon-'):
+		if not self.services:
 			return True
 		return False
 
@@ -59,6 +58,11 @@ class User(db.Model):
 				raise web.badrequest()
 		else:
 			return None
+
+	def setUsername(username):
+		self.username = username
+		self.put()
+		return True
 
 class UserService(db.Model):
 	name = db.StringProperty(required=True)

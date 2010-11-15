@@ -128,25 +128,21 @@ class game:
     else:
       return sendJSON(g, int(d.lastmove))
 
-def setcurrentUsername(username):
-  openid = None #web.openid.status()
-  if not openid:
-    return makeAnonUser()
-  return setusername(openid, username)
-
 class account:
-  def POST(self):
-    i = web.input('username', return_to='/')
-    try:
-      setcurrentUsername(i.username)
-    except UserDoesNotExist:
-      raise web.badrequest()
-    return web.redirect(i.return_to)
-  def GET(self):
-    user = User.currentUser()
-    if (user.isAnonymous()):
-      return render.user(None)
-    return render.user(user)
+	def POST(self):
+		i = web.input('username', return_to='/')
+		u = User.currentUser()
+		if u:
+			if i.username:
+				u.setUsername(i.username)
+		else:
+			return web.redirect('/user/login')
+		return web.redirect(i.return_to)
+	def GET(self):
+		user = User.currentUser()
+		if (user.isAnonymous()):
+			return render.user(None)
+		return render.user(user)
 
 class login:
 	def GET(self, service):

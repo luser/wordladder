@@ -133,6 +133,12 @@ def index(games, user):
     extend_([u'<body>\n'])
     if user:
         extend_([u'    <p>Hi, ', escape_(user.username, True), u'! [<a href="/user/logout">Log out</a>]</p>\n'])
+        if user.services:
+            extend_(['    ', u'    <p>You are associated with the following accounts:</p>\n'])
+            extend_(['    ', u'    <ul>\n'])
+            for s in loop.setup(user.services):
+                extend_(['        ', u'    <li>', escape_(s.name, True), u' (<a href="', escape_(s.url, True), u'">', escape_(s.url, True), u'</a>)</li>\n'])
+            extend_(['    ', u'    </ul>\n'])
     else:
         extend_([u'    <p>[<a href="/user/login/facebook">Facebook Login</a>]</p>\n'])
     extend_([u'<h1>Active Games:</h1>\n'])

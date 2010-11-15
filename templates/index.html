@@ -13,6 +13,12 @@ $def gamelist(gl, active):
 <body>
 $if user:
 	<p>Hi, $user.username! [<a href="/user/logout">Log out</a>]</p>
+	$if user.services:
+		<p>Your accounts:</p>
+		<ul>
+		$for s in user.services:
+			<li><a href="$s.url">$s.name</a></li>
+		</ul>
 $else:
 	<p>[<a href="/user/login/facebook">Facebook Login</a>]</p>
 <h1>Active Games:</h1>
