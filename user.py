@@ -102,13 +102,3 @@ def makeAnonUser():
 		return user
 	else:
 		return None
-
-def getSessionScore():
-    session_hash = web.cookies().get('ladder_session', '').split(',', 1)
-    if len(session_hash) > 1:
-        session_hash, session = session_hash
-        if session_hash == hmac.new(session, '', hashlib.sha1()):
-            del sessions[session]
-            web.setcookie('ladder_session', '', expires=-1)
-            return sessions[session]['score']
-    return None

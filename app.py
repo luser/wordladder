@@ -10,6 +10,7 @@ from words import validword
 from user import *
 from data import *
 from facebookoauth import *
+from googleoauth import *
 from config import HASHKEY
 
 urls = (
@@ -144,13 +145,13 @@ class account:
 
 class login:
 	def GET(self, service):
-		available_services = dict(facebook = facebookOAuth.authorize)
+		available_services = dict(facebook = facebookOAuth.authorize, google = googleOAuth.authorize)
 		user = User.currentUser()
 		if user and not user.isAnonymous() :
 			web.seeother("/user/account")
 		elif service in available_services:
-			args = web.input(code = "")
-			return available_services[service](args["code"])
+			args = web.input(code = '', oauth_token = '', oauth_verifier = '')
+			return available_services[service](args)
 		else:
 			return render.login()
 
