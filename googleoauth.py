@@ -63,7 +63,7 @@ class googleOAuth():
 			del args['oauth_verifier']
 			args['oauth_signature'] = googleOAuth.sign(url, args)
 			profile = load_json(urlopen(url + '?' + urllib.urlencode(args)).read())
-			service = UserService.get_or_insert(key_name='googlebuzz-' + str(profile['data']['id']), access_token=str(oauth_token), access_token_secret=str(oauth_token_secret), name='googlebuzz', user_service_id=str(profile['data']['id']), url=str(profile['data']['profileUrl']))
+			service = UserService.get_or_insert(key_name='googlebuzz-' + str(profile['data']['id']), access_token=str(oauth_token), access_token_secret=str(oauth_token_secret), name='googlebuzz', user_service_id=str(profile['data']['id']), picture=str(profile['data']['thumbnailUrl']), url=str(profile['data']['profileUrl']))
 
 			if service.user:
 				service.user.mergeWith(User.currentUser())
@@ -73,6 +73,8 @@ class googleOAuth():
 
 			if not user.username:
 				user.username = str(profile['data']['displayName'])
+			if not user.picture:
+				user.picture = str(profile['data']['thumbnailUrl'])
 			user.put()
 
 			service.user = user
@@ -89,11 +91,6 @@ class googleOAuth():
 			oauth_token_secret = response['oauth_token_secret'][-1]
 			User.currentSession().setKey('token_secret', oauth_token_secret)
 			return web.seeother(GOOGLE_AUTHORIZE_URL + '?oauth_token=' + urllib.quote(oauth_token));
-
-	@staticmethod
-	def logout():
-		web.setcookie('wl_identity', '', expires=-1)
-		return web.seeother('/')
 
 	@staticmethod
 	def sign(url, request):

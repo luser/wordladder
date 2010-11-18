@@ -7,7 +7,7 @@ from google.appengine.ext import db
 from json import dump_json, load_json
 
 from words import validword
-import user
+from user import *
 from session import *
 from data import *
 from facebookoauth import *
@@ -54,7 +54,7 @@ def sendJSON(game, lastid, error=None):
       if game.moves[id].user.username:
         d['username'] = game.moves[id].user.username
       else:
-        d['username'] = game.moves[id].user.openid
+        d['username'] = game.moves[id].user.key().name()
     j['moves'].append(d)
   if error:
     j['error'] = error
@@ -158,5 +158,8 @@ class login:
 
 class logout:
 	def GET(self):
-		web.setcookie("wl_identity", "", expires=mktime(localtime()) - 86400)
-		return web.redirect("/")
+		redirect = User.currentSession().getKey('redirect')
+		User.currentUser().logout()
+		if redirect:		
+			return web.redirect(redirect)
+		return web.redirect('/')

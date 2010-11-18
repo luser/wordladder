@@ -132,28 +132,26 @@ def index(games, user):
     extend_([u'</head>\n'])
     extend_([u'<body>\n'])
     if user:
-        extend_([u'    <h1>Hi, <a href="/user/account">\n'])
+        extend_([u'    <h1>Hi,\n'])
         if user.isAnonymous():
-            if user.username:
-                extend_(['        ', u'    ', escape_(user.username, True), u'\n'])
-            else:
-                extend_(['        ', u'    anonymous user\n'])
-            extend_(['    ', u'    </a>!</h1>\n'])
-            extend_(['    ', u'    <p>[<a href="/user/login/facebook">Facebook Login</a>]</p>\n'])
+            extend_(['    ', u'    <a href="/user/account">', escape_(str(user), True), u'</a>!</h1>\n'])
+            extend_(['    ', u'    <p>[<a href="/user/login/facebook">Facebook Login</a>] [<a href="/user/login/google">Google Buzz Login</a>]</p>\n'])
         else:
-            if user.username:
-                extend_(['        ', u'    ', escape_(user.username, True), u'\n'])
+            if user.picture:
+                extend_(['        ', u'    <img src="', escape_(user.picture, True), u'" border="0" height="50" alt="', escape_(str(user), True), u'" /> <a href="/user/account">', escape_(str(user), True), u'</a>!</h1>\n'])
             else:
-                extend_(['        ', u'    anonymous user\n'])
-            extend_(['    ', u'    </a>!</h1>\n'])
+                extend_(['        ', u'    <a href="/user/account">', escape_(str(user), True), u'</a>!</h1>\n'])
             extend_(['    ', u'    <p>[<a href="/user/logout">Log out</a>]</p>\n'])
             extend_(['    ', u'    <p>Your accounts:</p>\n'])
             extend_(['    ', u'    <ul>\n'])
             for s in loop.setup(user.services):
-                extend_(['        ', u'    <li><a href="', escape_(s.url, True), u'">', escape_(s.name, True), u'</a></li>\n'])
+                extend_(['        ', u'    <li>\n'])
+                if s.picture:
+                    extend_(['            ', u'    <img src="', escape_(s.picture, True), u'" border="0" height="50" alt="', escape_(str(user), True), u' on ', escape_(s.name, True), u'" />\n'])
+                extend_(['        ', u'    <a href="', escape_(s.url, True), u'">', escape_(s.name, True), u'</a></li>\n'])
             extend_(['    ', u'    </ul>\n'])
     else:
-        extend_([u'    <p>[<a href="/user/login/facebook">Facebook Login</a>]</p>\n'])
+        extend_([u'    <p>[<a href="/user/login/facebook">Facebook Login</a>] [<a href="/user/login/google">Google Buzz Login</a>]</p>\n'])
     extend_([u'<h1>Active Games:</h1>\n'])
     extend_([escape_(gamelist(games, True), False), u'\n'])
     extend_([u'<h2>Finished Games:</h2>\n'])

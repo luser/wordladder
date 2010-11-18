@@ -12,28 +12,26 @@ $def gamelist(gl, active):
 </head>
 <body>
 $if user:
-	<h1>Hi, <a href="/user/account">
+	<h1>Hi,
 	$if user.isAnonymous():
-		$if user.username:
-			$user.username
-		$else:
-			anonymous user
-		</a>!</h1>
-		<p>[<a href="/user/login/facebook">Facebook Login</a>]</p>
+		<a href="/user/account">$str(user)</a>!</h1>
+		<p>[<a href="/user/login/facebook">Facebook Login</a>] [<a href="/user/login/google">Google Buzz Login</a>]</p>
 	$else:
-		$if user.username:
-			$user.username
+		$if user.picture:
+			<img src="$user.picture" border="0" height="50" alt="$str(user)" /> <a href="/user/account">$str(user)</a>!</h1>
 		$else:
-			anonymous user
-		</a>!</h1>
+			<a href="/user/account">$str(user)</a>!</h1>
 		<p>[<a href="/user/logout">Log out</a>]</p>
 		<p>Your accounts:</p>
 		<ul>
 		$for s in user.services:
-			<li><a href="$s.url">$s.name</a></li>
+			<li>
+			$if s.picture:
+				<img src="$s.picture" border="0" height="50" alt="$str(user) on $s.name" />
+			<a href="$s.url">$s.name</a></li>
 		</ul>
 $else:
-	<p>[<a href="/user/login/facebook">Facebook Login</a>]</p>
+	<p>[<a href="/user/login/facebook">Facebook Login</a>] [<a href="/user/login/google">Google Buzz Login</a>]</p>
 <h1>Active Games:</h1>
 $:gamelist(games, True)
 <h2>Finished Games:</h2>

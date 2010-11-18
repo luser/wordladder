@@ -43,9 +43,9 @@ class facebookOAuth():
 			args.update(client_secret=FACEBOOK_APP_SECRET, code=code)
 			response = cgi.parse_qs(urlopen(FACEBOOK_ACCESS_TOKEN_URL + '?' + urllib.urlencode(args)).read())
 			token = response['access_token'][-1]
-			profile = load_json(urlopen('https://graph.facebook.com/me?' + urllib.urlencode(dict(access_token = token))).read())
+			profile = load_json(urlopen('https://graph.facebook.com/me?fields=id,name,link,picture' + urllib.urlencode(dict(access_token = token))).read())
 
-			service = UserService.get_or_insert(key_name='facebook-' + str(profile['id']), access_token=str(token), name='facebook', user_service_id=str(profile['id']), url=str(profile['link']))
+			service = UserService.get_or_insert(key_name='facebook-' + str(profile['id']), access_token=str(token), name='facebook', user_service_id=str(profile['id']), url=str(profile['link'], picture=str(profile['picture'])))
 
 			if service.user:
 				service.user.mergeWith(User.currentUser())
@@ -55,6 +55,8 @@ class facebookOAuth():
 
 			if not user.username:
 				user.username = str(profile['name'])
+			if not user.picture:
+				user.picture = str(profile['picture'])
 			user.put()
 
 			service.user = user
@@ -64,8 +66,3 @@ class facebookOAuth():
 			web.seeother('/')			
 		else:
 			web.seeother(FACEBOOK_AUTHORIZE_URL + '?' + urllib.urlencode(args))
-
-	@staticmethod
-	def logout(to='/'):
-		user.logout()
-		web.seeother(to)

@@ -13,6 +13,7 @@ from config import HASHKEY
 
 class User(db.Model):
 	username = db.StringProperty(required=False)
+	picture = db.LinkProperty(required=False)
 	created = db.DateTimeProperty(required=True, auto_now_add=True)
 
 	def __str__(self):
@@ -24,6 +25,7 @@ class User(db.Model):
 	def _obj(self):
 		return {'key': self.key().name(),
 						'username': self.username,
+						'picture': self.picture,
             'created': mktime(self.created)}
 
 	def isAnonymous(self):
@@ -37,7 +39,7 @@ class User(db.Model):
 	@staticmethod
 	def fromJSON(json):
 		j = load_json(json)
-		return User(key_name=j['key'], username=j['username'], created=j['created'])
+		return User(key_name=j['key'], username=j['username'], picture=j['picture'], created=j['created'])
 
 	@staticmethod
 	def currentUser():
@@ -61,17 +63,17 @@ class User(db.Model):
 			session.put()
 		return session				
 
-	def setUsername(username):
+	def setUsername(self, username):
 		self.username = username
 		self.put()
 		return True
 
 	@staticmethod
 	def makeAnonUser():
-		user = User(key_name='anon-' + hmac.new(HASHKEY, str(web.ctx.ip) + str(web.ctx.env['HTTP_USER_AGENT'])).hexdigest())
+		user = User(key_name='user-' + hmac.new(HASHKEY, str(mktime(localtime())) + str(web.ctx.ip) + str(web.ctx.env['HTTP_USER_AGENT'])).hexdigest())
 		user.put()
 		if user:
-			web.setcookie('wl_identity', user.key().name() + '/' + hmac.new(HASHKEY, user.key().name(), hashlib.sha1).hexdigest(), expires=mktime(localtime()) + 30 * 86400)
+			user.login()
 			return user
 		else:
 			return None
@@ -80,6 +82,9 @@ class User(db.Model):
 		# Take u's info and roll it into self, then eliminate u
 		if u.username and not self.username:
 			self.username = u.username
+
+		if u.picture and not self.picture:
+			self.picture = u.picture
 		
 		# TODO: Should we allow multiple accounts on the same service?
 		for uS in u.services:
@@ -108,7 +113,7 @@ class User(db.Model):
 		return web.setcookie('wl_identity', self.key().name() + '/' + hmac.new(HASHKEY, self.key().name(), hashlib.sha1).hexdigest(), expires=mktime(localtime()) + 86400 * 30)
 	
 	def logout(self):
-		return web.setcookie('wl_identity', '', expires=-1)
+		return self.makeAnonUser()
 
 class UserService(db.Model):
 	name = db.StringProperty(required=True)
@@ -116,6 +121,7 @@ class UserService(db.Model):
 	user_service_id = db.StringProperty(required=True)
 	access_token = db.StringProperty(required=True)
 	access_token_secret = db.StringProperty(required=False)
+	picture = db.LinkProperty(required=False)
 	url = db.LinkProperty(required=False)
 	created = db.DateTimeProperty(required=True, auto_now_add=True)
 
@@ -132,6 +138,7 @@ class UserService(db.Model):
 						'user_service_id': self.user_service_id,
 						'access_token': self.access_token,
 						'access_token_secret': self.access_token_secret,
+						'picture': self.picture,
 						'url': self.url,
 						'created': self.created}
 
@@ -141,4 +148,4 @@ class UserService(db.Model):
 	@staticmethod
 	def fromJSON(json):
 		j = load_json(json)
-		return UserService(key_name=j['key'], name=j['name'], user=j['user'], user_service_id=j['user_service_id'], access_token=j['access_token'], access_token_secret=j['access_token_secret'], url=j['url'], created=j['created'])
+		return UserService(key_name=j['key'], name=j['name'], user=j['user'], user_service_id=j['user_service_id'], access_token=j['access_token'], access_token_secret=j['access_token_secret'], picture=j['picture'], url=j['url'], created=j['created'])
