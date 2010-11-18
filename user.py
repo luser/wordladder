@@ -5,6 +5,7 @@ import os
 import hmac
 import hashlib
 from time import *
+from session import *
 
 from json import dump_json, load_json
 from google.appengine.ext import db
@@ -45,29 +46,76 @@ class User(db.Model):
 			identity = cookies["wl_identity"]
 			if identity:
 				parts = identity.split("/")
-			else:
-				return makeAnonUser()
-			if (hmac.new(HASHKEY, parts[0], hashlib.sha1).hexdigest() == parts[1]):
-				user = User.get_by_key_name(key_names=parts[0])
-				if user:
-					return user
-				else:
-					return makeAnonUser()
-			else:
-				raise web.badrequest()
-		else:
-			return makeAnonUser()
+				if (hmac.new(HASHKEY, parts[0], hashlib.sha1).hexdigest() == parts[1]):
+					user = User.get_by_key_name(key_names=parts[0])
+					if user:
+						return user
+		return User.makeAnonUser()
+
+	@staticmethod
+	def currentSession():
+		u = User.currentUser()
+		session = u.session.get()
+		if not session:
+			session = Session(key_name='session-' + u.key().name(), user=u)
+			session.put()
+		return session				
 
 	def setUsername(username):
 		self.username = username
 		self.put()
 		return True
 
+	@staticmethod
+	def makeAnonUser():
+		user = User(key_name='anon-' + hmac.new(HASHKEY, str(web.ctx.ip) + str(web.ctx.env['HTTP_USER_AGENT'])).hexdigest())
+		user.put()
+		if user:
+			web.setcookie('wl_identity', user.key().name() + '/' + hmac.new(HASHKEY, user.key().name(), hashlib.sha1).hexdigest(), expires=mktime(localtime()) + 30 * 86400)
+			return user
+		else:
+			return None
+
+	def mergeWith(self, u):
+		# Take u's info and roll it into self, then eliminate u
+		if u.username and not self.username:
+			self.username = u.username
+		
+		# TODO: Should we allow multiple accounts on the same service?
+		for uS in u.services:
+			if uS.name not in [mS.name for mS in self.services]:
+				uS.user = self
+				uS.put()
+			else:
+				uS.delete()
+
+		uSession = u.session.get()
+		if uSession:
+			mySession = self.currentSession()
+			for uP in uSession.params:
+				if uP.name not in [mP.name for mP in mySession.params]:
+					uP.session = mySession
+					uP.put()
+				else:
+					# TODO: Handle specific session params that should get merged in some other way.
+					uP.delete()
+			uSession.delete()
+
+		# TODO: Handle other stuff, like moves and scores and shit.
+		u.delete()
+
+	def login(self):
+		return web.setcookie('wl_identity', self.key().name() + '/' + hmac.new(HASHKEY, self.key().name(), hashlib.sha1).hexdigest(), expires=mktime(localtime()) + 86400 * 30)
+	
+	def logout(self):
+		return web.setcookie('wl_identity', '', expires=-1)
+
 class UserService(db.Model):
 	name = db.StringProperty(required=True)
 	user = db.ReferenceProperty(User, collection_name="services")
 	user_service_id = db.StringProperty(required=True)
 	access_token = db.StringProperty(required=True)
+	access_token_secret = db.StringProperty(required=False)
 	url = db.LinkProperty(required=False)
 	created = db.DateTimeProperty(required=True, auto_now_add=True)
 
@@ -83,6 +131,7 @@ class UserService(db.Model):
 						'user': self.user.key(),
 						'user_service_id': self.user_service_id,
 						'access_token': self.access_token,
+						'access_token_secret': self.access_token_secret,
 						'url': self.url,
 						'created': self.created}
 
@@ -92,13 +141,4 @@ class UserService(db.Model):
 	@staticmethod
 	def fromJSON(json):
 		j = load_json(json)
-		return UserService(key_name=j['key'], name=j['name'], user=j['user'], user_service_id=j['user_service_id'], access_token=j['access_token'], url=j['url'], created=j['created'])
-
-def makeAnonUser():
-	user = User(key_name='anon-' + hmac.new(HASHKEY, str(web.ctx.ip) + str(web.ctx.env['HTTP_USER_AGENT'])).hexdigest())
-	user.put()
-	if user:
-		web.setcookie('wl_identity', user.key().name() + '/' + hmac.new(HASHKEY, user.key().name(), hashlib.sha1).hexdigest(), expires=mktime(localtime()) + 30 * 86400)
-		return user
-	else:
-		return None
+		return UserService(key_name=j['key'], name=j['name'], user=j['user'], user_service_id=j['user_service_id'], access_token=j['access_token'], access_token_secret=j['access_token_secret'], url=j['url'], created=j['created'])

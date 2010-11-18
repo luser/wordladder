@@ -7,7 +7,8 @@ from google.appengine.ext import db
 from json import dump_json, load_json
 
 from words import validword
-from user import *
+import user
+from session import *
 from data import *
 from facebookoauth import *
 from googleoauth import *
@@ -147,7 +148,7 @@ class login:
 	def GET(self, service):
 		available_services = dict(facebook = facebookOAuth.authorize, google = googleOAuth.authorize)
 		user = User.currentUser()
-		if user and not user.isAnonymous() :
+		if user and not user.isAnonymous() and not service in available_services:
 			web.seeother("/user/account")
 		elif service in available_services:
 			args = web.input(code = '', oauth_token = '', oauth_verifier = '')
