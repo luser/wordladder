@@ -12,6 +12,10 @@ PLAY_WORDLIST = "/path/to/play_word.lst"
 # Used to store persistent state.
 DATADIR = "/path/to/data"
 
+# Hash key
+# Any random string of characters, used to compute secure HMAC signatures.
+HASHKEY = "changethis"
+
 #---------------------------------------------------------------
 # These options aren't necessary for running the webapp, just for
 # other scripts (like graphtraverse.py and scoracle.py)
