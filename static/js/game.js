@@ -85,6 +85,11 @@ function handleGameJSON(data)
              //FIXME
              username = "user";
            }
+					 if ('picture' in m) {
+					 	 picture = m.picture;
+					 } else {
+						 picture = 'http://www.google.com/s2/static/images/NoPicture.gif';
+           }
            var html = '<ul id="l'+m.id+'" style="display:none"><li'+(m.bottom?' bottom':'')+'><a id="m'+m.id+'" class="move">'+m.word+'</a><form class="hidden" method="POST" action="'+window.location+'/play"><input type="hidden" name="moveid" value="'+m.id+'"><input type="text" name="word" autocomplete="off" autocorrect="off" autocapitalize="off"></input></form></ul>';
            if (!m.bottom) {
              $('#m' + m.parent).parent().append(html);
@@ -102,7 +107,13 @@ function handleGameJSON(data)
 		       redrawwires();
 		   }
 	       });
-	   $('#playinfo').prepend('<span class="log">'+username + " plays " + m.word+"</span>");
+	   //$('#playinfo').prepend('<span class="log">'+username + " plays " + m.word+"</span>");
+			 $.gritter.add({
+				 title: username,
+				 text: 'played ' + m.word,
+				 image: picture,
+				 sticky: false
+			 });
          });
   if ('done' in data) {
       $.each(data.winningchain, function(i, mid) {
@@ -149,9 +160,18 @@ function moveClick(event)
   event.stopPropagation();
 }
 
+function gritterAdd(g, speed, callback) {
+	return callback();
+}
+
 $(document).ready(function()
 {
-  // hide all inputs when you click in empty space
+	$.extend($.gritter.options, {
+		add_at_top: true,
+		time: 8000
+	});
+  
+	// hide all inputs when you click in empty space
   $(document.body).click(function() {
                            $('form').addClass('hidden');
                          });

@@ -1,54 +1,60 @@
 $def with(game)
 $code
-  def finished():
-    if game.done:
-      return "(finished)"
-    return ""
-  def lasttenmoves(g):
-    return [g.moves[i] for i in sorted(g.moves.keys(), reverse=True)[:10]]
+	def finished():
+		if game.done:
+			return "(finished)"
+		return ""
+	def lasttenmoves(g):
+		return [g.moves[i] for i in sorted(g.moves.keys(), reverse=True)[:10]]
 $def form(m):
-  $if not game.done:
-    <form method="POST" action=""><input type="hidden" name="moveid" value="$m.id"><input type="text" name="word" autocomplete="off" autocorrect="off" autocapitalize="off"></input></form>
-  $else:
-    <div class="placeholder"></div>
+	$if not game.done:
+		<form method="POST" action=""><input type="hidden" name="moveid" value="$m.id"><input type="text" name="word" autocomplete="off" autocorrect="off" autocapitalize="off"></input></form>
+	$else:
+		<div class="placeholder"></div>
 $def word(m, w):
-    <a id="m${m.id}" class="move$(m.id in game.winningchain and ' win' or '')">$w</a>
+		<a id="m${m.id}" class="move$(m.id in game.winningchain and ' win' or '')">$w</a>
 $def ts(t):
-  <span class="timestamp">$t</span>
+	<span class="timestamp">$t</span>
 $def move(m, s):
-  <ul>
-  $if not m.bottom:
-    <li>$:word(m, m.word) $:ts(m.played) $:form(m)
-  $if m.children:
-    $for c in m.children:
-      $:move(c, False)
-  $if m.bottom:
-    <li bottom>$:word(m, m.word) $:form(m)
-  </ul>
+	<ul>
+	$if not m.bottom:
+		<li>$:word(m, m.word) $:ts(m.played) $:form(m)
+	$if m.children:
+		$for c in m.children:
+			$:move(c, False)
+	$if m.bottom:
+		<li bottom>$:word(m, m.word) $:form(m)
+	</ul>
 $def plays():
-  $for m in lasttenmoves(game):
-    <span class="log">$m.user played $m.word</span>
+	$for m in lasttenmoves(game):
+		$if m.hasValidUser:
+			<span class="log">$m.user played $m.word</span>
+		$else:
+			<span class="log">unknown user played $m.word</span>
 <!DOCTYPE html>
 <html><head><title>Word Ladder: $game.start &rarr; $game.end $finished()</title>
-<link rel="stylesheet" type="text/css" href="/static/site.css">
-<link rel="stylesheet" type="text/css" href="/static/humanmsg.css">
+<link rel="stylesheet" type="text/css" href="/static/css/site.css">
+<link rel="stylesheet" type="text/css" href="/static/css/humanmsg.css">
+<link rel="stylesheet" type="text/css" href="/static/css/jquery.gritter.css">
 <link rel="icon" href="/static/favicon.png">
 <meta name="viewport" content="width = device-width, user-scalable=no">
-<script type="text/javascript" src="/static/jquery-1.3.2.min.js"></script>
-<script type="text/javascript" src="/static/humanmsg.js"></script>
+<script type="text/javascript" src="http://www.google.com/jsapi"></script>
+<script type="text/javascript">google.load('jquery', '1.3.2');</script>
+<script type="text/javascript" src="/static/js/humanmsg.js"></script>
+<script type="text/javascript" src="/static/js/jquery.gritter.js"></script>
 <script type="text/javascript">
 var lastmove = $game.lastmove;
 var done = $(game.done and "true" or "false");
 var winningchain = $(game.done and game.winningchain or []);
 </script>
-<script type="text/javascript" src="/static/game.js"></script>
-<script type="text/javascript" src="/static/wire.js"></script>
+<script type="text/javascript" src="/static/js/game.js"></script>
+<script type="text/javascript" src="/static/js/wire.js"></script>
 <script type="text/javascript">
 $for m in game.moves.values():
-  $for c in m.children:
-    addLink($m.id, $c.id, '$((m.id in game.winningchain and c.id in game.winningchain) and 'red' or 'blue')');
+	$for c in m.children:
+		addLink($m.id, $c.id, '$((m.id in game.winningchain and c.id in game.winningchain) and 'red' or 'blue')');
 $if game.done:
-  addLink($game.lastmove, $(filter(lambda m: m.id != game.lastmove and m.word == game.moves[game.lastmove].word, game.moves.values())[0].id), 'red');
+	addLink($game.lastmove, $(filter(lambda m: m.id != game.lastmove and m.word == game.moves[game.lastmove].word, game.moves.values())[0].id), 'red');
 </script>
 </head>
 <body>

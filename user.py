@@ -106,7 +106,11 @@ class User(db.Model):
 					uP.delete()
 			uSession.delete()
 
-		# TODO: Handle other stuff, like moves and scores and shit.
+		for uM in u.moves:
+			uM.user = self
+			uM.put()
+
+		# TODO: Handle other stuff, like scores and shit.
 		u.delete()
 
 	def login(self):

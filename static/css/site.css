@@ -75,12 +75,14 @@ canvas.WireIt-Wire {
   position: fixed;
   bottom: 0;
   right: 0;
-  width: 20em;
-  height: 1.5em;
+  width: 20%;
+  height: 100%;
   overflow: auto;
   overflow-x: auto;
+	display: none;
 }
 
 .log {
   padding: 0.25em;
 }
+

@@ -8,69 +8,75 @@ def game(game):
     self = TemplateResult(); extend_ = self.extend
     
     def finished():
-      if game.done:
-        return "(finished)"
-      return ""
+            if game.done:
+                    return "(finished)"
+            return ""
     def lasttenmoves(g):
-      return [g.moves[i] for i in sorted(g.moves.keys(), reverse=True)[:10]]
+            return [g.moves[i] for i in sorted(g.moves.keys(), reverse=True)[:10]]
     __lineoffset__ -= 3
     def form(m):
         self = TemplateResult(); extend_ = self.extend
         if not game.done:
-            extend_([u'<form method="POST" action=""><input type="hidden" name="moveid" value="', escape_(m.id, True), u'"><input type="text" name="word" autocomplete="off" autocorrect="off" autocapitalize="off"></input></form>\n'])
+            extend_(['    ', u'    <form method="POST" action=""><input type="hidden" name="moveid" value="', escape_(m.id, True), u'"><input type="text" name="word" autocomplete="off" autocorrect="off" autocapitalize="off"></input></form>\n'])
         else:
-            extend_([u'<div class="placeholder"></div>\n'])
+            extend_(['    ', u'    <div class="placeholder"></div>\n'])
         return self
     __lineoffset__ -= 3
     def word(m, w):
         self = TemplateResult(); extend_ = self.extend
-        extend_([u'<a id="m', escape_((m.id), True), u'" class="move', escape_((m.id in game.winningchain and ' win' or ''), True), u'">', escape_(w, True), u'</a>\n'])
+        extend_([u'            <a id="m', escape_((m.id), True), u'" class="move', escape_((m.id in game.winningchain and ' win' or ''), True), u'">', escape_(w, True), u'</a>\n'])
         return self
     __lineoffset__ -= 3
     def ts(t):
         self = TemplateResult(); extend_ = self.extend
-        extend_([u'<span class="timestamp">', escape_(t, True), u'</span>\n'])
+        extend_([u'    <span class="timestamp">', escape_(t, True), u'</span>\n'])
         return self
     __lineoffset__ -= 3
     def move(m, s):
         self = TemplateResult(); extend_ = self.extend
-        extend_([u'<ul>\n'])
+        extend_([u'    <ul>\n'])
         if not m.bottom:
-            extend_([u'<li>', escape_(word(m, m.word), False), u' ', escape_(ts(m.played), False), u' ', escape_(form(m), False), u'\n'])
+            extend_(['    ', u'    <li>', escape_(word(m, m.word), False), u' ', escape_(ts(m.played), False), u' ', escape_(form(m), False), u'\n'])
         if m.children:
             for c in loop.setup(m.children):
-                extend_([escape_(move(c, False), False), u'\n'])
+                extend_(['        ', u'    ', escape_(move(c, False), False), u'\n'])
         if m.bottom:
-            extend_([u'<li bottom>', escape_(word(m, m.word), False), u' ', escape_(form(m), False), u'\n'])
-        extend_([u'</ul>\n'])
+            extend_(['    ', u'    <li bottom>', escape_(word(m, m.word), False), u' ', escape_(form(m), False), u'\n'])
+        extend_([u'    </ul>\n'])
         return self
     __lineoffset__ -= 3
     def plays():
         self = TemplateResult(); extend_ = self.extend
         for m in loop.setup(lasttenmoves(game)):
-            extend_([u'<span class="log">', escape_(m.user, True), u' played ', escape_(m.word, True), u'</span>\n'])
+            if m.hasValidUser:
+                extend_(['        ', u'    <span class="log">', escape_(m.user, True), u' played ', escape_(m.word, True), u'</span>\n'])
+            else:
+                extend_(['        ', u'    <span class="log">unknown user played ', escape_(m.word, True), u'</span>\n'])
         return self
     extend_([u'<!DOCTYPE html>\n'])
     extend_([u'<html><head><title>Word Ladder: ', escape_(game.start, True), u' &rarr; ', escape_(game.end, True), u' ', escape_(finished(), True), u'</title>\n'])
-    extend_([u'<link rel="stylesheet" type="text/css" href="/static/site.css">\n'])
-    extend_([u'<link rel="stylesheet" type="text/css" href="/static/humanmsg.css">\n'])
+    extend_([u'<link rel="stylesheet" type="text/css" href="/static/css/site.css">\n'])
+    extend_([u'<link rel="stylesheet" type="text/css" href="/static/css/humanmsg.css">\n'])
+    extend_([u'<link rel="stylesheet" type="text/css" href="/static/css/jquery.gritter.css">\n'])
     extend_([u'<link rel="icon" href="/static/favicon.png">\n'])
     extend_([u'<meta name="viewport" content="width = device-width, user-scalable=no">\n'])
-    extend_([u'<script type="text/javascript" src="/static/jquery-1.3.2.min.js"></script>\n'])
-    extend_([u'<script type="text/javascript" src="/static/humanmsg.js"></script>\n'])
+    extend_([u'<script type="text/javascript" src="http://www.google.com/jsapi"></script>\n'])
+    extend_([u'<script type="text/javascript">google.load(\'jquery\', \'1.3.2\');</script>\n'])
+    extend_([u'<script type="text/javascript" src="/static/js/humanmsg.js"></script>\n'])
+    extend_([u'<script type="text/javascript" src="/static/js/jquery.gritter.js"></script>\n'])
     extend_([u'<script type="text/javascript">\n'])
     extend_([u'var lastmove = ', escape_(game.lastmove, True), u';\n'])
     extend_([u'var done = ', escape_((game.done and "true" or "false"), True), u';\n'])
     extend_([u'var winningchain = ', escape_((game.done and game.winningchain or []), True), u';\n'])
     extend_([u'</script>\n'])
-    extend_([u'<script type="text/javascript" src="/static/game.js"></script>\n'])
-    extend_([u'<script type="text/javascript" src="/static/wire.js"></script>\n'])
+    extend_([u'<script type="text/javascript" src="/static/js/game.js"></script>\n'])
+    extend_([u'<script type="text/javascript" src="/static/js/wire.js"></script>\n'])
     extend_([u'<script type="text/javascript">\n'])
     for m in loop.setup(game.moves.values()):
         for c in loop.setup(m.children):
-            extend_([u'addLink(', escape_(m.id, True), u', ', escape_(c.id, True), u", '", escape_(((m.id in game.winningchain and c.id in game.winningchain) and 'red' or 'blue'), True), u"');\n"])
+            extend_(['    ', u'    addLink(', escape_(m.id, True), u', ', escape_(c.id, True), u", '", escape_(((m.id in game.winningchain and c.id in game.winningchain) and 'red' or 'blue'), True), u"');\n"])
     if game.done:
-        extend_([u'addLink(', escape_(game.lastmove, True), u', ', escape_((filter(lambda m: m.id != game.lastmove and m.word == game.moves[game.lastmove].word, game.moves.values())[0].id), True), u", 'red');\n"])
+        extend_([u'    addLink(', escape_(game.lastmove, True), u', ', escape_((filter(lambda m: m.id != game.lastmove and m.word == game.moves[game.lastmove].word, game.moves.values())[0].id), True), u", 'red');\n"])
     extend_([u'</script>\n'])
     extend_([u'</head>\n'])
     extend_([u'<body>\n'])
@@ -127,7 +133,7 @@ def index(games, user):
         return self
     extend_([u'<!DOCTYPE html>\n'])
     extend_([u'<html><head><title>Word Ladder</title>\n'])
-    extend_([u'<link rel="icon" href="/static/favicon.png">\n'])
+    extend_([u'<link rel="icon" href="/static/images/favicon.png">\n'])
     extend_([u'<meta name="viewport" content="width = device-width">\n'])
     extend_([u'</head>\n'])
     extend_([u'<body>\n'])
