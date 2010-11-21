@@ -46,6 +46,7 @@ $def plays():
 var lastmove = $game.lastmove;
 var done = $(game.done and "true" or "false");
 var winningchain = $(game.done and game.winningchain or []);
+var scores = $(game.done and game.score or {});
 </script>
 <script type="text/javascript" src="/static/js/game.js"></script>
 <script type="text/javascript" src="/static/js/wire.js"></script>
@@ -58,7 +59,12 @@ $if game.done:
 </script>
 </head>
 <body>
-<h1>$game.start &rarr; $game.end $finished()</h1>
+<h1 id="game">$game.start &rarr; $game.end $finished()</h1>
+$if game.done:
+	<ul id="scores">
+		$for s in game.scores():
+			<li><img src="$game.scores()[s]['picture']" alt="" title="" border="0" height="32" /> $game.scores()[s]['username'] earned $game.scores()[s]['score'] points</li>
+	</ul>
 $:move(game.moves[1], True)
 <br style="clear: left">
 $:move(game.moves[2], True)

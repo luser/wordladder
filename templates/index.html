@@ -1,9 +1,12 @@
 $def with(games, user)
-$def gamelist(gl, active):
+$def gamelist(gl, active, user=None):
   <ul>
     $for g in gl:
       $if g.done != active:
         <li><a href="/game/$g.key().name()">$g.start.word &rarr; $g.end.word</a>
+				$if user and user.key().name() in g.score:
+					(you earned $g.score[user.key().name()]['score'] points)
+				</li>
   </ul>
 <!DOCTYPE html>
 <html><head><title>Word Ladder</title>
@@ -21,6 +24,7 @@ $if user:
 			<img src="$user.picture" border="0" height="50" alt="$str(user)" /> <a href="/user/account">$str(user)</a>!</h1>
 		$else:
 			<a href="/user/account">$str(user)</a>!</h1>
+		<p>You have $user.score total points.</p>
 		<p>[<a href="/user/logout">Log out</a>]</p>
 		<p>Your accounts:</p>
 		<ul>
@@ -35,7 +39,7 @@ $else:
 <h1>Active Games:</h1>
 $:gamelist(games, True)
 <h2>Finished Games:</h2>
-$:gamelist(games, False)
+$:gamelist(games, False, user)
 <a href="new">New Game</a>
 </body>
 </html>

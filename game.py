@@ -118,18 +118,16 @@ class Game(db.Model):
 		Return a list of moves representing the chain of words
 		that won the game.
 		"""
-		if hasattr(self, '_winningchain'):
-			return self._winningchain
-		if self.done:
-			self._winningchain = self._findwinningchain()
-			return self._winningchain
-		else:
+		if not self.done:
 			return []
+		if not hasattr(self, '_winningchain'):
+			self._winningchain = self._findwinningchain()
+		return self._winningchain
 
 	def __repr__(self):
-		return "Game('%s', '%s', %s, %s)" % (self.start.word,
-																				 self.end.word,
-																				 self.done)
+		return "Game('%s', '%s', %s)" % (self.start.word,
+																		 self.end.word,
+																		 self.done)
 
 	def __str__(self):
 		return "%s-%s" % (self.start.word, self.end.word)
@@ -179,9 +177,17 @@ class Game(db.Model):
 									 bottom=m.bottom)
 		newmove.put()
 		self.moves[self.lastmove] = newmove
-		if self.done:
-			self._winningchain = self._findwinningchain()
 		return (True, '')
+	
+	def finish(self):
+		scores = self.scores()
+		for u in scores:
+			user = User.get_by_key_name(u)
+			if user:
+				user.score += scores[u]['score']
+				user.put()
+		self.winningchain
+		return True
 
 	def _findwinningchain(self):
 		"""Return a list of move ids representing the chain that won this
@@ -214,3 +220,34 @@ class Game(db.Model):
 			l.reverse()
 			l = l + l2
 		return l
+
+	def scores(self):
+		if hasattr(self, '_scores'):
+			return self._scores
+		win = self._findwinningchain()
+		scores = {}
+		for m in self.moves:
+			if self.moves[m].hasValidUser:
+				u = str(self.moves[m].user.key().id_or_name())
+				if m in win:
+					if u in scores:
+						scores[u]['score'] += 5
+					else:
+						scores[u] = {'username': str(self.moves[m].user), 'picture': self.moves[m].user.picture, 'score': 5}
+				else:
+					if u in scores:
+						scores[u]['score'] -= 1
+					else:
+						scores[u] = {'username': str(self.moves[m].user), 'picture': self.moves[m].user.picture, 'score': -1}
+		self._scores = scores
+		return scores
+
+	# Returns a simple version of the scores array, suitable for use by javascript.
+	@property
+	def score(self):
+		if not self.done:
+			return {}
+		if not hasattr(self, '_scores'):
+			self.scores()
+		return self._scores
+

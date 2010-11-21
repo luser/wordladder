@@ -14,6 +14,7 @@ from config import HASHKEY
 class User(db.Model):
 	username = db.StringProperty(required=False)
 	picture = db.LinkProperty(required=False)
+	score = db.IntegerProperty(required=False, default=0)
 	created = db.DateTimeProperty(required=True, auto_now_add=True)
 
 	def __str__(self):
@@ -26,6 +27,7 @@ class User(db.Model):
 		return {'key': self.key().name(),
 						'username': self.username,
 						'picture': self.picture,
+						'score': self.score,
             'created': mktime(self.created)}
 
 	def isAnonymous(self):
@@ -39,7 +41,7 @@ class User(db.Model):
 	@staticmethod
 	def fromJSON(json):
 		j = load_json(json)
-		return User(key_name=j['key'], username=j['username'], picture=j['picture'], created=j['created'])
+		return User(key_name=j['key'], username=j['username'], picture=j['picture'], score=j['score'], created=j['created'])
 
 	@staticmethod
 	def currentUser():
@@ -85,6 +87,9 @@ class User(db.Model):
 
 		if u.picture and not self.picture:
 			self.picture = u.picture
+
+		if u.score:
+			self.score += u.score
 		
 		# TODO: Should we allow multiple accounts on the same service?
 		for uS in u.services:

@@ -68,6 +68,7 @@ def game(game):
     extend_([u'var lastmove = ', escape_(game.lastmove, True), u';\n'])
     extend_([u'var done = ', escape_((game.done and "true" or "false"), True), u';\n'])
     extend_([u'var winningchain = ', escape_((game.done and game.winningchain or []), True), u';\n'])
+    extend_([u'var scores = ', escape_((game.done and game.score or {}), True), u';\n'])
     extend_([u'</script>\n'])
     extend_([u'<script type="text/javascript" src="/static/js/game.js"></script>\n'])
     extend_([u'<script type="text/javascript" src="/static/js/wire.js"></script>\n'])
@@ -80,7 +81,12 @@ def game(game):
     extend_([u'</script>\n'])
     extend_([u'</head>\n'])
     extend_([u'<body>\n'])
-    extend_([u'<h1>', escape_(game.start, True), u' &rarr; ', escape_(game.end, True), u' ', escape_(finished(), True), u'</h1>\n'])
+    extend_([u'<h1 id="game">', escape_(game.start, True), u' &rarr; ', escape_(game.end, True), u' ', escape_(finished(), True), u'</h1>\n'])
+    if game.done:
+        extend_([u'    <ul id="scores">\n'])
+        for s in loop.setup(game.scores()):
+            extend_(['            ', u'    <li><img src="', escape_(game.scores()[s]['picture'], True), u'" alt="" title="" border="0" height="32" /> ', escape_(game.scores()[s]['username'], True), u' earned ', escape_(game.scores()[s]['score'], True), u' points</li>\n'])
+        extend_([u'    </ul>\n'])
     extend_([escape_(move(game.moves[1], True), False), u'\n'])
     extend_([u'<br style="clear: left">\n'])
     extend_([escape_(move(game.moves[2], True), False), u'\n'])
@@ -123,12 +129,15 @@ def index(games, user):
     loop = ForLoop()
     self = TemplateResult(); extend_ = self.extend
     __lineoffset__ -= 3
-    def gamelist(gl, active):
+    def gamelist(gl, active, user=None):
         self = TemplateResult(); extend_ = self.extend
         extend_([u'<ul>\n'])
         for g in loop.setup(gl):
             if g.done != active:
                 extend_(['  ', u'<li><a href="/game/', escape_(g.key().name(), True), u'">', escape_(g.start.word, True), u' &rarr; ', escape_(g.end.word, True), u'</a>\n'])
+                if user and user.key().name() in g.score:
+                    extend_(['                          ', u'    (you earned ', escape_(g.score[user.key().name()]['score'], True), u' points)\n'])
+                extend_(['  ', u'                        </li>\n'])
         extend_([u'</ul>\n'])
         return self
     extend_([u'<!DOCTYPE html>\n'])
@@ -147,6 +156,7 @@ def index(games, user):
                 extend_(['        ', u'    <img src="', escape_(user.picture, True), u'" border="0" height="50" alt="', escape_(str(user), True), u'" /> <a href="/user/account">', escape_(str(user), True), u'</a>!</h1>\n'])
             else:
                 extend_(['        ', u'    <a href="/user/account">', escape_(str(user), True), u'</a>!</h1>\n'])
+            extend_(['    ', u'    <p>You have ', escape_(user.score, True), u' total points.</p>\n'])
             extend_(['    ', u'    <p>[<a href="/user/logout">Log out</a>]</p>\n'])
             extend_(['    ', u'    <p>Your accounts:</p>\n'])
             extend_(['    ', u'    <ul>\n'])
@@ -161,7 +171,7 @@ def index(games, user):
     extend_([u'<h1>Active Games:</h1>\n'])
     extend_([escape_(gamelist(games, True), False), u'\n'])
     extend_([u'<h2>Finished Games:</h2>\n'])
-    extend_([escape_(gamelist(games, False), False), u'\n'])
+    extend_([escape_(gamelist(games, False, user), False), u'\n'])
     extend_([u'<a href="new">New Game</a>\n'])
     extend_([u'</body>\n'])
     extend_([u'</html>\n'])

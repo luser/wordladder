@@ -107,7 +107,7 @@ function handleGameJSON(data)
 		       redrawwires();
 		   }
 	       });
-	   //$('#playinfo').prepend('<span class="log">'+username + " plays " + m.word+"</span>");
+	     $('#playinfo').prepend('<span class="log">'+username + " played " + m.word+"</span>");
 			 $.gritter.add({
 				 title: username,
 				 text: 'played ' + m.word,
@@ -122,6 +122,10 @@ function handleGameJSON(data)
       for (var i=0; i<data.winningchain.length-1; i++) {
 	  changeLinkColor(data.winningchain[i], data.winningchain[i+1], 'red');
       }
+			$('#game').after('<ul id="scores"></ul>');
+			for (user in data.scores) {
+				$('#scores').append('<li><img src="'+data.scores[user]['picture']+'" alt="" title="" border="0" height="32" /> '+data.scores[user]['username']+' earned '+data.scores[user]['score']+' points.</li>');
+			}
   }
   lastmove = data.lastmove;
   // poll again later
@@ -160,10 +164,6 @@ function moveClick(event)
   event.stopPropagation();
 }
 
-function gritterAdd(g, speed, callback) {
-	return callback();
-}
-
 $(document).ready(function()
 {
 	$.extend($.gritter.options, {
@@ -172,9 +172,7 @@ $(document).ready(function()
 	});
   
 	// hide all inputs when you click in empty space
-  $(document.body).click(function() {
-                           $('form').addClass('hidden');
-                         });
+  $(document.body).click(function() { $('form').addClass('hidden'); });
   if (!done) {
       $('form').addClass('hidden')
 	  .submit(handleSubmit);
