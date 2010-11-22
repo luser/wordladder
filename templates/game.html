@@ -6,6 +6,8 @@ $code
 		return ""
 	def lasttenmoves(g):
 		return [g.moves[i] for i in sorted(g.moves.keys(), reverse=True)[:10]]
+	def shortest(g):
+		return g.shortestChainLength()
 $def form(m):
 	$if not game.done:
 		<form method="POST" action=""><input type="hidden" name="moveid" value="$m.id"><input type="text" name="word" autocomplete="off" autocorrect="off" autocapitalize="off"></input></form>
@@ -59,7 +61,7 @@ $if game.done:
 </script>
 </head>
 <body>
-<h1 id="game">$game.start &rarr; $game.end $finished()</h1>
+<h1 id="game">$game.start &rarr; $game.end $finished() ($shortest(game))</h1>
 $if game.done:
 	<ul id="scores">
 		$for s in game.scores():

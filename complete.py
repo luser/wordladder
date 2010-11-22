@@ -6,7 +6,7 @@ import sys, os, os.path
 
 try:
   # python 2.6
-  from multiprocessing import Pool, cpuCount
+  from multiprocessing import Pool, cpu_count as cpuCount
 except ImportError:
   try:
     # pyprocessing

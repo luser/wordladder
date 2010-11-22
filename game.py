@@ -1,10 +1,12 @@
 #!/usr/bin/env python
-
+from __future__ import with_statement
 from google.appengine.ext import db
 from google.appengine.api import datastore_errors
-from words import getgame, validmove
+from words import getgame, validmove, LevenshteinDistance
 from user import User
 from time import *
+from config import DISTANCE_MATRIX, GAME_WORDLIST
+import sys, os, math
 
 from json import dump_json, load_json
 
@@ -124,6 +126,19 @@ class Game(db.Model):
 			self._winningchain = self._findwinningchain()
 		return self._winningchain
 
+	def shortestChainLength(self):
+		if hasattr(self, '_shortestChainLength'):
+			return self._shortestChainLength
+		with open(GAME_WORDLIST, "r") as wordlist:
+			gamewords = [x.rstrip() for x in wordlist.readlines()]
+		gamewordmap =  dict(zip(gamewords, range(len(gamewords))))
+		swid, ewid = gamewordmap[self.start.word], gamewordmap[self.end.word]
+		f = open(DISTANCE_MATRIX, 'r')
+		f.seek(swid * len(gamewordmap) + ewid, os.SEEK_SET)
+		self._shortestChainLength = ord(f.read(1))
+		f.close()
+		return self._shortestChainLength
+
 	def __repr__(self):
 		return "Game('%s', '%s', %s)" % (self.start.word,
 																		 self.end.word,
@@ -184,7 +199,7 @@ class Game(db.Model):
 		for u in scores:
 			user = User.get_by_key_name(u)
 			if user:
-				user.score += scores[u]['score']
+				user.score += int(scores[u]['score'])
 				user.put()
 		self.winningchain
 		return True
@@ -224,21 +239,47 @@ class Game(db.Model):
 	def scores(self):
 		if hasattr(self, '_scores'):
 			return self._scores
+		short = self.shortestChainLength()
 		win = self._findwinningchain()
+		winLen = len(win) - 2 # Subtract start and end moves.
+
 		scores = {}
+		
+		# Find out how many moves each contributor to the winning chain contributed.
+		for m in win:
+			m = self.moves[m]
+			if m.hasValidUser:
+				u = str(m.user.key().id_or_name())
+				if u in scores:
+					scores[u]['winMoves'] += 1
+				else:
+					scores[u] = {'username': str(m.user), 'picture': m.user.picture, 'score': 0, 'winMoves': 1}
+
+		# Figure out base points based on difficulty.
+		# TODO: This is kind of arbitrary.
+		# TODO: If we start using different dictionaries for different skill levels, incorporate that here.
+		difficulty = (short + LevenshteinDistance(self.start.word, self.end.word)) / 10
+
+		# Determine base points based on difficulty.
+		basePoints = math.floor(2 * difficulty) * 10
+
+		# Divvy up base points.
+		for u in scores:
+			scores[u]['score'] = int((scores[u]['winMoves'] / winLen) * basePoints)
+
+		# Divvy up performance points.
+		for u in scores:
+			scores[u]['score'] += int((scores[u]['winMoves'] / winLen) * ((4 * difficulty * short) - (winLen - short)))
+
+		# Deduct points for non-winning chain contributions.
 		for m in self.moves:
 			if self.moves[m].hasValidUser:
 				u = str(self.moves[m].user.key().id_or_name())
-				if m in win:
-					if u in scores:
-						scores[u]['score'] += 5
-					else:
-						scores[u] = {'username': str(self.moves[m].user), 'picture': self.moves[m].user.picture, 'score': 5}
-				else:
+				if m not in win:
 					if u in scores:
 						scores[u]['score'] -= 1
 					else:
-						scores[u] = {'username': str(self.moves[m].user), 'picture': self.moves[m].user.picture, 'score': -1}
+						scores[u] = {'username': str(self.moves[m].user), 'picture': self.moves[m].user.picture, 'winMoves': 0, 'score': -1}
 		self._scores = scores
 		return scores
 

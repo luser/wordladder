@@ -13,6 +13,8 @@ def game(game):
             return ""
     def lasttenmoves(g):
             return [g.moves[i] for i in sorted(g.moves.keys(), reverse=True)[:10]]
+    def shortest(g):
+            return g.shortestChainLength()
     __lineoffset__ -= 3
     def form(m):
         self = TemplateResult(); extend_ = self.extend
@@ -81,7 +83,7 @@ def game(game):
     extend_([u'</script>\n'])
     extend_([u'</head>\n'])
     extend_([u'<body>\n'])
-    extend_([u'<h1 id="game">', escape_(game.start, True), u' &rarr; ', escape_(game.end, True), u' ', escape_(finished(), True), u'</h1>\n'])
+    extend_([u'<h1 id="game">', escape_(game.start, True), u' &rarr; ', escape_(game.end, True), u' ', escape_(finished(), True), u' (', escape_(shortest(game), True), u')</h1>\n'])
     if game.done:
         extend_([u'    <ul id="scores">\n'])
         for s in loop.setup(game.scores()):
