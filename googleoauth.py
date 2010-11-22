@@ -31,6 +31,7 @@ import random
 from urllib2 import urlopen as urlopen
 from json import dump_json, load_json
 from google.appengine.ext import db
+from data import web_host
 from user import *
 from time import *
 from session import *
@@ -84,7 +85,7 @@ class googleOAuth():
 			return web.seeother('/')			
 		else:
 			User.currentSession().deleteKey('token_secret')
-			args.update(oauth_callback='http://wordladder.q/user/login/google', scope='https://www.googleapis.com/auth/buzz')
+			args.update(oauth_callback=web_host() + '/user/login/google', scope='https://www.googleapis.com/auth/buzz')
 			args['oauth_signature'] = googleOAuth.sign(GOOGLE_REQUEST_TOKEN_URL, args)
 			response = cgi.parse_qs(urlopen(GOOGLE_REQUEST_TOKEN_URL + '?' + urllib.urlencode(args)).read())
 			oauth_token = response['oauth_token'][-1]

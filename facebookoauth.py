@@ -29,6 +29,7 @@ import cgi
 from urllib2 import urlopen as urlopen
 from json import dump_json, load_json
 from google.appengine.ext import db
+from data import web_host
 from user import *
 from time import *
 from config import HASHKEY
@@ -38,7 +39,7 @@ class facebookOAuth():
 	def authorize(params):
 		code = (params['code'] if params['code'] else None)
 
-		args = dict(client_id = FACEBOOK_APP_ID, redirect_uri = 'http://wordladder.q/user/login/facebook')
+		args = dict(client_id = FACEBOOK_APP_ID, redirect_uri = web_host() + '/user/login/facebook')
 		if code:
 			args.update(client_secret=FACEBOOK_APP_SECRET, code=code)
 			response = cgi.parse_qs(urlopen(FACEBOOK_ACCESS_TOKEN_URL + '?' + urllib.urlencode(args)).read())
