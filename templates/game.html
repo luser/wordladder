@@ -47,8 +47,8 @@ $def plays():
 <script type="text/javascript">
 var lastmove = $game.lastmove;
 var done = $(game.done and "true" or "false");
-var winningchain = $(game.done and game.winningchain or []);
-var scores = $(game.done and game.score or {});
+var winningchain = $(dump_json(game.done and game.winningchain or []));
+var scores = $:(game.done and dump_json(game.score) or {});
 </script>
 <script type="text/javascript" src="/static/js/game.js"></script>
 <script type="text/javascript" src="/static/js/wire.js"></script>
