@@ -258,18 +258,18 @@ class Game(db.Model):
 		# Figure out base points based on difficulty.
 		# TODO: This is kind of arbitrary.
 		# TODO: If we start using different dictionaries for different skill levels, incorporate that here.
-		difficulty = (short + LevenshteinDistance(self.start.word, self.end.word)) / 10
+		difficulty = (float(short) + float(LevenshteinDistance(self.start.word, self.end.word))) / float(10)
 
 		# Determine base points based on difficulty.
-		basePoints = math.floor(2 * difficulty) * 10
+		basePoints = math.floor(2 * float(difficulty)) * 10
 
 		# Divvy up base points.
 		for u in scores:
-			scores[u]['score'] = int((scores[u]['winMoves'] / winLen) * basePoints)
+			scores[u]['score'] = math.floor((float(scores[u]['winMoves']) / float(winLen)) * basePoints)
 
 		# Divvy up performance points.
 		for u in scores:
-			scores[u]['score'] += int((scores[u]['winMoves'] / winLen) * ((4 * difficulty * short) - (winLen - short)))
+			scores[u]['score'] += math.floor((float(scores[u]['winMoves']) / float(winLen)) * ((4 * difficulty * float(short)) - (winLen - short)))
 
 		# Deduct points for non-winning chain contributions.
 		for m in self.moves:
