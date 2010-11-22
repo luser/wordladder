@@ -291,4 +291,3 @@ class Game(db.Model):
 		if not hasattr(self, '_scores'):
 			self.scores()
 		return self._scores
-

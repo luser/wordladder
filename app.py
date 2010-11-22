@@ -30,6 +30,7 @@ main = app.cgirun()
 
 # stupid incomplete list of builtins!
 TEMPLATE_BUILTINS['sorted'] = sorted
+TEMPLATE_BUILTINS['dump_json'] = dump_json
 render = web.template.render('templates', builtins=TEMPLATE_BUILTINS)
 
 def wantsJSON():
