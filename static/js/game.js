@@ -176,6 +176,13 @@ $(document).ready(function()
 
 	// hide all inputs when you click in empty space
   $(document.body).click(function() { $('form').addClass('hidden'); });
+  // hide inputs when pressing ESC
+  $(document).keypress(function(e) {
+                         if (e.keyCode == 27) { // ESC
+                           $('form').addClass('hidden');
+                           e.preventDefault();
+                         }
+                       });
   if (!done) {
       $('form').addClass('hidden')
 	  .submit(handleSubmit);
