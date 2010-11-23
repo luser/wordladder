@@ -41,13 +41,16 @@ function handlePlayResponse(form, data)
   }
   else {
     // success
-    // unfocus textbox
-    form.word.blur();
+    // clear out the textbox the user played from, and hide it
     form.word.value = '';
     $(form.word).removeClass('error');
     $(form).addClass('hidden');
   }
   handleGameJSON(data);
+  if (!('error' in data)) {
+    // focus the textbox under the word the user just played
+    $('#m' + data.lastmove).click();
+  }
 }
 
 function handlePlayError(form, err)
@@ -90,7 +93,7 @@ function handleGameJSON(data)
 					 } else {
 						 picture = 'http://www.google.com/s2/static/images/NoPicture.gif';
            }
-           var html = '<ul id="l'+m.id+'" style="display:none"><li'+(m.bottom?' bottom':'')+'><a id="m'+m.id+'" class="move">'+m.word+'</a><form class="hidden" method="POST" action="'+window.location+'/play"><input type="hidden" name="moveid" value="'+m.id+'"><input type="text" name="word" autocomplete="off" autocorrect="off" autocapitalize="off"></input></form></ul>';
+           var html = '<ul id="l'+m.id+'" style="display:none"><li'+(m.bottom?' bottom':'')+'><a id="m'+m.id+'" class="move">'+m.word+'</a><form class="hidden" method="POST" action="'+window.location+'/play"><input type="hidden" name="moveid" value="'+m.id+'"><input type="text" id="i'+m.id+'" name="word" autocomplete="off" autocorrect="off" autocapitalize="off"></input></form></ul>';
            if (!m.bottom) {
              $('#m' + m.parent).parent().append(html);
            }
@@ -170,9 +173,16 @@ $(document).ready(function()
 		add_at_top: true,
 		time: 8000
 	});
-  
+
 	// hide all inputs when you click in empty space
   $(document.body).click(function() { $('form').addClass('hidden'); });
+  // hide inputs when pressing ESC
+  $(document).keypress(function(e) {
+                         if (e.keyCode == 27) { // ESC
+                           $('form').addClass('hidden');
+                           e.preventDefault();
+                         }
+                       });
   if (!done) {
       $('form').addClass('hidden')
 	  .submit(handleSubmit);
