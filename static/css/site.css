@@ -25,7 +25,25 @@ ul li {
   padding: 0;
   margin: 0;
 }
-
+ul li img {
+  width: 16px;
+  align: texttop;
+  margin-left: -16px;
+  border: 1px black solid;
+}
+ul#scores {
+    border: 1px grey solid;
+    z-index: 1000;
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 10px;
+    margin: 3px;
+    -moz-border-radius: 5px;
+}
+ul#scores li img {
+    vertical-align: middle;
+}
 [bottom] {
   clear: left;
 }

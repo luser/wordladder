@@ -20,12 +20,23 @@ $def ts(t):
 $def move(m, s):
 	<ul>
 	$if not m.bottom:
-		<li>$:word(m, m.word) $:ts(m.played) $:form(m)
+		<li>
+		$if m.user:
+			<img src="$m.user.picture" alt="$m.user.username" title="$m.user.username" />
+		$else:
+			<div class="no-user"></div>
+		$:word(m, m.word) $:ts(m.played) $:form(m)
 	$if m.children:
 		$for c in m.children:
 			$:move(c, False)
+		</li>
 	$if m.bottom:
-		<li bottom>$:word(m, m.word) $:form(m)
+		<li bottom>
+		$if m.user:
+			<img src="$m.user.picture" alt="$m.user.username" title="$m.user.username" />
+		$else:
+			<div class="no-user"></div>
+		$:word(m, m.word) $:form(m)</li>
 	</ul>
 $def plays():
 	$for m in lasttenmoves(game):

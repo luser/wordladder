@@ -93,7 +93,7 @@ function handleGameJSON(data)
 					 } else {
 						 picture = 'http://www.google.com/s2/static/images/NoPicture.gif';
            }
-           var html = '<ul id="l'+m.id+'" style="display:none"><li'+(m.bottom?' bottom':'')+'><a id="m'+m.id+'" class="move">'+m.word+'</a><form class="hidden" method="POST" action="'+window.location+'/play"><input type="hidden" name="moveid" value="'+m.id+'"><input type="text" id="i'+m.id+'" name="word" autocomplete="off" autocorrect="off" autocapitalize="off"></input></form></ul>';
+           var html = '<ul id="l'+m.id+'" style="display:none"><li'+(m.bottom?' bottom':'')+'><img src="'+picture+'" alt="'+username+'" title="'+username+'" /> <a id="m'+m.id+'" class="move">'+m.word+'</a><form class="hidden" method="POST" action="'+window.location+'/play"><input type="hidden" name="moveid" value="'+m.id+'"><input type="text" id="i'+m.id+'" name="word" autocomplete="off" autocorrect="off" autocapitalize="off"></input></form></ul>';
            if (!m.bottom) {
              $('#m' + m.parent).parent().append(html);
            }

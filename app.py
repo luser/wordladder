@@ -58,6 +58,7 @@ def sendJSON(game, lastid, error=None):
 				d['username'] = game.moves[id].user.username
 			else:
 				d['username'] = game.moves[id].user.key().name()
+			d['picture'] = game.moves[id].user.picture
 		j['moves'].append(d)
 	if error:
 		j['error'] = error
