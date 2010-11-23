@@ -19,8 +19,9 @@ urls = (
 	'/new', 'newgame',
 	'/new/([^/]*)', 'newgame',
 	'/game/([^/]*)', 'game',
-	'/user/login', 'login',
 	'/user/login/([^/]*)', 'login',
+	'/user/update/([^/]*)', 'update',
+	'/user/remove/([^/]*)', 'remove',
 	'/user/logout', 'logout',
 	'/user/account', 'account',
 	)
@@ -168,3 +169,47 @@ class logout:
 		if redirect:	
 			return web.redirect(redirect)
 		return web.redirect('/')
+		
+class update:
+	def GET(self, service):
+		available_services = dict(facebook = facebookOAuth.updateProfile, googlebuzz = googleOAuth.updateProfile)
+  		
+		user = User.currentUser()
+		if user and not user.isAnonymous() and not service in available_services:
+			return web.seeother("/user/account")
+		elif service in available_services and service in [s.name for s in user.services]:
+			for s in user.services:
+				if s.name == service:
+					if available_services[service](s.access_token, s.access_token_secret):
+						User.currentSession().addMessage('info', 'Successfully updated ' + service + ' profile.')
+					else:
+						User.currentSession().addMessage('info', 'Failed to update ' + service + ' profile.')
+					return web.seeother(User.currentSession().getKey('redirect') and 1 or '/')
+		return web.seeother('/user/account')
+
+class login:
+	def GET(self, service):
+		available_services = dict(facebook = facebookOAuth.authorize, google = googleOAuth.authorize)
+		user = User.currentUser()
+		if user and not user.isAnonymous() and not service in available_services:
+			return web.seeother("/user/account")
+		elif service in available_services:
+			args = web.input(code = '', oauth_token = '', oauth_verifier = '')
+			return available_services[service](args)
+		else:
+			return render.login()
+
+class remove:
+	def GET(self, service):
+		available_services = dict(facebook = 1, googlebuzz = 1)
+		user = User.currentUser()
+		if user and not user.isAnonymous() and not service in available_services:
+			return web.seeother("/user/account")
+		elif service in available_services and service in [s.name for s in user.services]:
+			for s in user.services:
+				if s.name == service:
+					s.delete()
+					User.currentSession().addMessage('info', 'Successfully deleted ' + service + ' profile.')
+					return web.seeother(User.currentSession().getKey('redirect') and 1 or '/')
+		return web.seeother('/user/account')
+			

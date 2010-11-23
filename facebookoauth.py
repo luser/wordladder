@@ -29,7 +29,7 @@ import cgi
 from urllib2 import urlopen as urlopen
 from json import dump_json, load_json
 from google.appengine.ext import db
-from data import web_host
+from app import *
 from user import *
 from time import *
 from config import HASHKEY
@@ -44,26 +44,47 @@ class facebookOAuth():
 			args.update(client_secret=FACEBOOK_APP_SECRET, code=code)
 			response = cgi.parse_qs(urlopen(FACEBOOK_ACCESS_TOKEN_URL + '?' + urllib.urlencode(args)).read())
 			token = response['access_token'][-1]
-			profile = load_json(urlopen('https://graph.facebook.com/me?fields=id,name,link,picture&' + urllib.urlencode(dict(access_token = token))).read())
-
-			service = UserService.get_or_insert(key_name='facebook-' + str(profile['id']), access_token=str(token), name='facebook', user_service_id=str(profile['id']), url=str(profile['link']), picture=str(profile['picture']))
+			service = facebookOAuth.updateProfile(token, False)
 
 			if service.user:
-				service.user.mergeWith(User.currentUser())
 				user = service.user
 			else:
 				user = User.currentUser()
 
 			if not user.username:
-				user.username = str(profile['name'])
+				user.username = service.username
 			if not user.picture:
-				user.picture = str(profile['picture'])
+				user.picture = service.picture
 			user.put()
-
-			service.user = user
-			service.put()
 
 			user.login()
 			web.seeother('/')			
 		else:
 			web.seeother(FACEBOOK_AUTHORIZE_URL + '?' + urllib.urlencode(args))
+
+	@staticmethod
+	def updateProfile(access_token, access_token_secret = False):
+		profile = load_json(urlopen('https://graph.facebook.com/me?fields=id,name,link,picture&' + urllib.urlencode(dict(access_token = access_token))).read())
+		if profile:
+			service = UserService.get_or_insert(key_name='facebook-' + str(profile['id']), access_token=str(access_token), name='facebook', user_service_id=str(profile['id']), url=str(profile['link']), picture=str(profile['picture']))
+			service.access_token = str(access_token)
+			service.name = 'facebook'
+			service.username = str(profile['name'])
+			service.user_service_id = str(profile['id'])
+			service.url = str(profile['link'])
+			service.picture = str(profile['picture'])
+			
+			if service.user:
+				service.user.mergeWith(User.currentUser())
+				service.user.put()
+			else:
+				service.user = User.currentUser()
+	
+			service.put()
+			return service
+		else:
+			return False
+
+
+			
+

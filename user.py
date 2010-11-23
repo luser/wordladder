@@ -127,6 +127,7 @@ class User(db.Model):
 class UserService(db.Model):
 	name = db.StringProperty(required=True)
 	user = db.ReferenceProperty(User, collection_name="services")
+	username = db.StringProperty(required=False)
 	user_service_id = db.StringProperty(required=True)
 	access_token = db.StringProperty(required=True)
 	access_token_secret = db.StringProperty(required=False)

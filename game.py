@@ -270,16 +270,8 @@ class Game(db.Model):
 		# Divvy up performance points.
 		for u in scores:
 			scores[u]['score'] += math.floor((float(scores[u]['winMoves']) / float(winLen)) * ((4 * difficulty * float(short)) - (winLen - short)))
+			scores[u]['score'] = int(scores[u]['score'])
 
-		# Deduct points for non-winning chain contributions.
-		for m in self.moves:
-			if self.moves[m].hasValidUser:
-				u = str(self.moves[m].user.key().id_or_name())
-				if m not in win:
-					if u in scores:
-						scores[u]['score'] -= 1
-					else:
-						scores[u] = {'username': str(self.moves[m].user), 'picture': self.moves[m].user.picture, 'winMoves': 0, 'score': -1}
 		self._scores = scores
 		return scores
 

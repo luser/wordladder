@@ -4,6 +4,7 @@ import web
 import os
 import hmac
 import hashlib
+import pickle
 from time import *
 from user import *
 
@@ -68,10 +69,27 @@ class Session(db.Model):
 			return value
 		return None
 
+	def addMessage(self, type, message):
+		current = self.getMessages(type)
+		current.append(message)
+		current = pickle.dumps(current)
+		return self.setKey(type+'messages', current)
+
+	def getMessages(self, type):
+		current = self.getKey(type+'-messages')
+		if current:
+			current = pickle.loads(current)
+		else:
+			current = []
+		return current
+
+	def clearMessages(self, type):
+		return self.deleteKey(type+'-messages')
+
 class SessionParam(db.Model):
 	asession = db.ReferenceProperty(Session, collection_name="params")
 	name = db.StringProperty(required=True)
-	value = db.StringProperty(required=False)
+	value = db.TextProperty(required=False)
 	created = db.DateTimeProperty(required=True, auto_now_add=True)
 
 	def __str__(self):

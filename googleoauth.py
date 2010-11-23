@@ -40,14 +40,17 @@ from base64 import encodestring as base64encode
 
 class googleOAuth():
 	@staticmethod
-	def authorize(params):
-		oauth_token = (params['oauth_token'] if params['oauth_token'] else None)
-		oauth_verifier = (params['oauth_verifier'] if params['oauth_verifier'] else None)
-
-		args = dict(oauth_consumer_key = GOOGLE_APP_ID,
+	def defaultArgs():
+		return dict(oauth_consumer_key = GOOGLE_APP_ID,
 								oauth_nonce = ''.join([str(random.randint(0, 9)) for i in range(8)]),
 								oauth_signature_method = 'HMAC-SHA1',
 								oauth_timestamp = int(mktime(localtime())))
+
+	@staticmethod
+	def authorize(params):
+		oauth_token = (params['oauth_token'] if params['oauth_token'] else None)
+		oauth_verifier = (params['oauth_verifier'] if params['oauth_verifier'] else None)
+		args = googleOAuth.defaultArgs()
 
 		if oauth_token and oauth_verifier:
 			args.update({'oauth_token': oauth_token, 'oauth_verifier': oauth_verifier})
@@ -55,31 +58,19 @@ class googleOAuth():
 			response = cgi.parse_qs(urlopen(GOOGLE_ACCESS_TOKEN_URL + '?' + urllib.urlencode(args)).read())
 			oauth_token = response['oauth_token'][-1]
 			oauth_token_secret = response['oauth_token_secret'][-1]
-			User.currentSession().setKey('token_secret', oauth_token_secret)
 
-			# recalculate sig for next request
-			url = 'https://www.googleapis.com/buzz/v1/people/@me/@self'
-			args.update(oauth_token=oauth_token, alt='json')
-			del args['oauth_signature']
-			del args['oauth_verifier']
-			args['oauth_signature'] = googleOAuth.sign(url, args)
-			profile = load_json(urlopen(url + '?' + urllib.urlencode(args)).read())
-			service = UserService.get_or_insert(key_name='googlebuzz-' + str(profile['data']['id']), access_token=str(oauth_token), access_token_secret=str(oauth_token_secret), name='googlebuzz', user_service_id=str(profile['data']['id']), picture=str(profile['data']['thumbnailUrl']), url=str(profile['data']['profileUrl']))
+			service = googleOAuth.updateProfile(oauth_token, oauth_token_secret)
 
 			if service.user:
-				service.user.mergeWith(User.currentUser())
 				user = service.user
 			else:
 				user = User.currentUser()
 
 			if not user.username:
-				user.username = str(profile['data']['displayName'])
+				user.username = service.username
 			if not user.picture:
-				user.picture = str(profile['data']['thumbnailUrl'])
+				user.picture = service.picture
 			user.put()
-
-			service.user = user
-			service.put()
 
 			user.login()
 			return web.seeother('/')			
@@ -102,3 +93,34 @@ class googleOAuth():
 		base_string = 'GET&' + urllib.quote(url, '') + '&'
 		base_string += urllib.quote('&'.join('%s=%s' % (urllib.quote(str(k), ''), urllib.quote(str(request[k]), '')) for k in sorted(request.iterkeys())), '')
 		return base64encode(hmac.new(key, base_string, hashlib.sha1).digest())[:-1]
+
+	@staticmethod
+	def updateProfile(access_token, access_token_secret):
+		args = googleOAuth.defaultArgs()
+		url = 'https://www.googleapis.com/buzz/v1/people/@me/@self'
+		args.update(oauth_token=access_token, alt='json')
+		User.currentSession().setKey('token_secret', access_token_secret)
+		args['oauth_signature'] = googleOAuth.sign(url, args)
+		profile = load_json(urlopen(url + '?' + urllib.urlencode(args)).read())
+		if profile:
+			service = UserService.get_or_insert(key_name='googlebuzz-' + str(profile['data']['id']), access_token=str(access_token), access_token_secret=str(access_token_secret), name='googlebuzz', user_service_id=str(profile['data']['id']), picture=str(profile['data']['thumbnailUrl']), url=str(profile['data']['profileUrl']))
+			service.access_token = str(access_token)
+			service.access_token_secret = str(access_token_secret)
+			service.name='googlebuzz'
+			service.username = str(profile['data']['displayName'])
+			service.user_service_id = str(profile['data']['id'])
+			service.picture = str(profile['data']['thumbnailUrl'])
+			service.url = str(profile['data']['profileUrl'])
+			
+			user = User.currentUser()
+			if service.user and service.user.key().name() != user.key().name():
+				service.user.mergeWith(user)
+				user = service.user
+				user.put()
+			else:
+				service.user = user
+
+			service.put()
+			return service
+		else:
+			return False
