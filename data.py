@@ -104,7 +104,7 @@ def web_host(with_proto=True, with_port=True):
 	else:
 		url += web.ctx.env['SERVER_NAME']
 
-	if with_port:
+	if with_port and ':' not in url:
 		if web.ctx.env['wsgi.url_scheme'] == 'https':
 			if web.ctx.env['SERVER_PORT'] != '443':
 				url += ':' + web.ctx.env['SERVER_PORT']
