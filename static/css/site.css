@@ -40,9 +40,19 @@ ul#scores {
     padding: 10px;
     margin: 3px;
     -moz-border-radius: 5px;
+    display: block;
+    float: left;
+}
+ul#scores li {
+    display: block;
+    float: left;
+    clear: left;
+		margin-bottom: 2px;
 }
 ul#scores li img {
+    width: 32px;
     vertical-align: middle;
+    margin-left: 0px;
 }
 [bottom] {
   clear: left;
