@@ -12,6 +12,7 @@ from session import *
 from data import *
 from facebookoauth import *
 from googleoauth import *
+from twitteroauth import *
 from config import HASHKEY
 
 urls = (
@@ -153,7 +154,7 @@ class account:
 
 class login:
 	def GET(self, service):
-		available_services = dict(facebook = facebookOAuth.authorize, google = googleOAuth.authorize)
+		available_services = dict(facebook = facebookOAuth.authorize, google = googleOAuth.authorize, twitter = twitterOAuth.authorize)
 		user = User.currentUser()
 		if user and not user.isAnonymous() and not service in available_services:
 			web.seeother("/user/account")
@@ -173,7 +174,7 @@ class logout:
 		
 class update:
 	def GET(self, service):
-		available_services = dict(facebook = facebookOAuth.updateProfile, googlebuzz = googleOAuth.updateProfile)
+		available_services = dict(facebook = facebookOAuth.updateProfile, googlebuzz = googleOAuth.updateProfile, twitter = twitterOAuth.updateProfile)
   		
 		user = User.currentUser()
 		if user and not user.isAnonymous() and not service in available_services:
@@ -187,18 +188,6 @@ class update:
 						User.currentSession().addMessage('info', 'Failed to update ' + service + ' profile.')
 					return web.seeother(User.currentSession().getKey('redirect') and 1 or '/')
 		return web.seeother('/user/account')
-
-class login:
-	def GET(self, service):
-		available_services = dict(facebook = facebookOAuth.authorize, google = googleOAuth.authorize)
-		user = User.currentUser()
-		if user and not user.isAnonymous() and not service in available_services:
-			return web.seeother("/user/account")
-		elif service in available_services:
-			args = web.input(code = '', oauth_token = '', oauth_verifier = '')
-			return available_services[service](args)
-		else:
-			return render.login()
 
 class remove:
 	def GET(self, service):
