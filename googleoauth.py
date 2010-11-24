@@ -28,7 +28,7 @@ import web
 import cgi
 import random
 
-from urllib2 import urlopen as urlopen
+from urllib2 import urlopen as urlopen, URLError, HTTPError
 from json import dump_json, load_json
 from google.appengine.ext import db
 from data import web_host
@@ -60,6 +60,9 @@ class googleOAuth():
 			oauth_token_secret = response['oauth_token_secret'][-1]
 
 			service = googleOAuth.updateProfile(oauth_token, oauth_token_secret)
+			if not service:
+				User.currentSession().addMessage('error', 'Could not update Google profile.')
+				return web.seeother('/')
 
 			if service.user:
 				user = service.user
@@ -76,7 +79,7 @@ class googleOAuth():
 			return web.seeother('/')			
 		else:
 			User.currentSession().deleteKey('token_secret')
-			args.update(oauth_callback=web_host() + '/user/login/google', scope='https://www.googleapis.com/auth/buzz')
+			args.update(oauth_callback=web_host() + '/user/login/google', scope='https://www.googleapis.com/auth/buzz https://www.google.com/m8/feeds/')
 			args['oauth_signature'] = googleOAuth.sign(GOOGLE_REQUEST_TOKEN_URL, args)
 			response = cgi.parse_qs(urlopen(GOOGLE_REQUEST_TOKEN_URL + '?' + urllib.urlencode(args)).read())
 			oauth_token = response['oauth_token'][-1]
@@ -96,21 +99,45 @@ class googleOAuth():
 
 	@staticmethod
 	def updateProfile(access_token, access_token_secret):
+		# First try getting Buzz profile, mostly for the picture.
 		args = googleOAuth.defaultArgs()
 		url = 'https://www.googleapis.com/buzz/v1/people/@me/@self'
 		args.update(oauth_token=access_token, alt='json')
 		User.currentSession().setKey('token_secret', access_token_secret)
 		args['oauth_signature'] = googleOAuth.sign(url, args)
-		profile = load_json(urlopen(url + '?' + urllib.urlencode(args)).read())
-		if profile:
-			service = UserService.get_or_insert(key_name='googlebuzz-' + str(profile['data']['id']), access_token=str(access_token), access_token_secret=str(access_token_secret), name='googlebuzz', user_service_id=str(profile['data']['id']), picture=str(profile['data']['thumbnailUrl']), url=str(profile['data']['profileUrl']))
+		try:
+			bprofile = load_json(urlopen(url + '?' + urllib.urlencode(args)).read())
+		except (URLError, HTTPError):
+			bprofile = False
+
+		# Then get the Contacts profile.
+		args = googleOAuth.defaultArgs()
+		url = 'https://www.google.com/m8/feeds/contacts/default/full'
+		args.update(oauth_token=access_token, alt='json')
+		User.currentSession().setKey('token_secret', access_token_secret)
+		args['oauth_signature'] = googleOAuth.sign(url, args)
+		try:
+			cprofile = load_json(urlopen(url + '?' + urllib.urlencode(args)).read())
+		except URLError, u:
+			cprofile = False
+		except HTTPError, h:
+			cprofile = False
+
+		# Contacts profile is required.
+		if cprofile:
+			service = UserService.get_or_insert(key_name='google-' + str(cprofile['feed']['id']['$t']), access_token=str(access_token), access_token_secret=str(access_token_secret), name='google', user_service_id=str(cprofile['feed']['id']['$t']))
 			service.access_token = str(access_token)
 			service.access_token_secret = str(access_token_secret)
-			service.name='googlebuzz'
-			service.username = str(profile['data']['displayName'])
-			service.user_service_id = str(profile['data']['id'])
-			service.picture = str(profile['data']['thumbnailUrl'])
-			service.url = str(profile['data']['profileUrl'])
+			service.name='google'
+			service.username = str(cprofile['feed']['author'][0]['name']['$t'])
+			service.user_service_id = str(cprofile['feed']['id']['$t'])
+			service.email = str(cprofile['feed']['author'][0]['email']['$t'])
+
+			if bprofile:
+				if len(str(bprofile['data']['displayName'])) > len(str(service.username)):
+					service.username = str(bprofile['data']['displayName'])
+				service.picture = str(bprofile['data']['thumbnailUrl'])
+				service.url = str(bprofile['data']['profileUrl'])
 			
 			user = User.currentUser()
 			if service.user and service.user.key().name() != user.key().name():

@@ -85,6 +85,3 @@ class facebookOAuth():
 		else:
 			return False
 
-
-			
-

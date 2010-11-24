@@ -174,7 +174,7 @@ class logout:
 		
 class update:
 	def GET(self, service):
-		available_services = dict(facebook = facebookOAuth.updateProfile, googlebuzz = googleOAuth.updateProfile, twitter = twitterOAuth.updateProfile)
+		available_services = dict(facebook = facebookOAuth.updateProfile, google = googleOAuth.updateProfile, twitter = twitterOAuth.updateProfile)
   		
 		user = User.currentUser()
 		if user and not user.isAnonymous() and not service in available_services:

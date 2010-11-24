@@ -131,6 +131,7 @@ class UserService(db.Model):
 	user_service_id = db.StringProperty(required=True)
 	access_token = db.StringProperty(required=True)
 	access_token_secret = db.StringProperty(required=False)
+	email = db.EmailProperty(required=False)
 	picture = db.LinkProperty(required=False)
 	url = db.LinkProperty(required=False)
 	created = db.DateTimeProperty(required=True, auto_now_add=True)
@@ -148,6 +149,7 @@ class UserService(db.Model):
 						'user_service_id': self.user_service_id,
 						'access_token': self.access_token,
 						'access_token_secret': self.access_token_secret,
+						'email': self.email,
 						'picture': self.picture,
 						'url': self.url,
 						'created': self.created}
@@ -158,4 +160,4 @@ class UserService(db.Model):
 	@staticmethod
 	def fromJSON(json):
 		j = load_json(json)
-		return UserService(key_name=j['key'], name=j['name'], user=j['user'], user_service_id=j['user_service_id'], access_token=j['access_token'], access_token_secret=j['access_token_secret'], picture=j['picture'], url=j['url'], created=j['created'])
+		return UserService(key_name=j['key'], name=j['name'], user=j['user'], user_service_id=j['user_service_id'], access_token=j['access_token'], access_token_secret=j['access_token_secret'], email=j['email'], picture=j['picture'], url=j['url'], created=j['created'])
