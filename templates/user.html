@@ -1,4 +1,4 @@
-$def with(user)
+$def with(user, services)
 <!DOCTYPE html>
 <html><head><title>Word Ladder: Your Account</title>
 <link rel="icon" href="/static/images/favicon.png">
@@ -7,20 +7,41 @@ $def with(user)
 <h1>Your Account</h1>
 $if user:
   $if user.username:
-    <p>Your username is <span class="username">$user.username</span>. You can change it using the form below.</p>
+    <p>Your username is <span class="username">$user.username</span>.</p>
   $else:
     <p>You have not chosen a username yet. You can choose one using the form below.</p>
   <form action="/user/account" method="post">
-    <label for="username">Username: <input type="text" name="username" id="username" size="23" maxlength="32" /></label>
+    <label for="username">Change username: <input type="text" name="username" id="username" size="23" maxlength="32" /></label>
     <input type="hidden" name="return_to" value="/user/account" />
-    <button type="submit">Set Username</button>
+    <button type="submit">Go</button>
   </form>
+
+	$if len(services) > user.services.count():
+		<h2>Available services</h2>
+		<p>You can link your word ladder account to these services to be more social.</p>
+		<ul id="servicesavailable">
+		$for s in services:
+			$if s not in [us.name for us in user.services]:
+				<li><a href="/user/login/$s" title="Link a $s account">$s</a></li>
+		</ul>
+	
+	$if user.services.count():
+		<h2>Linked services</h2>
+		<p>You've linked your word ladder account to these services.</p>
+		<ul id="serviceslinked">
+		$for s in user.services:
+			<li>
+			$if s.picture:
+				<img src="$s.picture" border="0" height="50" alt="$str(user) on $s.name" />
+			$s.name
+			[<a href="/user/update/$s.name" title="Update $s.name profile">update profile</a>]
+			[<a href="/user/remove/$s.name" title="Unlink $s.name">unlink</a>]
+			$if s.picture and s.picture != user.picture:
+				[<a href="/user/usephoto/$s.name" title="Use $s.name photo">use photo</a>]
+			</li>
+		</ul>
 $else:
-  <p>You are not logged in. Please log in using OpenID.</p>
-  <form method="post" action="/user/login">
-    <label for="openid">Open ID: <input type="text" name="openid" id="openid" value="" /></label>
-    <input type="hidden" name="return_to" value="/user/account" />
-    <button type="submit">Login</button>
-  </form>
+  <p>You are not logged in.</p>
+
 </body>
 </html>

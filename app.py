@@ -10,10 +10,7 @@ from words import validword
 from user import *
 from session import *
 from data import *
-from facebookoauth import *
-from googleoauth import *
-from twitteroauth import *
-from config import HASHKEY
+from config import *
 
 urls = (
 	'/', 'index',
@@ -23,6 +20,7 @@ urls = (
 	'/user/login/([^/]*)', 'login',
 	'/user/update/([^/]*)', 'update',
 	'/user/remove/([^/]*)', 'remove',
+	'/user/usephoto/([^/]*)', 'usephoto',
 	'/user/logout', 'logout',
 	'/user/account', 'account',
 	)
@@ -140,66 +138,91 @@ class game:
 
 class account:
 	def POST(self):
-		i = web.input('username', return_to='/')
+		i = web.input('username')
 		u = User.currentUser()
 		if u:
 			if i.username:
 				u.setUsername(i.username)
 		else:
 			return web.redirect('/user/login')
-		return web.redirect(i.return_to)
+		return web.seeother(User.currentSession().getKey('redirect') and 1 or '/user/account')
 	def GET(self):
 		user = User.currentUser()
-		return render.user(user)
+		return render.user(user, SERVICES)
 
 class login:
 	def GET(self, service):
-		available_services = dict(facebook = facebookOAuth.authorize, google = googleOAuth.authorize, twitter = twitterOAuth.authorize)
 		user = User.currentUser()
-		if user and not user.isAnonymous() and not service in available_services:
-			web.seeother("/user/account")
-		elif service in available_services:
+		if user and not user.isAnonymous() and not service in SERVICES:
+			web.seeother(User.currentSession().getKey('redirect') and 1 or '/user/account')
+		elif service in SERVICES:
 			args = web.input(code = '', oauth_token = '', oauth_verifier = '')
-			return available_services[service](args)
+			return getServiceFunction(service, 'login')(args)
 		else:
 			return render.login()
 
 class logout:
 	def GET(self):
-		redirect = User.currentSession().getKey('redirect')
 		User.currentUser().logout()
-		if redirect:	
-			return web.redirect(redirect)
-		return web.redirect('/')
+		return web.seeother(User.currentSession().getKey('redirect') and 1 or '/')
 		
 class update:
 	def GET(self, service):
-		available_services = dict(facebook = facebookOAuth.updateProfile, google = googleOAuth.updateProfile, twitter = twitterOAuth.updateProfile)
-  		
 		user = User.currentUser()
-		if user and not user.isAnonymous() and not service in available_services:
-			return web.seeother("/user/account")
-		elif service in available_services and service in [s.name for s in user.services]:
+		if user and not user.isAnonymous() and not service in SERVICES:
+			return web.seeother(User.currentSession().getKey('redirect') and 1 or '/user/account')
+		elif service in SERVICES and service in [s.name for s in user.services]:
 			for s in user.services:
 				if s.name == service:
-					if available_services[service](s.access_token, s.access_token_secret):
+					if getServiceFunction(service, 'update')(s.access_token, s.access_token_secret):
 						User.currentSession().addMessage('info', 'Successfully updated ' + service + ' profile.')
 					else:
 						User.currentSession().addMessage('info', 'Failed to update ' + service + ' profile.')
-					return web.seeother(User.currentSession().getKey('redirect') and 1 or '/')
-		return web.seeother('/user/account')
+					return web.seeother(User.currentSession().getKey('redirect') and 1 or '/user/account')
+		return web.seeother(User.currentSession().getKey('redirect') and 1 or '/user/account')
 
 class remove:
 	def GET(self, service):
-		available_services = dict(facebook = 1, googlebuzz = 1)
 		user = User.currentUser()
-		if user and not user.isAnonymous() and not service in available_services:
-			return web.seeother("/user/account")
-		elif service in available_services and service in [s.name for s in user.services]:
+		if user and not user.isAnonymous() and not service in SERVICES:
+			return web.seeother(User.currentSession().getKey('redirect') and 1 or '/user/account')
+		elif service in SERVICES and service in [s.name for s in user.services]:
 			for s in user.services:
 				if s.name == service:
 					s.delete()
 					User.currentSession().addMessage('info', 'Successfully deleted ' + service + ' profile.')
-					return web.seeother(User.currentSession().getKey('redirect') and 1 or '/')
-		return web.seeother('/user/account')
+					return web.seeother(User.currentSession().getKey('redirect') and 1 or '/user/account')
+		return web.seeother(User.currentSession().getKey('redirect') and 1 or '/user/account')
+
+class usephoto:
+	def GET(self, service):
+		user = User.currentUser()
+		if user and not user.isAnonymous() and not service in SERVICES:
+			return web.seeother(User.currentSession().getKey('redirect') and 1 or '/user/account')
+		elif service in SERVICES and service in [s.name for s in user.services]:
+			for s in user.services:
+				if s.name == service:
+					user.picture = s.picture
+					user.put()
+					User.currentSession().addMessage('info', 'Using ' + s.name + ' picture as user icon.')
+					return web.seeother(User.currentSession().getKey('redirect') and 1 or '/user/account')
+		return web.seeother(User.currentSession().getKey('redirect') and 1 or '/user/account')
 			
+def getServiceFunction(serviceName, functionType):
+	if not serviceName in SERVICES:
+		return None
+	
+	moduleName = SERVICES[serviceName]['module']
+	if moduleName not in sys.modules:
+		__import__(moduleName)
+
+	className = SERVICES[serviceName]['class']
+	c = getattr(sys.modules[moduleName], className)
+
+	if not c:
+		return None
+
+	f = getattr(c, SERVICES[serviceName][functionType])
+	if f:
+		return f
+	return None

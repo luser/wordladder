@@ -163,7 +163,7 @@ def index(games, user):
         extend_([u'    <h1>Hi,\n'])
         if user.isAnonymous():
             extend_(['    ', u'    <a href="/user/account">', escape_(str(user), True), u'</a>!</h1>\n'])
-            extend_(['    ', u'    <p>[<a href="/user/login/facebook">Facebook Login</a>] [<a href="/user/login/google">Google Buzz Login</a>]</p>\n'])
+            extend_(['    ', u'    <p><a href="/user/account">Log in</a></p>\n'])
         else:
             if user.picture:
                 extend_(['        ', u'    <img src="', escape_(user.picture, True), u'" border="0" height="50" alt="', escape_(str(user), True), u'" /> <a href="/user/account">', escape_(str(user), True), u'</a>!</h1>\n'])
@@ -171,16 +171,8 @@ def index(games, user):
                 extend_(['        ', u'    <a href="/user/account">', escape_(str(user), True), u'</a>!</h1>\n'])
             extend_(['    ', u'    <p>You have ', escape_(user.score, True), u' total points.</p>\n'])
             extend_(['    ', u'    <p>[<a href="/user/logout">Log out</a>]</p>\n'])
-            extend_(['    ', u'    <p>Your accounts:</p>\n'])
-            extend_(['    ', u'    <ul>\n'])
-            for s in loop.setup(user.services):
-                extend_(['        ', u'    <li>\n'])
-                if s.picture:
-                    extend_(['            ', u'    <img src="', escape_(s.picture, True), u'" border="0" height="50" alt="', escape_(str(user), True), u' on ', escape_(s.name, True), u'" />\n'])
-                extend_(['        ', u'    <a href="', escape_(s.url, True), u'">', escape_(s.name, True), u'</a></li>\n'])
-            extend_(['    ', u'    </ul>\n'])
     else:
-        extend_([u'    <p>[<a href="/user/login/facebook">Facebook Login</a>] [<a href="/user/login/google">Google Buzz Login</a>]</p>\n'])
+        extend_([u'    <p><a href="/user/account">Log in</a></p>\n'])
     extend_([u'<h1>Active Games:</h1>\n'])
     extend_([escape_(gamelist(games, True), False), u'\n'])
     extend_([u'<h2>Finished Games:</h2>\n'])
@@ -195,7 +187,7 @@ index = CompiledTemplate(index, 'templates/index.html')
 join_ = index._join; escape_ = index._escape
 
 # coding: utf-8
-def user(user):
+def user(user, services):
     __lineoffset__ = -4
     loop = ForLoop()
     self = TemplateResult(); extend_ = self.extend
@@ -207,21 +199,42 @@ def user(user):
     extend_([u'<h1>Your Account</h1>\n'])
     if user:
         if user.username:
-            extend_([u'<p>Your username is <span class="username">', escape_(user.username, True), u'</span>. You can change it using the form below.</p>\n'])
+            extend_([u'<p>Your username is <span class="username">', escape_(user.username, True), u'</span>.</p>\n'])
         else:
             extend_([u'<p>You have not chosen a username yet. You can choose one using the form below.</p>\n'])
         extend_([u'<form action="/user/account" method="post">\n'])
-        extend_([u'  <label for="username">Username: <input type="text" name="username" id="username" size="23" maxlength="32" /></label>\n'])
+        extend_([u'  <label for="username">Change username: <input type="text" name="username" id="username" size="23" maxlength="32" /></label>\n'])
         extend_([u'  <input type="hidden" name="return_to" value="/user/account" />\n'])
-        extend_([u'  <button type="submit">Set Username</button>\n'])
+        extend_([u'  <button type="submit">Go</button>\n'])
         extend_([u'</form>\n'])
+        extend_([u'\n'])
+        if len(services) > user.services.count():
+            extend_(['      ', u'    <h2>Available services</h2>\n'])
+            extend_(['      ', u'    <p>You can link your word ladder account to these services to be more social.</p>\n'])
+            extend_(['      ', u'    <ul id="servicesavailable">\n'])
+            for s in loop.setup(services):
+                if s not in [us.name for us in user.services]:
+                    extend_(['              ', u'    <li><a href="/user/login/', escape_(s, True), u'" title="Link a ', escape_(s, True), u' account">', escape_(s, True), u'</a></li>\n'])
+            extend_(['      ', u'    </ul>\n'])
+            extend_(['      ', u'\n'])
+        if user.services.count():
+            extend_(['      ', u'    <h2>Linked services</h2>\n'])
+            extend_(['      ', u"    <p>You've linked your word ladder account to these services.</p>\n"])
+            extend_(['      ', u'    <ul id="serviceslinked">\n'])
+            for s in loop.setup(user.services):
+                extend_(['          ', u'    <li>\n'])
+                if s.picture:
+                    extend_(['              ', u'    <img src="', escape_(s.picture, True), u'" border="0" height="50" alt="', escape_(str(user), True), u' on ', escape_(s.name, True), u'" />\n'])
+                extend_(['          ', u'    ', escape_(s.name, True), u'\n'])
+                extend_(['          ', u'    [<a href="/user/update/', escape_(s.name, True), u'" title="Update ', escape_(s.name, True), u' profile">update profile</a>]\n'])
+                extend_(['          ', u'    [<a href="/user/remove/', escape_(s.name, True), u'" title="Unlink ', escape_(s.name, True), u'">unlink</a>]\n'])
+                if s.picture and s.picture != user.picture:
+                    extend_(['              ', u'    [<a href="/user/usephoto/', escape_(s.name, True), u'" title="Use ', escape_(s.name, True), u' photo">use photo</a>]\n'])
+                extend_(['          ', u'    </li>\n'])
+            extend_(['      ', u'    </ul>\n'])
     else:
-        extend_([u'<p>You are not logged in. Please log in using OpenID.</p>\n'])
-        extend_([u'<form method="post" action="/user/login">\n'])
-        extend_([u'  <label for="openid">Open ID: <input type="text" name="openid" id="openid" value="" /></label>\n'])
-        extend_([u'  <input type="hidden" name="return_to" value="/user/account" />\n'])
-        extend_([u'  <button type="submit">Login</button>\n'])
-        extend_([u'</form>\n'])
+        extend_([u'<p>You are not logged in.</p>\n'])
+        extend_([u'\n'])
     extend_([u'</body>\n'])
     extend_([u'</html>\n'])
 

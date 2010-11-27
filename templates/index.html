@@ -18,7 +18,7 @@ $if user:
 	<h1>Hi,
 	$if user.isAnonymous():
 		<a href="/user/account">$str(user)</a>!</h1>
-		<p>[<a href="/user/login/facebook">Facebook Login</a>] [<a href="/user/login/google">Google Buzz Login</a>]</p>
+		<p><a href="/user/account">Log in</a></p>
 	$else:
 		$if user.picture:
 			<img src="$user.picture" border="0" height="50" alt="$str(user)" /> <a href="/user/account">$str(user)</a>!</h1>
@@ -26,16 +26,8 @@ $if user:
 			<a href="/user/account">$str(user)</a>!</h1>
 		<p>You have $user.score total points.</p>
 		<p>[<a href="/user/logout">Log out</a>]</p>
-		<p>Your accounts:</p>
-		<ul>
-		$for s in user.services:
-			<li>
-			$if s.picture:
-				<img src="$s.picture" border="0" height="50" alt="$str(user) on $s.name" />
-			<a href="$s.url">$s.name</a></li>
-		</ul>
 $else:
-	<p>[<a href="/user/login/facebook">Facebook Login</a>] [<a href="/user/login/google">Google Buzz Login</a>]</p>
+	<p><a href="/user/account">Log in</a></p>
 <h1>Active Games:</h1>
 $:gamelist(games, True)
 <h2>Finished Games:</h2>

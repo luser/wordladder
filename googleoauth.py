@@ -156,6 +156,11 @@ class googleOAuth():
 				service.picture = str(bprofile['data']['thumbnailUrl'])
 				service.url = str(bprofile['data']['profileUrl'])
 			
+			if not service.picture and service.email:
+				gravatar_url = "http://www.gravatar.com/avatar.php?"
+				gravatar_url += urllib.urlencode({'gravatar_id': hashlib.md5(email.lower()).hexdigest(), 'size': '50', 'default': 'identicon'})
+				service.picture = gravatar_url
+
 			user = User.currentUser()
 			if service.user and service.user.key().name() != user.key().name():
 				service.user.mergeWith(user)

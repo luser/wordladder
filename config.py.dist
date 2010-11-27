@@ -16,6 +16,28 @@ DATADIR = "/path/to/data"
 # Any random string of characters, used to compute secure HMAC signatures.
 HASHKEY = "changethis"
 
+# User account services available
+SERVICES = {
+	'facebook': {
+		'module': 'facebookoauth',
+		'class': 'facebookOAuth',
+		'login': 'authorize',
+		'update': 'updateProfile',
+	},
+	'twitter': {
+		'module': 'twitteroauth',
+		'class': 'twitterOAuth',
+		'login': 'authorize',
+		'update': 'updateProfile',
+	},
+	'google': {
+		'module': 'googleoauth',
+		'class': 'googleOAuth',
+		'login': 'authorize',
+		'update': 'updateProfile',
+	}
+}
+
 #---------------------------------------------------------------
 # These options aren't necessary for running the webapp, just for
 # other scripts (like graphtraverse.py and scoracle.py)
