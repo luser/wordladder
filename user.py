@@ -74,7 +74,7 @@ class User(db.Model):
 	def makeAnonUser():
 		user = User(key_name='user-' + hmac.new(HASHKEY, str(mktime(localtime())) + str(web.ctx.ip) + str(web.ctx.env['HTTP_USER_AGENT'])).hexdigest())
 		user.put()
-		if user:
+		if user.put():
 			user.login()
 			return user
 		else:
@@ -115,8 +115,8 @@ class User(db.Model):
 			uM.user = self
 			uM.put()
 
-		# TODO: Handle other stuff, like scores and shit.
 		u.delete()
+		return self.login()
 
 	def login(self):
 		return web.setcookie('wl_identity', self.key().name() + '/' + hmac.new(HASHKEY, self.key().name(), hashlib.sha1).hexdigest(), expires=mktime(localtime()) + 86400 * 30)

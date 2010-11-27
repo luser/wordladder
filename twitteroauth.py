@@ -20,15 +20,10 @@ TWITTER_REQUEST_TOKEN_URL = 'https://api.twitter.com/oauth/request_token'
 TWITTER_AUTHORIZE_URL = 'https://api.twitter.com/oauth/authorize'
 TWITTER_ACCESS_TOKEN_URL = 'https://api.twitter.com/oauth/access_token'
 
-import hashlib
-import hmac
-import os.path
-import urllib
-import web
-import cgi
-import random
+import hashlib, hmac
+import os.path, random
+import web, cgi, urllib, urllib2
 
-from urllib2 import urlopen as urlopen
 from json import dump_json, load_json
 from google.appengine.ext import db
 from data import web_host
@@ -55,7 +50,18 @@ class twitterOAuth():
 		if oauth_token and oauth_verifier:
 			args.update({'oauth_token': oauth_token, 'oauth_verifier': oauth_verifier})
 			args['oauth_signature'] = twitterOAuth.sign(TWITTER_ACCESS_TOKEN_URL, args)
-			response = cgi.parse_qs(urlopen(TWITTER_ACCESS_TOKEN_URL + '?' + urllib.urlencode(args)).read())
+			try:
+				response = urllib2.urlopen(TWITTER_ACCESS_TOKEN_URL + '?' + urllib.urlencode(args)).read()
+			except:
+				User.currentSession().addMessage('error', "Couldn't get access token from Twitter. Please try again in a few minutes.")
+				return web.seeother('/')
+
+			response = cgi.parse_qs(response)
+
+			if 'oauth_token' not in response or 'oauth_token_secret' not in response:
+				User.currentSession().addMessage('error', "Didn't get the expected response from Twitter.")
+				return web.seeother('/')
+
 			oauth_token = response['oauth_token'][-1]
 			oauth_token_secret = response['oauth_token_secret'][-1]
 
@@ -78,11 +84,23 @@ class twitterOAuth():
 			User.currentSession().deleteKey('token_secret')
 			args.update(oauth_callback=web_host() + '/user/login/twitter')
 			args['oauth_signature'] = twitterOAuth.sign(TWITTER_REQUEST_TOKEN_URL, args)
-			response = cgi.parse_qs(urlopen(TWITTER_REQUEST_TOKEN_URL + '?' + urllib.urlencode(args)).read())
-			oauth_token = response['oauth_token'][-1]
-			oauth_token_secret = response['oauth_token_secret'][-1]
-			User.currentSession().setKey('token_secret', oauth_token_secret)
-			return web.seeother(TWITTER_AUTHORIZE_URL + '?oauth_token=' + urllib.quote(oauth_token));
+
+			try:
+				response = urllib2.urlopen(TWITTER_REQUEST_TOKEN_URL + '?' + urllib.urlencode(args)).read()
+			except:
+				User.currentSession().addMessage('error', "Couldn't request OAuth token from Twitter. Please try again in a few minutes.")
+				return web.seeother('/')
+
+			response = cgi.parse_qs(response)
+
+			if 'oauth_token' in response and 'oauth_token_secret' in response:
+				oauth_token = response['oauth_token'][-1]
+				oauth_token_secret = response['oauth_token_secret'][-1]
+				User.currentSession().setKey('token_secret', oauth_token_secret)
+				return web.seeother(TWITTER_AUTHORIZE_URL + '?oauth_token=' + urllib.quote(oauth_token));
+			else:
+				User.currentSession().addMessage('error', "Twitter's response didn't contain the information we expected. Please try again in a few minutes.")
+				return web.seeother('/')
 
 	@staticmethod
 	def sign(url, request):
@@ -101,7 +119,13 @@ class twitterOAuth():
 		args.update(oauth_token=access_token)
 		User.currentSession().setKey('token_secret', access_token_secret)
 		args['oauth_signature'] = twitterOAuth.sign(url, args)
-		profile = load_json(urlopen(url + '?' + urllib.urlencode(args)).read())
+		
+		try:
+			profile = load_json(urllib2.urlopen(url + '?' + urllib.urlencode(args)).read())
+		except:
+			User.currentSession().addMessage('error', "Couldn't access your Twitter profile.")
+			profile = False
+
 		if profile:
 			service = UserService.get_or_insert(key_name='twitter-' + str(profile['id']), access_token=str(access_token), access_token_secret=str(access_token_secret), name='twitter', username=str(profile['name']), user_service_id=str(profile['id']), picture=str(profile['profile_image_url']), url=str('http://twitter.com/' + profile['screen_name']))
 			service.access_token = str(access_token)

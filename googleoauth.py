@@ -20,13 +20,9 @@ GOOGLE_REQUEST_TOKEN_URL = 'https://www.google.com/accounts/OAuthGetRequestToken
 GOOGLE_AUTHORIZE_URL = 'https://www.google.com/accounts/OAuthAuthorizeToken'
 GOOGLE_ACCESS_TOKEN_URL = 'https://www.google.com/accounts/OAuthGetAccessToken'
 
-import hashlib
-import hmac
-import os.path
-import urllib
-import web
-import cgi
-import random
+import hmac, hashlib
+import os.path, random
+import web, cgi, urllib
 
 from urllib2 import urlopen as urlopen, URLError, HTTPError
 from json import dump_json, load_json
@@ -55,7 +51,17 @@ class googleOAuth():
 		if oauth_token and oauth_verifier:
 			args.update({'oauth_token': oauth_token, 'oauth_verifier': oauth_verifier})
 			args['oauth_signature'] = googleOAuth.sign(GOOGLE_ACCESS_TOKEN_URL, args)
-			response = cgi.parse_qs(urlopen(GOOGLE_ACCESS_TOKEN_URL + '?' + urllib.urlencode(args)).read())
+			try:
+				response = urlopen(GOOGLE_ACCESS_TOKEN_URL + '?' + urllib.urlencode(args)).read()
+			except:
+				User.currentSession().addMessage('error', "Couldn't fetch OAuth access token from Google. Please try again in a few minutes.")
+				return web.seeother('/')
+
+			response = cgi.parse_qs(response)
+			if 'oauth_token' not in response or 'oauth_token_secret' not in response:
+				User.currentSession().addMessage('error', "Google's response didn't contain the information we expected. Please try again in a few minutes.")
+				return web.seeother('/')
+
 			oauth_token = response['oauth_token'][-1]
 			oauth_token_secret = response['oauth_token_secret'][-1]
 
@@ -76,16 +82,27 @@ class googleOAuth():
 			user.put()
 
 			user.login()
+			User.currentSession().addMessage('info', "Successfully logged into your Google account.")
 			return web.seeother('/')			
 		else:
 			User.currentSession().deleteKey('token_secret')
 			args.update(oauth_callback=web_host() + '/user/login/google', scope='https://www.googleapis.com/auth/buzz https://www.google.com/m8/feeds/')
 			args['oauth_signature'] = googleOAuth.sign(GOOGLE_REQUEST_TOKEN_URL, args)
-			response = cgi.parse_qs(urlopen(GOOGLE_REQUEST_TOKEN_URL + '?' + urllib.urlencode(args)).read())
-			oauth_token = response['oauth_token'][-1]
-			oauth_token_secret = response['oauth_token_secret'][-1]
-			User.currentSession().setKey('token_secret', oauth_token_secret)
-			return web.seeother(GOOGLE_AUTHORIZE_URL + '?oauth_token=' + urllib.quote(oauth_token));
+			try:
+				response = urlopen(GOOGLE_REQUEST_TOKEN_URL + '?' + urllib.urlencode(args)).read()
+			except:
+				User.currentSession().addMessage('error', "Couldn't request OAuth token from Google. Please try again in a few minutes.")
+				return web.seeother('/')
+
+			response = cgi.parse_qs(response)
+			if 'oauth_token' in response and 'oauth_token_secret' in response:
+				oauth_token = response['oauth_token'][-1]
+				oauth_token_secret = response['oauth_token_secret'][-1]
+				User.currentSession().setKey('token_secret', oauth_token_secret)
+				return web.seeother(GOOGLE_AUTHORIZE_URL + '?oauth_token=' + urllib.quote(oauth_token));
+			else:
+				User.currentSession().addMessage('error', "Google's response didn't contain the information we expected. Please try again in a few minutes.")
+				return web.seeother('/')
 
 	@staticmethod
 	def sign(url, request):
@@ -108,6 +125,7 @@ class googleOAuth():
 		try:
 			bprofile = load_json(urlopen(url + '?' + urllib.urlencode(args)).read())
 		except (URLError, HTTPError):
+			User.currentSession().addMessage('warning', "Couldn't access your Google Buzz profile (maybe you don't have one?).")
 			bprofile = False
 
 		# Then get the Contacts profile.
@@ -118,9 +136,8 @@ class googleOAuth():
 		args['oauth_signature'] = googleOAuth.sign(url, args)
 		try:
 			cprofile = load_json(urlopen(url + '?' + urllib.urlencode(args)).read())
-		except URLError, u:
-			cprofile = False
-		except HTTPError, h:
+		except (URLError, HTTPError):
+			User.currentSession().addMessage('error', "Couldn't access your Google Contacts profile. This is required for authenticating with your Google account.")
 			cprofile = False
 
 		# Contacts profile is required.

@@ -19,12 +19,9 @@ FACEBOOK_APP_SECRET = 'a2f057029372cbb02e31094c23dfd40f'
 FACEBOOK_AUTHORIZE_URL = 'https://graph.facebook.com/oauth/authorize'
 FACEBOOK_ACCESS_TOKEN_URL = 'https://graph.facebook.com/oauth/access_token'
 
-import hashlib
-import hmac
+import hashlib, hmac
 import os.path
-import urllib
-import web
-import cgi
+import web, cgi, urllib
 
 from urllib2 import urlopen as urlopen
 from json import dump_json, load_json
@@ -42,7 +39,17 @@ class facebookOAuth():
 		args = dict(client_id = FACEBOOK_APP_ID, redirect_uri = web_host() + '/user/login/facebook')
 		if code:
 			args.update(client_secret=FACEBOOK_APP_SECRET, code=code)
-			response = cgi.parse_qs(urlopen(FACEBOOK_ACCESS_TOKEN_URL + '?' + urllib.urlencode(args)).read())
+			try:
+				response = urlopen(FACEBOOK_ACCESS_TOKEN_URL + '?' + urllib.urlencode(args)).read()
+			except:
+				User.currentSession().addMessage('error', "Couldn't get access token from Facebook. Please try again in a few minutes.")
+				web.seeother('/')
+
+			response = cgi.parse_qs(response)
+			if not 'access_token' in response:
+				User.currentSession().addMessage('error', "The response from Facebook didn't contain the information we expected. Please try again in a few minutes.")
+				web.seeother('/')
+
 			token = response['access_token'][-1]
 			service = facebookOAuth.updateProfile(token, False)
 
@@ -58,13 +65,20 @@ class facebookOAuth():
 			user.put()
 
 			user.login()
+			User.currentSession().addMessage('info', "Successfully logged you into your Facebook account.")
 			web.seeother('/')			
 		else:
 			web.seeother(FACEBOOK_AUTHORIZE_URL + '?' + urllib.urlencode(args))
 
 	@staticmethod
 	def updateProfile(access_token, access_token_secret = False):
-		profile = load_json(urlopen('https://graph.facebook.com/me?fields=id,name,link,picture&' + urllib.urlencode(dict(access_token = access_token))).read())
+		try:
+			response = urlopen('https://graph.facebook.com/me?fields=id,name,link,picture&' + urllib.urlencode(dict(access_token = access_token))).read()
+		except:
+			User.currentSession().addMessage('error', "Couldn't get profile information from Facebook. Please try again in a few minutes.")
+			return False
+
+		profile = load_json(response)
 		if profile:
 			service = UserService.get_or_insert(key_name='facebook-' + str(profile['id']), access_token=str(access_token), name='facebook', user_service_id=str(profile['id']), url=str(profile['link']), picture=str(profile['picture']))
 			service.access_token = str(access_token)
