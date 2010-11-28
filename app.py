@@ -31,7 +31,8 @@ main = app.cgirun()
 # stupid incomplete list of builtins!
 TEMPLATE_BUILTINS['sorted'] = sorted
 TEMPLATE_BUILTINS['dump_json'] = dump_json
-render = web.template.render('templates', builtins=TEMPLATE_BUILTINS)
+TEMPLATE_BUILTINS['currentUser'] = User.currentUser
+render = web.template.render('templates', builtins=TEMPLATE_BUILTINS, base='layout')
 
 def wantsJSON():
 	#TODO: better Accept parsing?

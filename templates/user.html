@@ -1,20 +1,12 @@
 $def with(user, services)
-<!DOCTYPE html>
-<html><head><title>Word Ladder: Your Account</title>
-<link rel="icon" href="/static/images/favicon.png">
-</head>
-<body>
+$var title: Your Account
+$var css:
+$var js:
 <h1>Your Account</h1>
 $if user:
-  $if user.username:
-    <p>Your username is <span class="username">$user.username</span>.</p>
-  $else:
-    <p>You have not chosen a username yet. You can choose one using the form below.</p>
-  <form action="/user/account" method="post">
-    <label for="username">Change username: <input type="text" name="username" id="username" size="23" maxlength="32" /></label>
-    <input type="hidden" name="return_to" value="/user/account" />
-    <button type="submit">Go</button>
-  </form>
+	$if user.score and user.isAnonymous():
+		<h2>Log in to claim your points</h2>
+		<p>You've earned points, but you're still using a guest account. Log into one of the services below to claim your account and your points.</p>
 
 	$if len(services) > user.services.count():
 		<h2>Available services</h2>
@@ -40,8 +32,16 @@ $if user:
 				[<a href="/user/usephoto/$s.name" title="Use $s.name photo">use photo</a>]
 			</li>
 		</ul>
+
+	<h2>Username</h2>
+	$if user.username:
+		<p>Your username is <span class="username">$user.username</span>.</p>
+	$else:
+		<p>You have not chosen a username yet. You can choose one using the form below.</p>
+	<form action="/user/account" method="post">
+		<label for="username">Change username: <input type="text" name="username" id="username" size="23" maxlength="32" /></label>
+		<input type="hidden" name="return_to" value="/user/account" />
+		<button type="submit">Go</button>
+	</form>
 $else:
   <p>You are not logged in.</p>
-
-</body>
-</html>

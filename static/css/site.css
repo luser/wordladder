@@ -1,116 +1,72 @@
 .error {
   background-color: red;
 }
-
 body {
   text-align: center;
   font-size: 10pt;
 }
-p {
-  display: block;
+div#statusBar {
+  font-size: 80%;
+  font-family: Tahoma;
+  font-weight: bold;
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 4px 0px;
+  z-index: 500;
+  width: 100%;
+  height: 16px;
+  background: #999;
+	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#cccccc', endColorstr='#666666'); /* for IE */
+	background: -webkit-gradient(linear, left top, left bottom, from(#ccc), to(#666)); /* for webkit browsers */
+	background: -moz-linear-gradient(top,  #ccc,  #666); /* for firefox 3.6+ */
+  color: white;
+  vertical-align: middle;
+}
+div#statusBar a {
+  color: #333;
+}
+div#statusBar div img {
+  vertical-align: middle;
+}
+div#statusBar div {
   float: left;
-  clear: both;
+  height: 24px;
+  padding: 0 1em;
+  text-shadow: white 0 0 5px;
 }
-ul {
-  display: block;
-  float: left;
-  text-align: center;
-  padding: 0;
-  margin: 0;
-  list-style: none;
+div#statusBar a.button {
+  padding: 0px 1em;
 }
-ul li {
-  display: block;
-  float: left;
-  padding: 0;
-  margin: 0;
+div#statusBar div#points {
+  margin-left: auto;
+  margin-right: auto;
 }
-ul li img {
-  width: 16px;
-  align: texttop;
-  margin-left: -16px;
-  border: 1px black solid;
+div#statusBar div#actions {
+  float: right;
 }
-ul#scores {
-    border: 1px grey solid;
-    z-index: 1000;
-    position: absolute;
-    top: 0;
-    right: 0;
-    padding: 10px;
-    margin: 3px;
-    -moz-border-radius: 5px;
-    display: block;
-    float: left;
+div#body {
+	margin-top: 28px;
+	text-align: left;
 }
-ul#scores li {
-    display: block;
-    float: left;
-    clear: left;
-		margin-bottom: 2px;
-}
-ul#scores li img {
-    width: 32px;
-    vertical-align: middle;
-    margin-left: 0px;
-}
-[bottom] {
-  clear: left;
-}
-input, .placeholder {
-  width: 9em;
-}
-.placeholder {
-  margin-top: 0.5em;
-  height: 1em;
-}
-form {
-  margin: 0.6em 1px;
+span#newgame {
+  background: #30b02c;
+	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#67e063', endColorstr='#0a6b06'); /* for IE */
+	background: -webkit-gradient(linear, left top, left bottom, from(#67e063), to(#0a6b06)); /* for webkit browsers */
+	background: -moz-linear-gradient(top,  #67e063,  #0a6b06); /* for firefox 3.6+ */
+	-moz-border-radius: 15px;
+	border-radius: 15px;
+	border: 2px #333 solid;
+	display: inline-block;
+	padding: 1em 2em;
+	font-size: 120%;
+	font-weight: bold;
+	text-align: center;
+	text-shadow: #67e063 1px 1px 0px;
+	color: black;
 }
 
-.hidden {
-  visibility: hidden;
+span#newgame a, span#newgame a:visited {
+	color: black;
+	text-decoration: none;
 }
-
-.move {
-  position: relative;
-  border: 1px solid gray;
-  padding: 0.5em;
-  background: white;
-  -moz-border-radius: 10px;
-  -webkit-border-radius: 10px;
-  -moz-box-shadow: 2px 2px 2px gray;
-  -webkit-box-shadow: 2px 2px 2px gray;
-}
-.timestamp {
-  display: none;
-}
-
-.win {
-  border: 1px solid red;
-}
-
-
-div.WireIt-Terminal {
-  background: none;
-}
-
-canvas.WireIt-Wire {
-  z-index: -1;
-}
-
-#playinfo {
-  position: fixed;
-  bottom: 0;
-  right: 0;
-  width: 20%;
-  height: 100%;
-  overflow: auto;
-  overflow-x: auto;
-	display: none;
-}
-
-.log {
-  padding: 0.25em;
-}
-

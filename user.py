@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 
-import web
+import web, urllib
 import os
-import hmac
-import hashlib
+import hmac, hashlib
 from time import *
 from session import *
 
@@ -16,6 +15,9 @@ class User(db.Model):
 	picture = db.LinkProperty(required=False)
 	score = db.IntegerProperty(required=False, default=0)
 	created = db.DateTimeProperty(required=True, auto_now_add=True)
+
+	# static
+	_currentUser = None
 
 	def __str__(self):
 		if self.username:
@@ -45,6 +47,8 @@ class User(db.Model):
 
 	@staticmethod
 	def currentUser():
+		if User._currentUser:
+			return User._currentUser
 		cookies = web.cookies()
 		if ("wl_identity" in cookies):
 			identity = cookies["wl_identity"]
@@ -53,6 +57,7 @@ class User(db.Model):
 				if (hmac.new(HASHKEY, parts[0], hashlib.sha1).hexdigest() == parts[1]):
 					user = User.get_by_key_name(key_names=parts[0])
 					if user:
+						User._currentUser = user
 						return user
 		return User.makeAnonUser()
 
@@ -73,7 +78,9 @@ class User(db.Model):
 	@staticmethod
 	def makeAnonUser():
 		user = User(key_name='user-' + hmac.new(HASHKEY, str(mktime(localtime())) + str(web.ctx.ip) + str(web.ctx.env['HTTP_USER_AGENT'])).hexdigest())
-		user.put()
+		gravatar_url = "http://www.gravatar.com/avatar.php?"
+		gravatar_url += urllib.urlencode({'gravatar_id': hashlib.md5(str(web.ctx.ip)+str(web.ctx.env['HTTP_USER_AGENT'])).hexdigest(), 'size': '50', 'default': 'identicon'})
+		user.picture = gravatar_url
 		if user.put():
 			user.login()
 			return user
@@ -101,10 +108,10 @@ class User(db.Model):
 
 		uSession = u.session.get()
 		if uSession:
-			mySession = self.currentSession()
+			mySession = self.session.get()
 			for uP in uSession.params:
 				if uP.name not in [mP.name for mP in mySession.params]:
-					uP.session = mySession
+					uP.asession = mySession
 					uP.put()
 				else:
 					# TODO: Handle specific session params that should get merged in some other way.
@@ -116,12 +123,14 @@ class User(db.Model):
 			uM.put()
 
 		u.delete()
-		return self.login()
+		return self
 
 	def login(self):
+		User._currentUser = self
 		return web.setcookie('wl_identity', self.key().name() + '/' + hmac.new(HASHKEY, self.key().name(), hashlib.sha1).hexdigest(), expires=mktime(localtime()) + 86400 * 30)
 	
 	def logout(self):
+		User._currentUser = None
 		return self.makeAnonUser()
 
 class UserService(db.Model):

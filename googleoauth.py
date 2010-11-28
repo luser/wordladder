@@ -83,7 +83,7 @@ class googleOAuth():
 
 			user.login()
 			User.currentSession().addMessage('info', "Successfully logged into your Google account.")
-			return web.seeother('/')			
+			return web.seeother('/')
 		else:
 			User.currentSession().deleteKey('token_secret')
 			args.update(oauth_callback=web_host() + '/user/login/google', scope='https://www.googleapis.com/auth/buzz https://www.google.com/m8/feeds/')
@@ -102,7 +102,7 @@ class googleOAuth():
 				return web.seeother(GOOGLE_AUTHORIZE_URL + '?oauth_token=' + urllib.quote(oauth_token));
 			else:
 				User.currentSession().addMessage('error', "Google's response didn't contain the information we expected. Please try again in a few minutes.")
-				return web.seeother('/')
+				return web.seeother('/?f=0.5')
 
 	@staticmethod
 	def sign(url, request):
@@ -158,14 +158,13 @@ class googleOAuth():
 			
 			if not service.picture and service.email:
 				gravatar_url = "http://www.gravatar.com/avatar.php?"
-				gravatar_url += urllib.urlencode({'gravatar_id': hashlib.md5(email.lower()).hexdigest(), 'size': '50', 'default': 'identicon'})
+				gravatar_url += urllib.urlencode({'gravatar_id': hashlib.md5(service.email.lower()).hexdigest(), 'size': '50', 'default': 'identicon'})
 				service.picture = gravatar_url
 
 			user = User.currentUser()
 			if service.user and service.user.key().name() != user.key().name():
 				service.user.mergeWith(user)
-				user = service.user
-				user.put()
+				service.user.put()
 			else:
 				service.user = user
 

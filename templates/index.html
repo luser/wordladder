@@ -1,4 +1,7 @@
 $def with(games, user)
+$var title: Welcome
+$var css:
+$var js:
 $def gamelist(gl, active, user=None):
   <ul>
     $for g in gl:
@@ -8,30 +11,9 @@ $def gamelist(gl, active, user=None):
 					(you earned $g.score[user.key().name()]['score'] points)
 				</li>
   </ul>
-<!DOCTYPE html>
-<html><head><title>Word Ladder</title>
-<link rel="icon" href="/static/images/favicon.png">
-<meta name="viewport" content="width = device-width">
-</head>
-<body>
-$if user:
-	<h1>Hi,
-	$if user.isAnonymous():
-		<a href="/user/account">$str(user)</a>!</h1>
-		<p><a href="/user/account">Log in</a></p>
-	$else:
-		$if user.picture:
-			<img src="$user.picture" border="0" height="50" alt="$str(user)" /> <a href="/user/account">$str(user)</a>!</h1>
-		$else:
-			<a href="/user/account">$str(user)</a>!</h1>
-		<p>You have $user.score total points.</p>
-		<p>[<a href="/user/logout">Log out</a>]</p>
-$else:
-	<p><a href="/user/account">Log in</a></p>
-<h1>Active Games:</h1>
+<h1>Word Ladder</h1>
+<a href="/new"><span id="newgame">New Game</span></a>
+<h2>Unsolved Games:</h2>
 $:gamelist(games, True)
-<h2>Finished Games:</h2>
+<h2>Solved Games:</h2>
 $:gamelist(games, False, user)
-<a href="new">New Game</a>
-</body>
-</html>
