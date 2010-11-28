@@ -66,7 +66,7 @@ def game(game):
             else:
                 extend_(['        ', u'    <span class="log">unknown user played ', escape_(m.word, True), u'</span>\n'])
         return self
-    self['title'] = join_(u'game.start &rarr; game.end finished()')
+    self['title'] = join_(escape_(game.start, True), u' &rarr; ', escape_(game.end, True), u' ', escape_(finished(), True))
     self['css'] = join_(u'/static/css/game.css /static/css/jquery.gritter.css')
     self['js'] = join_(u'/static/js/jquery.gritter.js /static/js/game.js /static/js/wire.js')
     extend_([u'<script type="text/javascript">\n'])
@@ -105,7 +105,7 @@ def layout (content):
     extend_([u'<!DOCTYPE html>\n'])
     extend_([u'<html>\n'])
     extend_([u'        <head>\n'])
-    extend_([u'                <title>Word Ladder: ', escape_(content.title, True), u'</title>\n'])
+    extend_([u'                <title>Word Ladder: ', escape_(content.title, False), u'</title>\n'])
     extend_([u'                <link rel="icon" href="/static/images/favicon.png" />\n'])
     extend_([u'                <link rel="shortcut icon" href="/static/images/favicon.png" />\n'])
     extend_([u'                <meta name="viewport" content="width = device-width">\n'])
@@ -113,13 +113,13 @@ def layout (content):
     extend_([u'                <link rel="stylesheet" href="/static/css/humanmsg.css" media="screen" />\n'])
     if content.css:
         for css in loop.setup(content.css.split()):
-            extend_(['            ', u'    <link rel="stylesheet" href="', escape_(css, True), u'" type="text/css" media="screen" />\n'])
+            extend_(['            ', u'    <link rel="stylesheet" href="', escape_(css, False), u'" type="text/css" media="screen" />\n'])
         extend_(['        ', u'    <script type="text/javascript" src="http://www.google.com/jsapi"></script>\n'])
         extend_(['        ', u'    <script type="text/javascript">google.load(\'jquery\', \'1.3.2\');</script>\n'])
         extend_(['        ', u'    <script type="text/javascript" src="/static/js/humanmsg.js"></script>\n'])
     if content.js:
         for js in loop.setup(content.js.split()):
-            extend_(['            ', u'    <script type="text/javascript" src="', escape_(js, True), u'"></script>\n'])
+            extend_(['            ', u'    <script type="text/javascript" src="', escape_(js, False), u'"></script>\n'])
     extend_([u'        </head>\n'])
     extend_([u'        <body>\n'])
     extend_([u'                <div id="content">\n'])

@@ -44,7 +44,7 @@ $def plays():
 			<span class="log">$m.user played $m.word</span>
 		$else:
 			<span class="log">unknown user played $m.word</span>
-$var title: game.start &rarr; game.end finished()
+$var title: $game.start &rarr; $game.end $finished()
 $var css: /static/css/game.css /static/css/jquery.gritter.css
 $var js: /static/js/jquery.gritter.js /static/js/game.js /static/js/wire.js
 <script type="text/javascript">
