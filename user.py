@@ -17,7 +17,7 @@ class User(db.Model):
 	created = db.DateTimeProperty(required=True, auto_now_add=True)
 
 	# static
-	_currentUser = None
+	_currentUser = {}
 
 	def __str__(self):
 		if self.username:
@@ -47,17 +47,16 @@ class User(db.Model):
 
 	@staticmethod
 	def currentUser():
-		if User._currentUser:
-			return User._currentUser
 		cookies = web.cookies()
 		if ("wl_identity" in cookies):
 			identity = cookies["wl_identity"]
 			if identity:
 				parts = identity.split("/")
+				if parts[0] in User._currentUser:
+					return User._currentUser[parts[0]]
 				if (hmac.new(HASHKEY, parts[0], hashlib.sha1).hexdigest() == parts[1]):
 					user = User.get_by_key_name(key_names=parts[0])
 					if user:
-						User._currentUser = user
 						return user
 		return User.makeAnonUser()
 
@@ -126,11 +125,15 @@ class User(db.Model):
 		return self
 
 	def login(self):
-		User._currentUser = self
+		identity = web.cookies().get('wl_identity')
+		if identity:
+			parts = identity.split('/')
+			User._currentUser[parts[0]] = self
 		return web.setcookie('wl_identity', self.key().name() + '/' + hmac.new(HASHKEY, self.key().name(), hashlib.sha1).hexdigest(), expires=mktime(localtime()) + 86400 * 30)
 	
 	def logout(self):
-		User._currentUser = None
+		if self.key().name() in User._currentUser:
+			del User._currentUser[self.key().name()]
 		return self.makeAnonUser()
 
 class UserService(db.Model):

@@ -1,0 +1,110 @@
+h1#game {
+	text-align: center;
+}
+p {
+  display: block;
+  float: left;
+  clear: both;
+}
+ul {
+  display: block;
+  float: left;
+  text-align: center;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+ul li {
+  display: block;
+  float: left;
+  padding: 0;
+  margin: 0;
+}
+ul li img {
+  width: 16px;
+  align: texttop;
+  margin-left: -16px;
+  border: 1px black solid;
+}
+ul#scores {
+  border: 1px grey solid;
+  z-index: 1000;
+  position: absolute;
+  top: 30px;
+  right: 0;
+  padding: 10px;
+  margin: 3px;
+  -moz-border-radius: 5px;
+  display: block;
+  float: left;
+}
+ul#scores li {
+  display: block;
+  float: left;
+  clear: left;
+	margin-bottom: 2px;
+}
+ul#scores li img {
+  width: 32px;
+  vertical-align: middle;
+  margin-left: 0px;
+}
+[bottom] {
+  clear: left;
+}
+input, .placeholder {
+  width: 9em;
+}
+.placeholder {
+  margin-top: 0.5em;
+  height: 1em;
+}
+form {
+  margin: 0.6em 1px;
+}
+
+.hidden {
+  visibility: hidden;
+}
+
+.move {
+  position: relative;
+  border: 1px solid gray;
+  padding: 0.5em;
+  background: white;
+  -moz-border-radius: 10px;
+  -webkit-border-radius: 10px;
+  -moz-box-shadow: 2px 2px 2px gray;
+  -webkit-box-shadow: 2px 2px 2px gray;
+}
+.timestamp {
+  display: none;
+}
+
+.win {
+  border: 1px solid red;
+}
+
+div.WireIt-Terminal {
+  background: none;
+}
+
+canvas.WireIt-Wire {
+  z-index: -1;
+}
+
+#playinfo {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  width: 20%;
+  height: 100%;
+  overflow: auto;
+  overflow-x: auto;
+	display: none;
+}
+
+.log {
+  padding: 0.25em;
+}
+
