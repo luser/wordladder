@@ -41,6 +41,7 @@ function handlePlayError (form, err) {
 function handleGameJSON (data) {
   if ('done' in data && !done) {
     done = data.done;
+		update.stop();
     //TODO: fancy this up
     document.title += " (finished)";
     $('h1').append(" (finished)");
