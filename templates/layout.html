@@ -36,9 +36,14 @@ $def with (content)
 						<a href="/user/logout" title="Log out" class="button" id="logout-button">Log out</a>
 				</div>
 				<div id="points">
-					$currentUser().score total points
-					$if currentUser().isAnonymous() and currentUser().score:
-					&mdash; <a href="/user/account">Log in to claim these points</a>
+					<a href="/user/stats">
+						$currentUser().score total points
+						$if currentUser().isAnonymous() and currentUser().score:
+							&mdash; <a href="/user/account">Log in to claim these points</a>
+					</a>
+					<div class="popup">
+						games popup							
+					</div>
 				</div>
 				<div id="actions">
 					<a href="/new">New Game</a>

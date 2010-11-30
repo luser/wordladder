@@ -54,11 +54,13 @@ def sendJSON(game, lastid, error=None):
 		if game.moves[id].bottom:
 			d['bottom'] = True
 		if game.moves[id].user:
-			if game.moves[id].user.username:
-				d['username'] = game.moves[id].user.username
-			else:
-				d['username'] = game.moves[id].user.key().name()
-			d['picture'] = game.moves[id].user.picture
+			d['userid'] = game.moves[id].user.key().name()
+			if game.moves[id].user.key().name() not in [game.moves[m].user.key().name() for m in game.moves if game.moves[m].hasValidUser and m < lastid]:
+				if game.moves[id].user.username:
+					d['username'] = game.moves[id].user.username
+				else:
+					d['username'] = "Guest"
+				d['picture'] = game.moves[id].user.picture
 		j['moves'].append(d)
 	if error:
 		j['error'] = error

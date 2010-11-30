@@ -46,6 +46,18 @@ class Move(db.Model):
 						"bottom": self.bottom,
 						"children": [c.id for c in self.children]}
 
+	# Returns the game in which this move was played.
+	@property
+	def game(self):
+		if hasattr(self, '_game'):
+			return self._game
+
+		if self.parent() and self.parent().__class__.__name__ == 'Game':
+			self._game = self.parent()
+			return self._game
+		else:
+			return self.parent_.game()
+
 	@property
 	def hasValidUser(self):
 		# BUG http://code.google.com/p/googleappengine/issues/detail?id=426
@@ -113,6 +125,21 @@ class Game(db.Model):
 		for m in q:
 			self._moves[m.id] = m
 		return self._moves
+
+	@property
+	def users(self):
+		"""
+		Return a dict of user key -> user for all users who have played moves in this game.
+		"""
+		if hasattr(self, '_users'):
+			return self._users
+
+		self._users = {}
+		for m in self.moves:
+			if self.moves[m].hasValidUser:
+				u = self.moves[m].user
+				self._users[u.key().name()] = u
+		return self._users
 
 	@property
 	def winningchain(self):

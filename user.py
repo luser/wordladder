@@ -129,12 +129,28 @@ class User(db.Model):
 		if identity:
 			parts = identity.split('/')
 			User._currentUser[parts[0]] = self
+		if self.key().name() in User._currentUser:
+			return True
+		User._currentUser[self.key().name()] = self
 		return web.setcookie('wl_identity', self.key().name() + '/' + hmac.new(HASHKEY, self.key().name(), hashlib.sha1).hexdigest(), expires=mktime(localtime()) + 86400 * 30)
 	
 	def logout(self):
 		if self.key().name() in User._currentUser:
 			del User._currentUser[self.key().name()]
 		return self.makeAnonUser()
+
+	def gamesPlayed(self):
+		games = {}
+		for m in self.moves:
+			g = m.game
+			if g.key().name() not in games:
+				games[g.key().name()] = {'moves': 0, 'winningmoves': 0, 'done': g.done}
+
+			games[g.key().name()]['moves'] += 1
+			if g.done and m.id in g.winningchain:
+				games[g.key().name()]['winningmoves'] += 1
+
+		return games
 
 class UserService(db.Model):
 	name = db.StringProperty(required=True)

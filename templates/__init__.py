@@ -68,12 +68,15 @@ def game(game):
         return self
     self['title'] = join_(escape_(game.start, True), u' &rarr; ', escape_(game.end, True), u' ', escape_(finished(), True))
     self['css'] = join_(u'/static/css/game.css /static/css/jquery.gritter.css')
-    self['js'] = join_(u'/static/js/jquery.gritter.js /static/js/game.js /static/js/wire.js')
+    self['js'] = join_(u'/static/js/jquery.periodicalupdater.js /static/js/jquery.shake.js /static/js/game.js /static/js/wire.js')
     extend_([u'<script type="text/javascript">\n'])
     extend_([u'var lastmove = ', escape_(game.lastmove, True), u';\n'])
     extend_([u'var done = ', escape_((game.done and "true" or "false"), True), u';\n'])
-    extend_([u'var winningchain = ', escape_((dump_json(game.done and game.winningchain or [])), True), u';\n'])
-    extend_([u'var scores = ', escape_((game.done and dump_json(game.score) or {}), False), u';\n'])
+    for u in loop.setup(game.users):
+        extend_([u"    users['", escape_((u), True), u"'] = {'username': '", escape_(game.users[u].username, False), u"', 'picture': '", escape_(game.users[u].picture, False), u"'};\n"])
+    if game.done:
+        extend_([u'    var winningchain = ', escape_((dump_json(game.done and game.winningchain or [])), True), u';\n'])
+        extend_([u'    var scores = ', escape_((game.done and dump_json(game.score) or {}), False), u';\n'])
     for m in loop.setup(game.moves.values()):
         for c in loop.setup(m.children):
             extend_(['    ', u'    addLink(', escape_(m.id, True), u', ', escape_(c.id, True), u", '", escape_(((m.id in game.winningchain and c.id in game.winningchain) and 'red' or 'blue'), True), u"');\n"])
@@ -139,9 +142,14 @@ def layout (content):
         extend_(['                                        ', u'    <a href="/user/logout" title="Log out" class="button" id="logout-button">Log out</a>\n'])
     extend_([u'                                </div>\n'])
     extend_([u'                                <div id="points">\n'])
-    extend_([u'                                        ', escape_(currentUser().score, True), u' total points\n'])
+    extend_([u'                                        <a href="/user/stats">\n'])
+    extend_([u'                                                ', escape_(currentUser().score, True), u' total points\n'])
     if currentUser().isAnonymous() and currentUser().score:
-        extend_(['                                        ', u'&mdash; <a href="/user/account">Log in to claim these points</a>\n'])
+        extend_(['                                                ', u'    &mdash; <a href="/user/account">Log in to claim these points</a>\n'])
+    extend_([u'                                        </a>\n'])
+    extend_([u'                                        <div class="popup">\n'])
+    extend_([u'                                                games popup                                                     \n'])
+    extend_([u'                                        </div>\n'])
     extend_([u'                                </div>\n'])
     extend_([u'                                <div id="actions">\n'])
     extend_([u'                                        <a href="/new">New Game</a>\n'])
@@ -203,6 +211,7 @@ def index(games, user):
         extend_([u'</ul>\n'])
         return self
     extend_([u'<h1>Word Ladder</h1>\n'])
+    extend_([u'<p>word &rarr; ward &rarr; wad &rarr; wade &rarr; waded &rarr; warded &rarr; wadder &rarr; ladder</p>\n'])
     extend_([u'<a href="/new"><span id="newgame">New Game</span></a>\n'])
     extend_([u'<h2>Unsolved Games:</h2>\n'])
     extend_([escape_(gamelist(games, True), False), u'\n'])

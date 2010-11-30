@@ -46,12 +46,15 @@ $def plays():
 			<span class="log">unknown user played $m.word</span>
 $var title: $game.start &rarr; $game.end $finished()
 $var css: /static/css/game.css /static/css/jquery.gritter.css
-$var js: /static/js/jquery.gritter.js /static/js/game.js /static/js/wire.js
+$var js: /static/js/jquery.periodicalupdater.js /static/js/jquery.shake.js /static/js/game.js /static/js/wire.js
 <script type="text/javascript">
 var lastmove = $game.lastmove;
 var done = $(game.done and "true" or "false");
-var winningchain = $(dump_json(game.done and game.winningchain or []));
-var scores = $:(game.done and dump_json(game.score) or {});
+$for u in game.users:
+	users['$(u)'] = {'username': '$:game.users[u].username', 'picture': '$:game.users[u].picture'};
+$if game.done:
+	var winningchain = $(dump_json(game.done and game.winningchain or []));
+	var scores = $:(game.done and dump_json(game.score) or {});
 $for m in game.moves.values():
 	$for c in m.children:
 		addLink($m.id, $c.id, '$((m.id in game.winningchain and c.id in game.winningchain) and 'red' or 'blue')');
