@@ -57,14 +57,17 @@ function redrawwires()
   var ctx = c.getContext('2d');
   ctx.clearRect(0,0, c.width, c.height);
   $.each(links, function(i, l) {
-	   var f = elementCenter($('#m' + l.from));
-	   var t = elementCenter($('#m' + l.to));
-	   ctx.beginPath();
-	   ctx.moveTo(f.left, f.top);
-	   ctx.lineTo(t.left, t.top);
-	   ctx.strokeStyle = l.color;
-	   ctx.lineWidth = 2.0;
-	   ctx.stroke();
+	  var f = elementCenter($('#m' + l.from));
+	  var t = elementCenter($('#m' + l.to));
+	  ctx.beginPath();
+		if (Math.abs(f.left, t.left) < 5) f.left = t.left;
+		if (t.left < f.left) f.left -= 15;
+		if (t.left > f.left) f.left += 15;
+	  ctx.moveTo(f.left, f.top);
+	  ctx.lineTo(t.left, t.top);
+	  ctx.strokeStyle = l.color;
+	  ctx.lineWidth = 2.0;
+	  ctx.stroke();
 	 });
 
 }

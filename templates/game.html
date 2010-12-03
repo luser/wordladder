@@ -14,29 +14,26 @@ $def form(m):
 	$else:
 		<div class="placeholder"></div>
 $def word(m, w):
-		<a id="m${m.id}" class="move$(m.id in game.winningchain and ' win' or '')">$w</a>
+		<a id="m${m.id}" class="move$(m.id in game.winningchain and ' win' or '')">
+		$if m.user:
+			<img src="$m.user.picture" alt="$m.user.username" title="$m.user.username" />
+		$else:
+			<div class="no-user"></div>
+		$w
+		</a>
 $def ts(t):
 	<span class="timestamp">$t</span>
 $def move(m, s):
 	<ul>
 	$if not m.bottom:
 		<li>
-		$if m.user:
-			<img src="$m.user.picture" alt="$m.user.username" title="$m.user.username" />
-		$else:
-			<div class="no-user"></div>
 		$:word(m, m.word) $:ts(m.played) $:form(m)
 	$if m.children:
 		$for c in m.children:
 			$:move(c, False)
 		</li>
 	$if m.bottom:
-		<li bottom>
-		$if m.user:
-			<img src="$m.user.picture" alt="$m.user.username" title="$m.user.username" />
-		$else:
-			<div class="no-user"></div>
-		$:word(m, m.word) $:form(m)</li>
+		<li bottom>$:word(m, m.word) $:form(m)</li>
 	</ul>
 $def plays():
 	$for m in lasttenmoves(game):
@@ -45,8 +42,19 @@ $def plays():
 		$else:
 			<span class="log">unknown user played $m.word</span>
 $var title: $game.start &rarr; $game.end $finished()
-$var css: /static/css/game.css /static/css/jquery.gritter.css
+$var css: /static/css/game.css
 $var js: /static/js/jquery.periodicalupdater.js /static/js/jquery.shake.js /static/js/game.js /static/js/wire.js
+<h1 id="game">$game.start &rarr; $game.end $finished()</h1>
+$if game.done:
+	<ul id="scores">
+		$for s in game.scores():
+			<li><img src="$game.scores()[s]['picture']" alt="" title="" border="0" height="32" /> $game.scores()[s]['username'] earned $game.scores()[s]['score'] points</li>
+	</ul>
+$:move(game.moves[1], True)
+<br style="clear: left">
+$:move(game.moves[2], True)
+<p><a href="/">Back to game list</a>
+<div id="playinfo">$:plays()</div>
 <script type="text/javascript">
 var lastmove = $game.lastmove;
 var done = $(game.done and "true" or "false");
@@ -61,14 +69,3 @@ $for m in game.moves.values():
 $if game.done:
 	addLink($game.lastmove, $(filter(lambda m: m.id != game.lastmove and m.word == game.moves[game.lastmove].word, game.moves.values())[0].id), 'red');
 </script>
-<h1 id="game">$game.start &rarr; $game.end $finished()</h1>
-$if game.done:
-	<ul id="scores">
-		$for s in game.scores():
-			<li><img src="$game.scores()[s]['picture']" alt="" title="" border="0" height="32" /> $game.scores()[s]['username'] earned $game.scores()[s]['score'] points</li>
-	</ul>
-$:move(game.moves[1], True)
-<br style="clear: left">
-$:move(game.moves[2], True)
-<p><a href="/">Back to game list</a>
-<div id="playinfo">$:plays()</div>

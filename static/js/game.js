@@ -66,7 +66,14 @@ function handleGameJSON (data) {
 				username = users[m.userid]['username'];
 				picture = users[m.userid]['picture'];
 			}
-	    var html = '<ul id="l' + m.id + '" style="display:none"><li' + (m.bottom?' bottom':'') + '><img src="' + picture + '" alt="' + username + '" title="' + username + '" /> <a id="m' + m.id + '" class="move">' + m.word + '</a><form class="hidden" method="POST" action="' + window.location + '/play"><input type="hidden" name="moveid" value="' + m.id + '"><input type="text" id="i' + m.id + '" name="word" autocomplete="off" autocorrect="off" autocapitalize="off"></input></form></ul>';
+	    var html =  '<ul id="l' + m.id + '" style="display:none"><li' + (m.bottom?' bottom':'') + '>';
+					html += '<a id="m' + m.id + '" class="move">';
+			    html += '<img src="' + picture + '" alt="' + username + '" title="' + username + '" /> ';
+					html += m.word + '</a>';
+					html += '<form class="hidden" method="POST" action="' + window.location + '/play">';
+					html += '<input type="hidden" name="moveid" value="' + m.id + '">';
+					html += '<input type="text" id="i' + m.id + '" name="word" autocomplete="off" autocorrect="off" autocapitalize="off">';
+					html += '</input></form></ul>';
 	    if (!m.bottom) $('#m' + m.parent).parent().append(html);
 	    else $('#m' + m.parent).parent().before(html);
 	    $('#m' + m.id).attr('title', 'Click to add a word after this word').click(moveClick).nextAll('form').submit(handleSubmit);

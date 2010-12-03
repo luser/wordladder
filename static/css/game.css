@@ -20,11 +20,17 @@ ul li {
   padding: 0;
   margin: 0;
 }
-ul li img {
+ul li a img {
   width: 16px;
-  align: texttop;
-  margin-left: -16px;
+  vertical-align: middle;
+  margin: 2px 4px;
   border: 1px black solid;
+}
+ul li a div.no-user {
+  height: 16px;
+  vertical-align: middle;
+  margin: 2px 4px;
+	display: inline-block;
 }
 ul#scores {
   border: 1px grey solid;
