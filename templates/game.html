@@ -4,43 +4,32 @@ $code
 		if game.done:
 			return "(finished)"
 		return ""
-	def lasttenmoves(g):
-		return [g.moves[i] for i in sorted(g.moves.keys(), reverse=True)[:10]]
 	def shortest(g):
 		return g.shortestChainLength()
-$def form(m):
+$def form(l, m):
 	$if not game.done:
-		<form method="POST" action=""><input type="hidden" name="moveid" value="$m.id"><input type="text" name="word" autocomplete="off" autocorrect="off" autocapitalize="off"></input></form>
+		<form method="POST" action=""><input type="hidden" name="moveid" value="$m.id"><input type="hidden" name="ladderid" value="$l.id"><input type="text" name="word" autocomplete="off" autocorrect="off" autocapitalize="off"></form>
 	$else:
 		<div class="placeholder"></div>
-$def word(m, w):
-		<a id="m${m.id}" class="move$(m.id in game.winningchain and ' win' or '')">
-		$if m.user:
-			<img src="$m.user.picture" alt="$m.user.username" title="$m.user.username" />
-		$else:
-			<div class="no-user"></div>
-		$w
-		</a>
+$def word(l, m, w):
+	<a id="l${l.id}m${m.id}" class="move$(m.id in game.winningchain and ' win' or '')">
+	$if m.user:
+		<img src="$m.user.picture" alt="$m.user.username" title="$m.user.username" />
+	$else:
+		<div class="no-user"></div>
+	$w $m.id
+	</a>
 $def ts(t):
 	<span class="timestamp">$t</span>
-$def move(m, s):
-	<ul>
-	$if not m.bottom:
-		<li>
-		$:word(m, m.word) $:ts(m.played) $:form(m)
-	$if m.children:
-		$for c in m.children:
-			$:move(c, False)
-		</li>
-	$if m.bottom:
-		<li bottom>$:word(m, m.word) $:form(m)</li>
-	</ul>
-$def plays():
-	$for m in lasttenmoves(game):
-		$if m.hasValidUser:
-			<span class="log">$m.user played $m.word</span>
-		$else:
-			<span class="log">unknown user played $m.word</span>
+$def drawladder(l, bottom):
+	$if bottom == l.bottom:
+		$ ladder = l.ladder
+		$if not bottom:
+			$ladder.reverse()
+		<ul id="l${l.id}">
+		$for r in ladder:
+			<li>$:word(l, r, r.word) $:ts(r.played) $:form(l, r)</li>
+		</ul>
 $var title: $game.start &rarr; $game.end $finished()
 $var css: /static/css/game.css
 $var js: /static/js/jquery.periodicalupdater.js /static/js/jquery.shake.js /static/js/game.js /static/js/wire.js
@@ -50,11 +39,16 @@ $if game.done:
 		$for s in game.scores():
 			<li><img src="$game.scores()[s]['picture']" alt="" title="" border="0" height="32" /> $game.scores()[s]['username'] earned $game.scores()[s]['score'] points</li>
 	</ul>
-$:move(game.moves[1], True)
-<br style="clear: left">
-$:move(game.moves[2], True)
+<div id="top-ladder">
+$for l in game.leaves:
+	$:drawladder(l, False)
+</div>
+<br style="clear: both;"/>
+<div id="bottom-ladder">
+$for l in game.leaves:
+	$:drawladder(l, True)
+</div>
 <p><a href="/">Back to game list</a>
-<div id="playinfo">$:plays()</div>
 <script type="text/javascript">
 var lastmove = $game.lastmove;
 var done = $(game.done and "true" or "false");
@@ -63,9 +57,4 @@ $for u in game.users:
 $if game.done:
 	var winningchain = $(dump_json(game.done and game.winningchain or []));
 	var scores = $:(game.done and dump_json(game.score) or {});
-$for m in game.moves.values():
-	$for c in m.children:
-		addLink($m.id, $c.id, '$((m.id in game.winningchain and c.id in game.winningchain) and 'red' or 'blue')');
-$if game.done:
-	addLink($game.lastmove, $(filter(lambda m: m.id != game.lastmove and m.word == game.moves[game.lastmove].word, game.moves.values())[0].id), 'red');
 </script>

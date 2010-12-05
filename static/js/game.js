@@ -25,24 +25,24 @@ function handlePlayResponse (form, data) {
     // success
     form.word.value = '';
     $(form.word).removeClass('error');
-    $(form).addClass('hidden');
+    $(form).slideUp('fast');
   }
-  handleGameJSON(data);
+  handleGameJSON(data, $(form).parent().parent());
   if (!('error' in data)) {
     // focus the textbox under the word the user just played
-    $('#m' + data.lastmove).click();
+    $('#l' + data.lastmove + 'm' + data.lastmove).click();
   }
 }
 
 function handlePlayError (form, err) {
-  //TODO: network error icon or something
+  // TODO: network error icon or something
 }
 
-function handleGameJSON (data) {
+function handleGameJSON (data, ladder) {
   if ('done' in data && !done) {
     done = data.done;
 		update.stop();
-    //TODO: fancy this up
+    // TODO: fancy this up
     document.title += " (finished)";
     $('h1').append(" (finished)");
 		$('#game').after('<ul id="scores"></ul>');
@@ -66,27 +66,49 @@ function handleGameJSON (data) {
 				username = users[m.userid]['username'];
 				picture = users[m.userid]['picture'];
 			}
-	    var html =  '<ul id="l' + m.id + '" style="display:none"><li' + (m.bottom?' bottom':'') + '>';
-					html += '<a id="m' + m.id + '" class="move">';
+			
+			// If this move creates a branch, duplicate the ladder up to the previous move.
+			var newBranch = false;
+			$(ladder).children('li').each(function (i, e) {
+				moveid = parseInt($(e).children('a').attr('id').replace($(ladder).attr('id') + 'm', ''));
+				if (moveid > m.parent) newBranch = true;
+			});
+
+			if (newBranch) {
+				newLadder = $(document.createElement('ul'));
+				newLadder.attr('id', 'l' + m.id);
+				$(ladder).children('li').each(function (i, e) {
+					moveid = parseInt($(e).children('a').attr('id').replace($(ladder).attr('id') + 'm', ''));
+					if (moveid <= m.parent) {
+						newMove = $(e).clone();
+						newMove.children('a').attr('id', newLadder.attr('id') + 'm' + moveid);
+						newMove.children('a').click(moveClick).nextAll('form').submit(handleSubmit);
+						newMove.appendTo(newLadder);
+					}
+				});
+			} else newLadder = $(ladder);
+
+			// Add the new move.
+	    var html =  '<li' + (m.bottom?' bottom':'') + '>';
+					html += '<a id="' + newLadder.attr('id') + 'm' + m.id + '" class="move">';
 			    html += '<img src="' + picture + '" alt="' + username + '" title="' + username + '" /> ';
 					html += m.word + '</a>';
-					html += '<form class="hidden" method="POST" action="' + window.location + '/play">';
+					html += '<form method="POST" action="' + window.location + '/play">';
 					html += '<input type="hidden" name="moveid" value="' + m.id + '">';
-					html += '<input type="text" id="i' + m.id + '" name="word" autocomplete="off" autocorrect="off" autocapitalize="off">';
-					html += '</input></form></ul>';
-	    if (!m.bottom) $('#m' + m.parent).parent().append(html);
-	    else $('#m' + m.parent).parent().before(html);
-	    $('#m' + m.id).attr('title', 'Click to add a word after this word').click(moveClick).nextAll('form').submit(handleSubmit);
-			addLink(m.id, m.parent, 'blue');
-			numAnims++;
-	    $('#l' + m.id).show('normal', function() {
-			  numAnims--;
-			  if (numAnims <= 0) {
-			    clearInterval(animTimer);
-			    redrawwires();
-		    }
-			});
-	  	$('#playinfo').prepend('<span class="log">' + username + " played " + m.word + "</span>");
+					html += '<input type="hidden" name="ladderid" value="' + newLadder.attr('id') + '">';
+					html += '<input type="text" id="' + newLadder.attr('id') + 'i' + m.id + '" name="word" autocomplete="off" autocorrect="off" autocapitalize="off">';
+					html += '</input></form></li>';
+			if (m.bottom) newLadder.prepend(html);
+			else newLadder.append(html);			
+
+			// Put the new ladder next to the old one.
+			if (newBranch) $(ladder).after(newLadder);
+
+			// Hide the old form.
+			$('form').slideUp('fast');
+
+			// Set up handlers for new move.
+	    $('#' + newLadder.attr('id') + 'm' + m.id).attr('title', 'Click to add a word after this word').click(moveClick).nextAll('form').submit(handleSubmit).hide();
 		}
 	});
   if ('done' in data) {
@@ -97,13 +119,13 @@ function handleGameJSON (data) {
 }
 
 function moveClick(event) {
-  var washidden = $(this).nextAll('form').hasClass('hidden');
+  var washidden = $(this).nextAll('form').css('display') == 'none';
   // hide all inputs first
-  $('form').addClass('hidden');
-  if (washidden) $(this).nextAll('form').removeClass('hidden').children('input').get(1).focus();
+  $('form').slideUp('fast');
+  if (washidden) $(this).nextAll('form').slideDown('fast', function () { $(this).children('input').get(2).focus(); });
   else {
     // hidden now, blur it
-    $(this).nextAll('form').children('input').get(1).blur();
+    $(this).nextAll('form').children('input').get(2).blur();
   }
 
   event.stopPropagation();
@@ -111,19 +133,19 @@ function moveClick(event) {
 
 $(document).ready(function () {
 	// hide all inputs when you click in empty space
-  $(document.body).click(function() { $('form').addClass('hidden'); });
+  $(document.body).click(function() { $('form').slideUp('fast'); });
   
 	// hide inputs when pressing ESC
   $(document).keypress(function (e) {
 		$('form input[name="word"]').removeClass('error');
     if (e.keyCode == 27) { // ESC
-      $('form').addClass('hidden');
+      $('form').slideUp('fast');
       e.preventDefault();
     }
   });
 
   if (!done) {
-    $('form').addClass('hidden').submit(handleSubmit);
+    $('form').css('display', 'none').submit(handleSubmit);
     $('.move').attr('title', 'Click to add a word after this word').click(moveClick);
     
 		update = $.PeriodicalUpdater(document.location.href, {

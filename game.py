@@ -36,6 +36,28 @@ class Move(db.Model):
 
 		return self._children
 
+	@property
+	def ladder(self):
+		"""
+		Return a list of moves that lead from this move to a root move.
+		"""
+		if hasattr(self, '_ladder'):
+			return self._ladder
+
+		self._ladder = [self]
+		if self.parent_ and self.parent_.__class__.__name__ == 'Move':
+			self._ladder.extend(self.parent_.ladder)
+
+		return self._ladder
+
+	@property
+	def isLeaf(self):
+		return len(self.children) == 0
+
+	@property
+	def isRoot(self):
+		return self.parent_.__class__.__name__ == 'Game'
+
 	def _obj(self):
 		return {"id": self.id,
 						"key": self.key().name(),
@@ -125,6 +147,20 @@ class Game(db.Model):
 		for m in q:
 			self._moves[m.id] = m
 		return self._moves
+
+	@property
+	def leaves(self):
+		"""
+		Return a list of all the leaf nodes in this game's move tree.
+		"""
+		if hasattr(self, '_leaves'):
+			return self._leaves
+
+		self._leaves = []
+		for m in self.moves.values():
+			if len(m.children) == 0:
+				self._leaves.append(m)
+		return self._leaves
 
 	@property
 	def users(self):
