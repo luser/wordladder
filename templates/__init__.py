@@ -29,7 +29,7 @@ def game(game):
             extend_(['    ', u'    <img src="', escape_(m.user.picture, True), u'" alt="', escape_(m.user.username, True), u'" title="', escape_(m.user.username, True), u'" />\n'])
         else:
             extend_(['    ', u'    <div class="no-user"></div>\n'])
-        extend_([u'    ', escape_(w, True), u' ', escape_(m.id, True), u'\n'])
+        extend_([u'    ', escape_(w, True), u'\n'])
         extend_([u'    </a>\n'])
         return self
     __lineoffset__ -= 3
@@ -51,7 +51,7 @@ def game(game):
         return self
     self['title'] = join_(escape_(game.start, True), u' &rarr; ', escape_(game.end, True), u' ', escape_(finished(), True))
     self['css'] = join_(u'/static/css/game.css')
-    self['js'] = join_(u'/static/js/jquery.periodicalupdater.js /static/js/jquery.shake.js /static/js/game.js /static/js/wire.js')
+    self['js'] = join_(u'/static/js/jquery.periodicalupdater.js /static/js/jquery.shake.js /static/js/game.js')
     extend_([u'<h1 id="game">', escape_(game.start, True), u' &rarr; ', escape_(game.end, True), u' ', escape_(finished(), True), u'</h1>\n'])
     if game.done:
         extend_([u'    <ul id="scores">\n'])

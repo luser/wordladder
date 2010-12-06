@@ -17,7 +17,7 @@ $def word(l, m, w):
 		<img src="$m.user.picture" alt="$m.user.username" title="$m.user.username" />
 	$else:
 		<div class="no-user"></div>
-	$w $m.id
+	$w
 	</a>
 $def ts(t):
 	<span class="timestamp">$t</span>
@@ -32,7 +32,7 @@ $def drawladder(l, bottom):
 		</ul>
 $var title: $game.start &rarr; $game.end $finished()
 $var css: /static/css/game.css
-$var js: /static/js/jquery.periodicalupdater.js /static/js/jquery.shake.js /static/js/game.js /static/js/wire.js
+$var js: /static/js/jquery.periodicalupdater.js /static/js/jquery.shake.js /static/js/game.js
 <h1 id="game">$game.start &rarr; $game.end $finished()</h1>
 $if game.done:
 	<ul id="scores">

@@ -52,7 +52,6 @@ function handleGameJSON (data, ladder) {
   }
   var animTimer = -1;
   var numAnims = 0;
-  if (data.moves.length > 0) animTimer = setInterval(redrawwires, 100);
   $.each(data.moves, function(i, m) {
 		if (m.id > lastmove) {
       if ('userid' in m && !(m.userid in users)) {
@@ -83,6 +82,7 @@ function handleGameJSON (data, ladder) {
 						newMove = $(e).clone();
 						newMove.children('a').attr('id', newLadder.attr('id') + 'm' + moveid);
 						newMove.children('a').click(moveClick).nextAll('form').submit(handleSubmit);
+						newMove.css('opacity', '0.5').hover(function () { $(this).css('opacity', 1); }, function () { $(this).css('opacity', '0.5'); });
 						newMove.appendTo(newLadder);
 					}
 				});
@@ -102,7 +102,12 @@ function handleGameJSON (data, ladder) {
 			else newLadder.append(html);			
 
 			// Put the new ladder next to the old one.
-			if (newBranch) $(ladder).after(newLadder);
+			if (newBranch) {
+				$(newLadder).hide().css('opacity', 0);
+				$(ladder).after(newLadder);
+				$(newLadder).animate({width: 'show'}, {duration: 500, queue: true});
+				$(newLadder).animate({opacity: 1}, {duration: 500, queue: true});
+			}
 
 			// Hide the old form.
 			$('form').slideUp('fast');
@@ -111,10 +116,7 @@ function handleGameJSON (data, ladder) {
 	    $('#' + newLadder.attr('id') + 'm' + m.id).attr('title', 'Click to add a word after this word').click(moveClick).nextAll('form').submit(handleSubmit).hide();
 		}
 	});
-  if ('done' in data) {
-    $.each(data.winningchain, function(i, mid) { $('#m' + mid).addClass('win'); });
-    for (var i=0; i<data.winningchain.length-1; i++) { changeLinkColor(data.winningchain[i], data.winningchain[i+1], 'red'); }
-  }
+  if ('done' in data) $.each(data.winningchain, function(i, mid) { $('#m' + mid).addClass('win'); });
   if (data.lastmove > lastmove) lastmove = data.lastmove;
 }
 
