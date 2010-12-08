@@ -12,7 +12,7 @@ $def form(l, m):
 	$else:
 		<div class="placeholder"></div>
 $def word(l, m, w):
-	<a id="l${l.id}m${m.id}" class="move$(m.id in game.winningchain and ' win' or '')">
+	<a id="l${l.id}m${m.id}" class="move move${m.id}$(m.id in game.winningchain and ' win' or '')">
 	$if m.user:
 		<img src="$m.user.picture" alt="$m.user.username" title="$m.user.username" />
 	$else:
@@ -23,6 +23,8 @@ $def ts(t):
 	<span class="timestamp">$t</span>
 $def drawladder(l, bottom):
 	$if bottom == l.bottom:
+		<div class="ladder-container">
+		<div class="ladder-width"></div>
 		$ ladder = l.ladder
 		$if not bottom:
 			$ladder.reverse()
@@ -30,6 +32,7 @@ $def drawladder(l, bottom):
 		$for r in ladder:
 			<li>$:word(l, r, r.word) $:ts(r.played) $:form(l, r)</li>
 		</ul>
+		</div>
 $var title: $game.start &rarr; $game.end $finished()
 $var css: /static/css/game.css
 $var js: /static/js/jquery.periodicalupdater.js /static/js/jquery.shake.js /static/js/game.js
@@ -39,12 +42,12 @@ $if game.done:
 		$for s in game.scores():
 			<li><img src="$game.scores()[s]['picture']" alt="" title="" border="0" height="32" /> $game.scores()[s]['username'] earned $game.scores()[s]['score'] points</li>
 	</ul>
-<div id="top-ladder">
+<div id="top-ladder" class="ladder-set">
 $for l in game.leaves:
 	$:drawladder(l, False)
 </div>
-<br style="clear: both;"/>
-<div id="bottom-ladder">
+<hr style="clear: both;"/>
+<div id="bottom-ladder" class="ladder-set">
 $for l in game.leaves:
 	$:drawladder(l, True)
 </div>

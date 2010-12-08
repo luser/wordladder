@@ -4,7 +4,7 @@
 	home - http://humanmsg.googlecode.com
 */
 
-html, body {
+* html, body {
 	height: 100%; /* Damn you IE! */
 }
 

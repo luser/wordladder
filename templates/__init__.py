@@ -24,7 +24,7 @@ def game(game):
     __lineoffset__ -= 3
     def word(l, m, w):
         self = TemplateResult(); extend_ = self.extend
-        extend_([u'    <a id="l', escape_((l.id), True), u'm', escape_((m.id), True), u'" class="move', escape_((m.id in game.winningchain and ' win' or ''), True), u'">\n'])
+        extend_([u'    <a id="l', escape_((l.id), True), u'm', escape_((m.id), True), u'" class="move move', escape_((m.id), True), escape_((m.id in game.winningchain and ' win' or ''), True), u'">\n'])
         if m.user:
             extend_(['    ', u'    <img src="', escape_(m.user.picture, True), u'" alt="', escape_(m.user.username, True), u'" title="', escape_(m.user.username, True), u'" />\n'])
         else:
@@ -41,6 +41,8 @@ def game(game):
     def drawladder(l, bottom):
         self = TemplateResult(); extend_ = self.extend
         if bottom == l.bottom:
+            extend_(['    ', u'    <div class="ladder-container">\n'])
+            extend_(['    ', u'    <div class="ladder-width"></div>\n'])
             ladder = l.ladder
             if not bottom:
                 extend_(['        ', u'    ', escape_(ladder.reverse(), True), u'\n'])
@@ -48,6 +50,7 @@ def game(game):
             for r in loop.setup(ladder):
                 extend_(['        ', u'    <li>', escape_(word(l, r, r.word), False), u' ', escape_(ts(r.played), False), u' ', escape_(form(l, r), False), u'</li>\n'])
             extend_(['    ', u'    </ul>\n'])
+            extend_(['    ', u'    </div>\n'])
         return self
     self['title'] = join_(escape_(game.start, True), u' &rarr; ', escape_(game.end, True), u' ', escape_(finished(), True))
     self['css'] = join_(u'/static/css/game.css')
@@ -58,12 +61,12 @@ def game(game):
         for s in loop.setup(game.scores()):
             extend_(['            ', u'    <li><img src="', escape_(game.scores()[s]['picture'], True), u'" alt="" title="" border="0" height="32" /> ', escape_(game.scores()[s]['username'], True), u' earned ', escape_(game.scores()[s]['score'], True), u' points</li>\n'])
         extend_([u'    </ul>\n'])
-    extend_([u'<div id="top-ladder">\n'])
+    extend_([u'<div id="top-ladder" class="ladder-set">\n'])
     for l in loop.setup(game.leaves):
         extend_([u'    ', escape_(drawladder(l, False), False), u'\n'])
     extend_([u'</div>\n'])
-    extend_([u'<br style="clear: both;"/>\n'])
-    extend_([u'<div id="bottom-ladder">\n'])
+    extend_([u'<hr style="clear: both;"/>\n'])
+    extend_([u'<div id="bottom-ladder" class="ladder-set">\n'])
     for l in loop.setup(game.leaves):
         extend_([u'    ', escape_(drawladder(l, True), False), u'\n'])
     extend_([u'</div>\n'])

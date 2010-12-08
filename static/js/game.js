@@ -30,7 +30,7 @@ function handlePlayResponse (form, data) {
   handleGameJSON(data, $(form).parent().parent());
   if (!('error' in data)) {
     // focus the textbox under the word the user just played
-    $('#l' + data.lastmove + 'm' + data.lastmove).click();
+    $('a.move' + data.lastmove).click();
   }
 }
 
@@ -50,8 +50,6 @@ function handleGameJSON (data, ladder) {
 			$('#scores').append('<li><img src="'+data.scores[user]['picture']+'" alt="" title="" border="0" height="32" /> '+data.scores[user]['username']+' earned '+data.scores[user]['score']+' points.</li>');
 		}
   }
-  var animTimer = -1;
-  var numAnims = 0;
   $.each(data.moves, function(i, m) {
 		if (m.id > lastmove) {
       if ('userid' in m && !(m.userid in users)) {
@@ -68,6 +66,7 @@ function handleGameJSON (data, ladder) {
 			
 			// If this move creates a branch, duplicate the ladder up to the previous move.
 			var newBranch = false;
+			if (!ladder) ladder = $('a.move' + m.parent + ':last').parent().parent();
 			$(ladder).children('li').each(function (i, e) {
 				moveid = parseInt($(e).children('a').attr('id').replace($(ladder).attr('id') + 'm', ''));
 				if (moveid > m.parent) newBranch = true;
@@ -90,7 +89,7 @@ function handleGameJSON (data, ladder) {
 
 			// Add the new move.
 	    var html =  '<li' + (m.bottom?' bottom':'') + '>';
-					html += '<a id="' + newLadder.attr('id') + 'm' + m.id + '" class="move">';
+					html += '<a id="' + newLadder.attr('id') + 'm' + m.id + '" class="move move' + m.id + '">';
 			    html += '<img src="' + picture + '" alt="' + username + '" title="' + username + '" /> ';
 					html += m.word + '</a>';
 					html += '<form method="POST" action="' + window.location + '/play">';
@@ -98,15 +97,18 @@ function handleGameJSON (data, ladder) {
 					html += '<input type="hidden" name="ladderid" value="' + newLadder.attr('id') + '">';
 					html += '<input type="text" id="' + newLadder.attr('id') + 'i' + m.id + '" name="word" autocomplete="off" autocorrect="off" autocapitalize="off">';
 					html += '</input></form></li>';
+			
 			if (m.bottom) newLadder.prepend(html);
 			else newLadder.append(html);			
 
 			// Put the new ladder next to the old one.
 			if (newBranch) {
-				$(newLadder).hide().css('opacity', 0);
-				$(ladder).after(newLadder);
-				$(newLadder).animate({width: 'show'}, {duration: 500, queue: true});
-				$(newLadder).animate({opacity: 1}, {duration: 500, queue: true});
+				var newContainer = $(document.createElement('div')).addClass('ladder-container').hide().css('opacity', 0);
+				var newProp = $(document.createElement('div')).addClass('ladder-width');
+				$(newContainer).append(newProp).append(newLadder);
+				$(ladder).parent().after(newContainer);
+				$(newContainer).animate({width: 'show'}, {duration: 500, queue: true});
+				$(newContainer).animate({opacity: 1}, {duration: 500, queue: true});
 			}
 
 			// Hide the old form.
@@ -121,12 +123,24 @@ function handleGameJSON (data, ladder) {
 }
 
 function moveClick(event) {
-  var washidden = $(this).nextAll('form').css('display') == 'none';
-  // hide all inputs first
+	var washidden = $(this).nextAll('form').css('display') == 'none';
+  // Hide all inputs first
   $('form').slideUp('fast');
+	// Fade all ladders
+	$('.ladder-container').animate({opacity: 0.5}, 100);
+	// Center this ladder
+	var lSet = $(this).closest('.ladder-set');
+	var tCon = $(this).closest('.ladder-container');
+	var tPos = tCon.position();
+	var tWidth = tCon.width();
+	var wWidth = $(window).width();
+	lSet.animate({left: (wWidth / 2) - tPos.left - (tWidth / 2)}, 250);
+	// Un-fade this ladder
+	$(this).parent().parent().parent().animate({opacity: 1}, 100);
+	// Show the form
   if (washidden) $(this).nextAll('form').slideDown('fast', function () { $(this).children('input').get(2).focus(); });
   else {
-    // hidden now, blur it
+    // Hidden now, blur it
     $(this).nextAll('form').children('input').get(2).blur();
   }
 
