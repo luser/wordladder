@@ -48,9 +48,6 @@ ul li a img.addword {
 	border: none;
 	cursor: pointer;
 }
-ul li a img.addword:hover {
-	opacity: 1;
-}
 ul li a img.addword.bottom {
 	top: -1.15em;;
 }

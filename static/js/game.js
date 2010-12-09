@@ -128,13 +128,28 @@ function handleGameJSON (data, ladder) {
 		}
 	});
   if ('done' in data) {
-		$.each(data.winningchain, function(i, mid) { $('.move' + mid).addClass('win').unbind('click'); });
+		$('a.move').unbind('click');
+
+		// First find the winning ladders in each ladder-set.
+		$('div.ladder-container').each(function(i, c) {
+			thisWin = true;
+			$(c).find('a.move').each(function (i, m) {
+				var l = $(m).closest('ul');
+				var moveid = String($(m).attr('id')).replace(l.attr('id') + 'm', '');
+				if (!(moveid in oc(data.winningchain))) thisWin = false;
+			});
+			if (thisWin) $(c).find('a.move').addClass('win');
+		});
+
+		// Hide interactive stuff.
 		$('form').slideUp('fast').remove();
 		$('img.addword').fadeOut('fast');
-		centerLadder($('#top-ladder a.win:first').closest('.ladder-set'), $('#top-ladder a.win:first').closest('.ladder-container'));
-		centerLadder($('#bottom-ladder a.win:first').closest('.ladder-set'), $('#bottom-ladder a.win:first').closest('.ladder-container'));
+
+		// Center the winning ladders.
+		centerLadder($('#top-ladder'), $('#top-ladder a.win:first').closest('.ladder-container'));
+		centerLadder($('#bottom-ladder'), $('#bottom-ladder a.win:first').closest('.ladder-container'));
 		$('a.win').animate({opacity: 1}, 100);
-		$('a.move:not(.win)').animate({opacity: 0.1}, 100);
+		$('a.move:not(.win)').animate({opacity: 0.3}, 100);
 	}
   if (data.lastmove > lastmove) lastmove = data.lastmove;
 }
@@ -199,5 +214,15 @@ $(document).ready(function () {
 		centerLadder($('#bottom-ladder'), $('.ladder-container:first'));
 		centerLadder($('#top-ladder'), $('.ladder-container:first'));
 		$('.move:last').click();
-  }
+  } else {
+		centerLadder($('#top-ladder a.win:first').closest('.ladder-set'), $('#top-ladder a.win:first').closest('.ladder-container'));
+		centerLadder($('#bottom-ladder a.win:first').closest('.ladder-set'), $('#bottom-ladder a.win:first').closest('.ladder-container'));
+		$('a.move:not(.win)').animate({opacity: 0.3}, 100);
+	}
 });
+
+function oc (a) {
+  var o = {};
+  for(var i=0;i<a.length;i++) { o[a[i]]=''; }
+  return o;
+}
