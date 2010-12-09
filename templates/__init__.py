@@ -24,7 +24,11 @@ def game(game):
     __lineoffset__ -= 3
     def word(l, m, w):
         self = TemplateResult(); extend_ = self.extend
-        extend_([u'    <a id="l', escape_((l.id), True), u'm', escape_((m.id), True), u'" class="move move', escape_((m.id), True), escape_((m.id in game.winningchain and ' win' or ''), True), u'">\n'])
+        extend_([u'    <a id="l', escape_((l.id), True), u'm', escape_((m.id), True), u'" class="move move', escape_((m.id), True), escape_(((m.id in game.winningchain and l.id in game.winningchain and ' win') or ''), True), u'">\n'])
+        if m.bottom:
+            extend_(['    ', u'    <img src="/static/images/add.png" alt="Add a word" title="Add a word" class="addword bottom" />\n'])
+        else:
+            extend_(['    ', u'    <img src="/static/images/add.png" alt="Add a word" title="Add a word" class="addword" />\n'])
         if m.user:
             extend_(['    ', u'    <img src="', escape_(m.user.picture, True), u'" alt="', escape_(m.user.username, True), u'" title="', escape_(m.user.username, True), u'" />\n'])
         else:
@@ -48,7 +52,13 @@ def game(game):
                 extend_(['        ', u'    ', escape_(ladder.reverse(), True), u'\n'])
             extend_(['    ', u'    <ul id="l', escape_((l.id), True), u'">\n'])
             for r in loop.setup(ladder):
-                extend_(['        ', u'    <li>', escape_(word(l, r, r.word), False), u' ', escape_(ts(r.played), False), u' ', escape_(form(l, r), False), u'</li>\n'])
+                extend_(['        ', u'    <li>\n'])
+                if bottom:
+                    extend_(['            ', u'    ', escape_(form(l, r), False), u'\n'])
+                extend_(['        ', u'    ', escape_(word(l, r, r.word), False), u' ', escape_(ts(r.played), False), u'\n'])
+                if not bottom:
+                    extend_(['            ', u'    ', escape_(form(l, r), False), u'\n'])
+                extend_(['        ', u'    </li>\n'])
             extend_(['    ', u'    </ul>\n'])
             extend_(['    ', u'    </div>\n'])
         return self

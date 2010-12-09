@@ -192,14 +192,7 @@ class Game(db.Model):
 	def shortestChainLength(self):
 		if hasattr(self, '_shortestChainLength'):
 			return self._shortestChainLength
-		with open(GAME_WORDLIST, "r") as wordlist:
-			gamewords = [x.rstrip() for x in wordlist.readlines()]
-		gamewordmap =  dict(zip(gamewords, range(len(gamewords))))
-		swid, ewid = gamewordmap[self.start.word], gamewordmap[self.end.word]
-		f = open(DISTANCE_MATRIX, 'r')
-		f.seek(swid * len(gamewordmap) + ewid, os.SEEK_SET)
-		self._shortestChainLength = ord(f.read(1))
-		f.close()
+		self._shortestChainLength = LevenshteinDistance(self.start.word, self.end.word)
 		return self._shortestChainLength
 
 	def __repr__(self):

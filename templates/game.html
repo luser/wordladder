@@ -12,7 +12,11 @@ $def form(l, m):
 	$else:
 		<div class="placeholder"></div>
 $def word(l, m, w):
-	<a id="l${l.id}m${m.id}" class="move move${m.id}$(m.id in game.winningchain and ' win' or '')">
+	<a id="l${l.id}m${m.id}" class="move move${m.id}$((m.id in game.winningchain and l.id in game.winningchain and ' win') or '')">
+	$if m.bottom:
+		<img src="/static/images/add.png" alt="Add a word" title="Add a word" class="addword bottom" />
+	$else:
+		<img src="/static/images/add.png" alt="Add a word" title="Add a word" class="addword" />
 	$if m.user:
 		<img src="$m.user.picture" alt="$m.user.username" title="$m.user.username" />
 	$else:
@@ -30,7 +34,13 @@ $def drawladder(l, bottom):
 			$ladder.reverse()
 		<ul id="l${l.id}">
 		$for r in ladder:
-			<li>$:word(l, r, r.word) $:ts(r.played) $:form(l, r)</li>
+			<li>
+			$if bottom:
+				$:form(l, r)
+			$:word(l, r, r.word) $:ts(r.played)
+			$if not bottom:
+				$:form(l, r)
+			</li>
 		</ul>
 		</div>
 $var title: $game.start &rarr; $game.end $finished()

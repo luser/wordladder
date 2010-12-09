@@ -30,7 +30,7 @@ ul li {
   float: left;
 	clear: left;
   padding: 0;
-  margin: 3px 1px;
+  margin: 0 1px;
 	width: 100%;
 }
 ul li a img {
@@ -38,6 +38,21 @@ ul li a img {
   vertical-align: middle;
   margin: 2px 4px 2px -16px;
   border: 1px black solid;
+}
+ul li a img.addword {
+	z-index: 10;
+	position: relative;
+	left: 3.8em;
+	 float: left;
+	top: 1.3em;
+	border: none;
+	cursor: pointer;
+}
+ul li a img.addword:hover {
+	opacity: 1;
+}
+ul li a img.addword.bottom {
+	top: -1.15em;;
 }
 ul li a div.no-user {
   height: 16px;
@@ -61,6 +76,9 @@ div#bottom-ladder ul {
 	float: none;
 	vertical-align: bottom;
 }
+div.ladder-container {
+	margin: 1em 0;
+}
 div#top-ladder {
 	float: left;
 	width: 200%;
@@ -78,10 +96,11 @@ ul#scores {
   top: 30px;
   right: 0;
   padding: 10px;
-  margin: 3px;
+  margin: 0 4px;
   -moz-border-radius: 5px;
   display: block;
-  float: left;
+	background: white;
+	width: 30%;
 }
 ul#scores li {
   display: block;
@@ -101,7 +120,7 @@ input {
   width: 8em;
 }
 form {
-  margin: 0.6em 1px 0;
+  margin: 0 1px;
 	padding: 0;
 	width: 100%;
 }
@@ -119,7 +138,7 @@ form {
 	background: none repeat scroll 0 0 white;
   border: 1px solid gray;
   display: block;
-  margin: 0 auto;
+  margin: 0.3em auto;
   padding: 0;
   position: relative;
   width: 80%;
@@ -129,7 +148,10 @@ form {
 }
 
 .win {
-  border: 1px solid red;
+	-moz-box-shadow: 4px 4px 4px gray;
+	-webkit-box-shadow: 4px 4px 4px gray;
+	border: 2px solid darkgreen;
+	padding: 0.1em;
 }
 
 div.WireIt-Terminal {
