@@ -2,7 +2,7 @@ from web.template import CompiledTemplate, ForLoop, TemplateResult
 
 
 # coding: utf-8
-def game(game):
+def game(game, user):
     __lineoffset__ = -4
     loop = ForLoop()
     self = TemplateResult(); extend_ = self.extend
@@ -17,7 +17,7 @@ def game(game):
     def form(l, m):
         self = TemplateResult(); extend_ = self.extend
         if not game.done:
-            extend_(['    ', u'    <form method="POST" action=""><input type="hidden" name="moveid" value="', escape_(m.id, True), u'"><input type="hidden" name="ladderid" value="', escape_(l.id, True), u'"><input type="text" name="word" autocomplete="off" autocorrect="off" autocapitalize="off"></form>\n'])
+            extend_(['    ', u'    <form method="POST" autocomplete="off"><input type="hidden" name="moveid" value="', escape_(m.id, True), u'"><input type="hidden" name="ladderid" value="', escape_(l.id, True), u'"><input type="text" name="word" autocomplete="off" autocorrect="off" autocapitalize="off"></form>\n'])
         else:
             extend_(['    ', u'    <div class="placeholder"></div>\n'])
         return self
@@ -83,8 +83,9 @@ def game(game):
     extend_([u'</div>\n'])
     extend_([u'<p><a href="/">Back to game list</a>\n'])
     extend_([u'<script type="text/javascript">\n'])
-    extend_([u'var lastmove = ', escape_(game.lastmove, True), u';\n'])
-    extend_([u'var done = ', escape_((game.done and "true" or "false"), True), u';\n'])
+    extend_([u'        var lastmove = ', escape_(game.lastmove, True), u';\n'])
+    extend_([u'        var done = ', escape_((game.done and "true" or "false"), True), u';\n'])
+    extend_([u"        var userid = '", escape_(user.key().name(), False), u"';\n"])
     for u in loop.setup(game.users):
         extend_([u"    users['", escape_((u), True), u"'] = {'username': '", escape_(game.users[u].username, False), u"', 'picture': '", escape_(game.users[u].picture, False), u"'};\n"])
     if game.done:
@@ -169,18 +170,12 @@ def play(game, word, reason):
     __lineoffset__ = -4
     loop = ForLoop()
     self = TemplateResult(); extend_ = self.extend
-    extend_([u'<!DOCTYPE html>\n'])
-    extend_([u'<html><head><title>Word Ladder: ', escape_(game.start, True), u' &rarr; ', escape_(game.end, True), u' - Error</title>\n'])
-    extend_([u'<link rel="icon" href="/static/images/favicon.png">\n'])
-    extend_([u'<meta http-equiv="refresh" content="2;URL=/game/', escape_((game.start), True), u'-', escape_((game.end), True), u'">\n'])
-    extend_([u'<meta name="viewport" content="width = device-width">\n'])
-    extend_([u'</head>\n'])
-    extend_([u'<body>\n'])
+    self['title'] = join_(u'Word Ladder; ', escape_(game.start, True), u' &rarr; ', escape_(game.end, True), u' - Error')
+    self['css'] = join_()
+    self['js'] = join_()
     extend_([u'<h1>You cannot play the word ', escape_(word, True), u' there</h1>\n'])
-    extend_([u'<p>', escape_(reason, True), u'\n'])
-    extend_([u'<p><a href="/game/', escape_((game.start), True), u'-', escape_((game.end), True), u'">Back to the game</a>\n'])
-    extend_([u'</body>\n'])
-    extend_([u'</html>\n'])
+    extend_([u'<p>', escape_(reason, True), u'</p>\n'])
+    extend_([u'<p><a href="/game/', escape_((game.start), True), u'-', escape_((game.end), True), u'">Back to the game</a></p>\n'])
 
     return self
 

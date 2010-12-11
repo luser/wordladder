@@ -140,6 +140,13 @@ form {
   position: relative;
   width: 80%;
 }
+
+.move.active {
+	-moz-box-shadow: 0px 0px 5px dodgerblue;
+	-webkit-box-shadow: 0px 0px 5px dodgerblue;
+	border: 1px solid dodgerblue;
+}
+
 .timestamp {
   display: none;
 }

@@ -1,6 +1,7 @@
 var DEFAULT_POLLTIME = 2000;
 var update = -1;
 var users = {};
+var centered = {};
 
 function handleSubmit (event) {
   var form = this;
@@ -65,7 +66,7 @@ function handleGameJSON (data, ladder) {
 			
 			// If this move creates a branch, duplicate the ladder up to the previous move.
 			var newBranch = false;
-			if (!ladder) ladder = $('a.move' + m.parent + ':last').parent().parent();
+			if (!ladder || m.userid != userid) ladder = $('a.move' + m.parent + ':last').parent().parent();
 			$(ladder).children('li').each(function (i, e) {
 				moveid = parseInt($(e).children('a').attr('id').replace($(ladder).attr('id') + 'm', ''));
 				if (moveid > m.parent) newBranch = true;
@@ -80,7 +81,6 @@ function handleGameJSON (data, ladder) {
 						newMove = $(e).clone();
 						newMove.children('a').attr('id', newLadder.attr('id') + 'm' + moveid);
 						newMove.children('a').click(moveClick).nextAll('form').submit(handleSubmit);
-						newMove.css('opacity', '0.5').hover(function () { $(this).css('opacity', 1); }, function () { $(this).css('opacity', '0.5'); });
 						newMove.appendTo(newLadder);
 					}
 				});
@@ -94,7 +94,7 @@ function handleGameJSON (data, ladder) {
 				    html += '<img src="' + picture + '" alt="' + username + '" title="' + username + '" /> ';
 						html += m.word + '</a>';
 					}
-					html += '<form method="POST" style="display: none;">';
+					html += '<form method="POST" style="display: none;" autocomplete="off">';
 					html += '<input type="hidden" name="moveid" value="' + m.id + '" />';
 					html += '<input type="hidden" name="ladderid" value="' + newLadder.attr('id') + '" />';
 					html += '<input type="text" id="' + newLadder.attr('id') + 'i' + m.id + '" name="word" autocomplete="off" autocorrect="off" autocapitalize="off" />';
@@ -118,6 +118,7 @@ function handleGameJSON (data, ladder) {
 				$(ladder).parent().after(newContainer);
 				$(newContainer).animate({width: 'show'}, {duration: 500, queue: true});
 				$(newContainer).animate({opacity: 1}, {duration: 500, queue: true});
+				centerLadder($(newContainer).closest('.ladder-set'), centered[$(newContainer).closest('.ladder-set')]);
 			}
 
 			// Hide the old form.
@@ -159,6 +160,7 @@ function centerLadder (set, ladder) {
   var tWidth = ladder.width();
   var wWidth = $(window).width();
   set.animate({left: (wWidth / 2) - tPos.left - (tWidth / 2)}, 250);
+	centered[set.attr('id')] = ladder;
 }
 
 function moveClick(event) {
@@ -166,6 +168,7 @@ function moveClick(event) {
   // Hide all inputs first
   $('form').slideUp('fast');
 	$('img.addword').fadeIn();
+	$('a.move').removeClass('active');
 	// Fade all ladders
 	$('.move').animate({opacity: 0.5}, 100);
 	// Center this ladder
@@ -176,6 +179,7 @@ function moveClick(event) {
   if (washidden) {
 		$(this).children('img.addword').fadeOut();
 		$(this).siblings('form').slideDown('fast', function () { $(this).children('input').get(2).focus(); });
+		$(this).addClass('active');
   } else {
     // Hidden now, blur it
     $(this).siblings('form').children('input').get(2).blur();
@@ -188,14 +192,9 @@ $(document).ready(function () {
 	// hide all inputs when you click in empty space
   $(document.body).click(function() { $('form').slideUp('fast'); });
   
-	// hide inputs when pressing ESC
-  $(document).keypress(function (e) {
-		$('form input[name="word"]').removeClass('error');
-    if (e.keyCode == 27) { // ESC
-      $('form').slideUp('fast');
-      e.preventDefault();
-    }
-  });
+	// handle keypresses
+  $('form input[name="word"]').keypress(keybdNav);
+  $(document).keypress(function (e) { if (e.keyCode == 27) { $('input').blur(); $('form').slideUp('fast'); e.preventDefault(); e.stopPropagation(); } });
 
   if (!done) {
     $('form').css('display', 'none').submit(handleSubmit);
@@ -220,6 +219,51 @@ $(document).ready(function () {
 		$('a.move:not(.win)').animate({opacity: 0.3}, 100);
 	}
 });
+
+function keybdNav (e) {
+		$('form input[name="word"]').removeClass('error');
+		var moveKeys = {38: 'up', 40: 'down', 39: 'right', 37: 'left'};
+		if (e.keyCode in moveKeys) {
+			$('input').blur();
+			$('form').hide();
+			
+			var active = $('a.move.active').closest('li');
+			var activePos = $(active).closest('ul').children('li').index($(active));
+			var activeLadder = $(active).closest('.ladder-container');
+			var activeLadderSet = $(activeLadder).closest('.ladder-set');
+			var activeLadderPos = $(activeLadderSet).children('.ladder-container').index($(activeLadder));
+			
+    	if (e.keyCode == 38) { // up
+				if ($(activeLadderSet).attr('id') == 'bottom-ladder' && activePos == 0) {
+					var topCount = $(centered['top-ladder']).children('ul').children('li').length - 1;
+					var newActive = $(centered['top-ladder']).children('ul').children('li').get(topCount);
+					$(newActive).children('a').click();
+				} else $(active).prev('li').children('a').click();
+			} else if (e.keyCode == 40) { // down
+				var topCount = $(activeLadder).children('ul').children('li').length - 1;
+				if ($(activeLadderSet).attr('id') == 'top-ladder' && activePos == topCount) {
+					var newActive = $(centered['bottom-ladder']).children('ul').children('li').get(0);
+					$(newActive).children('a').click();
+				} else $(active).next('li').children('a').click();
+			} else if (e.keyCode == 39) { // right
+				var rightLadder = $(active).closest('.ladder-container').next('.ladder-container').children('ul').get(0);
+				if (rightLadder) {
+					var newCount = $(rightLadder).children('li').length - 1;
+					var newActive = $(rightLadder).children('li').get(Math.min(activePos, newCount));
+					$(newActive).children('a').click();
+				}
+			} else if (e.keyCode == 37) { // left
+				var leftLadder = $(active).closest('.ladder-container').prev('.ladder-container').children('ul').get(0);
+				if (leftLadder) {
+					var newCount = $(leftLadder).children('li').length - 1;
+					var newActive = $(leftLadder).children('li').get(Math.min(activePos, newCount));
+					$(newActive).children('a').click();
+				}
+			}
+		}
+		e.preventDefault();
+		e.stopPropagation();
+}
 
 function oc (a) {
   var o = {};

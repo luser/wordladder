@@ -1,13 +1,7 @@
 $def with(game, word, reason)
-<!DOCTYPE html>
-<html><head><title>Word Ladder: $game.start &rarr; $game.end - Error</title>
-<link rel="icon" href="/static/images/favicon.png">
-<meta http-equiv="refresh" content="2;URL=/game/${game.start}-${game.end}">
-<meta name="viewport" content="width = device-width">
-</head>
-<body>
+$var title: Word Ladder; $game.start &rarr; $game.end - Error
+$var css:
+$var js:
 <h1>You cannot play the word $word there</h1>
-<p>$reason
-<p><a href="/game/${game.start}-${game.end}">Back to the game</a>
-</body>
-</html>
+<p>$reason</p>
+<p><a href="/game/${game.start}-${game.end}">Back to the game</a></p>
