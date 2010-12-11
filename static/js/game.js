@@ -78,9 +78,9 @@ function handleGameJSON (data, ladder) {
 				$(ladder).children('li').each(function (i, e) {
 					moveid = parseInt($(e).children('a').attr('id').replace($(ladder).attr('id') + 'm', ''));
 					if (moveid <= m.parent) {
-						newMove = $(e).clone();
+						newMove = $(e).clone().removeClass('active');
 						newMove.children('a').attr('id', newLadder.attr('id') + 'm' + moveid);
-						newMove.children('a').click(moveClick).nextAll('form').submit(handleSubmit);
+						newMove.children('a').click(moveClick).nextAll('form').submit(handleSubmit).children('input[name="word"]').keypress(keybdNav);
 						newMove.appendTo(newLadder);
 					}
 				});
@@ -118,14 +118,14 @@ function handleGameJSON (data, ladder) {
 				$(ladder).parent().after(newContainer);
 				$(newContainer).animate({width: 'show'}, {duration: 500, queue: true});
 				$(newContainer).animate({opacity: 1}, {duration: 500, queue: true});
-				centerLadder($(newContainer).closest('.ladder-set'), centered[$(newContainer).closest('.ladder-set')]);
+				centerLadder($(newContainer).closest('.ladder-set'), centered[$(newContainer).closest('.ladder-set').attr('id')]);
 			}
 
 			// Hide the old form.
 			$('form').slideUp('fast');
 
 			// Set up handlers for new move.
-	    $('#' + newLadder.attr('id') + 'm' + m.id).attr('title', 'Click to add a word after this word').click(moveClick).siblings('form').submit(handleSubmit);
+	    $('#' + newLadder.attr('id') + 'm' + m.id).attr('title', 'Click to add a word after this word').click(moveClick).siblings('form').submit(handleSubmit).children('input[name="word"]').keypress(keybdNav);;
 		}
 	});
   if ('done' in data) {
@@ -260,9 +260,9 @@ function keybdNav (e) {
 					$(newActive).children('a').click();
 				}
 			}
+			e.preventDefault();
+			e.stopPropagation();
 		}
-		e.preventDefault();
-		e.stopPropagation();
 }
 
 function oc (a) {
