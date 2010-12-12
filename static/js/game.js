@@ -172,6 +172,7 @@ function centerLadder (set, ladder) {
 function moveClick(event) {
 	var washidden = $(this).siblings('form').css('display') == 'none';
   // Hide all inputs first
+	$('input').blur();
   $('form').slideUp('fast');
 	$('img.addword').fadeIn();
 	$('a.move').removeClass('active');
@@ -200,7 +201,7 @@ $(document).ready(function () {
   
 	// handle keypresses
   $('form input[name="word"]').keypress(keybdNav);
-  $(document).keypress(function (e) { if (e.keyCode == 27) { $('input').blur(); $('form').slideUp('fast'); e.preventDefault(); e.stopPropagation(); } });
+  $(document).keypress(function (e) { if (e.keyCode == 9) { e.preventDefault(); e.stopPropagation(); } else keybdNav(e); });
 
   if (!done) {
     $('form').css('display', 'none').submit(handleSubmit);
@@ -231,11 +232,10 @@ $(document).ready(function () {
 function keybdNav (e) {
 		$('form input[name="word"]').removeClass('error');
 		var moveKeys = {38: 'up', 40: 'down', 39: 'right', 37: 'left'};
+		var active = $('a.move.active').closest('li');
 		if (e.keyCode in moveKeys) {
 			$('input').blur();
-			$('form').hide();
 			
-			var active = $('a.move.active').closest('li');
 			var activePos = $(active).closest('ul').children('li').index($(active));
 			var activeLadder = $(active).closest('.ladder-container');
 			var activeLadderSet = $(activeLadder).closest('.ladder-set');
@@ -269,6 +269,9 @@ function keybdNav (e) {
 			}
 			e.preventDefault();
 			e.stopPropagation();
+
+			var active = $('a.move.active').closest('li');
+			active.children('form').children('input').focus();
 		}
 }
 
