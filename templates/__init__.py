@@ -24,7 +24,7 @@ def game(game, user):
     __lineoffset__ -= 3
     def word(l, m, w):
         self = TemplateResult(); extend_ = self.extend
-        extend_([u'    <a id="l', escape_((l.id), True), u'm', escape_((m.id), True), u'" class="move move', escape_((m.id), True), escape_(((m.id in game.winningchain and l.id in game.winningchain and ' win') or ''), True), u'">\n'])
+        extend_([u'    <a id="l', escape_((l.id), True), u'm', escape_((m.id), True), u'" class="move move', escape_((m.id), True), u'">\n'])
         if not game.done:
             if m.bottom:
                 extend_(['        ', u'    <img src="/static/images/add.png" alt="Add a word" title="Add a word" class="addword bottom" />\n'])
@@ -86,6 +86,7 @@ def game(game, user):
     extend_([u'        var lastmove = ', escape_(game.lastmove, True), u';\n'])
     extend_([u'        var done = ', escape_((game.done and "true" or "false"), True), u';\n'])
     extend_([u"        var userid = '", escape_(user.key().name(), False), u"';\n"])
+    extend_([u'        var users = {};\n'])
     for u in loop.setup(game.users):
         extend_([u"    users['", escape_((u), True), u"'] = {'username': '", escape_(game.users[u].username, False), u"', 'picture': '", escape_(game.users[u].picture, False), u"'};\n"])
     if game.done:

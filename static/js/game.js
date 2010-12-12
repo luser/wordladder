@@ -7,7 +7,7 @@ function handleSubmit (event) {
   var form = this;
   $.ajax({type: 'POST',
           url: document.location.href,
-          data: {'lastmove': lastmove, 'word': this.word.value, 'moveid': this.moveid.value},
+          data: {'lastmove': lastmove, 'word': form.word.value, 'moveid': form.moveid.value},
           dataType: 'json',
           beforeSend: function(req) { req.setRequestHeader('Accept', 'text/json'); },
           success: function(data) { handlePlayResponse(form, data); },
@@ -68,7 +68,7 @@ function handleGameJSON (data, ladder) {
 			var newBranch = false;
 			if (!ladder || m.userid != userid) ladder = $('a.move' + m.parent + ':last').parent().parent();
 			$(ladder).children('li').each(function (i, e) {
-				moveid = parseInt($(e).children('a').attr('id').replace($(ladder).attr('id') + 'm', ''));
+				moveid = parseInt($(e).children('a').attr('id').replace($(ladder).attr('id') + 'm', ''), 10);
 				if (moveid > m.parent) newBranch = true;
 			});
 
@@ -76,7 +76,7 @@ function handleGameJSON (data, ladder) {
 				newLadder = $(document.createElement('ul'));
 				newLadder.attr('id', 'l' + m.id);
 				$(ladder).children('li').each(function (i, e) {
-					moveid = parseInt($(e).children('a').attr('id').replace($(ladder).attr('id') + 'm', ''));
+					moveid = parseInt($(e).children('a').attr('id').replace($(ladder).attr('id') + 'm', ''), 10);
 					if (moveid <= m.parent) {
 						newMove = $(e).clone().removeClass('active');
 						newMove.children('a').attr('id', newLadder.attr('id') + 'm' + moveid);
@@ -148,13 +148,14 @@ function handleGameJSON (data, ladder) {
 
 function highlightWinningLadders (last_move, winning_chain) {
 		var lmove = $('a.move' + last_move);
-		$(lmove).closest('li').siblings().children('a').addClass('win');
+		$(lmove).addClass('win').closest('li').siblings().children('a').addClass('win');
 		var found = false;
 		$(lmove).closest('.ladder-set').siblings('.ladder-set').children('.ladder-container').each(function(i, c) {
 			$(c).find('a.move').each(function (i, m) {
 				var moveid = String($(m).attr('id')).replace($(m).closest('ul').attr('id') + 'm', '');
 				if ((moveid in oc(winning_chain)) && $(m).text() == $(lmove).text() && !found) {
-					$(m).addClass('win').parent().prevAll('li').children('a').addClass('win');
+					if ($(c).closest('.ladder-set').attr('id') == 'top-ladder') $(m).addClass('win').parent().prevAll('li').children('a').addClass('win');
+					else $(m).addClass('win').parent().nextAll('li').children('a').addClass('win');
 					found = true;
 				}
 			});
@@ -200,8 +201,8 @@ $(document).ready(function () {
   $(document.body).click(function() { $('form').slideUp('fast'); });
   
 	// handle keypresses
-  $('form input[name="word"]').keypress(keybdNav);
-  $(document).keypress(function (e) { if (e.keyCode == 9) { e.preventDefault(); e.stopPropagation(); } else keybdNav(e); });
+  $('form input[name="word"]').keydown(keybdNav);
+  $(document).keydown(function (e) { if (e.keyCode == 9) { e.preventDefault(); e.stopPropagation(); } else keybdNav(e); });
 
   if (!done) {
     $('form').css('display', 'none').submit(handleSubmit);
@@ -213,8 +214,8 @@ $(document).ready(function () {
 	      minTimeout: DEFAULT_POLLTIME,
 	      maxTimeout: 10125,
 	      multiplier: 1.5,
-	      type: 'json',
-			}, function(data) { handleGameJSON(data); }
+	      type: 'json'
+			}, function(data) { handleGameJSON(data, false); }
 		);
 
 		centerLadder($('#bottom-ladder'), $('.ladder-container:first'));
@@ -223,8 +224,8 @@ $(document).ready(function () {
   } else {
 		highlightWinningLadders(lastmove, winningchain);
 
-		centerLadder($('#top-ladder a.win:first').closest('.ladder-set'), $('#top-ladder a.win:first').closest('.ladder-container'));
-		centerLadder($('#bottom-ladder a.win:first').closest('.ladder-set'), $('#bottom-ladder a.win:first').closest('.ladder-container'));
+		centerLadder($('#top-ladder'), $('#top-ladder a.win:first').closest('.ladder-container'));
+		centerLadder($('#bottom-ladder'), $('#bottom-ladder a.win:first').closest('.ladder-container'));
 		$('a.move:not(.win)').animate({opacity: 0.5}, 100);
 	}
 });
@@ -270,7 +271,7 @@ function keybdNav (e) {
 			e.preventDefault();
 			e.stopPropagation();
 
-			var active = $('a.move.active').closest('li');
+			active = $('a.move.active').closest('li');
 			active.children('form').children('input').focus();
 		}
 }
