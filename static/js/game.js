@@ -129,30 +129,36 @@ function handleGameJSON (data, ladder) {
 		}
 	});
   if ('done' in data) {
-		$('a.move').unbind('click');
-
-		// First find the winning ladders in each ladder-set.
-		$('div.ladder-container').each(function(i, c) {
-			thisWin = true;
-			$(c).find('a.move').each(function (i, m) {
-				var l = $(m).closest('ul');
-				var moveid = String($(m).attr('id')).replace(l.attr('id') + 'm', '');
-				if (!(moveid in oc(data.winningchain))) thisWin = false;
-			});
-			if (thisWin) $(c).find('a.move').addClass('win');
-		});
+		$('a.move').unbind('click').removeClass('active');
 
 		// Hide interactive stuff.
 		$('form').slideUp('fast').remove();
 		$('img.addword').fadeOut('fast');
 
+		highlightWinningLadders(data.lastmove, data.winningchain);
+
 		// Center the winning ladders.
 		centerLadder($('#top-ladder'), $('#top-ladder a.win:first').closest('.ladder-container'));
 		centerLadder($('#bottom-ladder'), $('#bottom-ladder a.win:first').closest('.ladder-container'));
 		$('a.win').animate({opacity: 1}, 100);
-		$('a.move:not(.win)').animate({opacity: 0.3}, 100);
+		$('a.move:not(.win)').animate({opacity: 0.5}, 100);
 	}
   if (data.lastmove > lastmove) lastmove = data.lastmove;
+}
+
+function highlightWinningLadders (last_move, winning_chain) {
+		var lmove = $('a.move' + last_move);
+		$(lmove).closest('li').siblings().children('a').addClass('win');
+		var found = false;
+		$(lmove).closest('.ladder-set').siblings('.ladder-set').children('.ladder-container').each(function(i, c) {
+			$(c).find('a.move').each(function (i, m) {
+				var moveid = String($(m).attr('id')).replace($(m).closest('ul').attr('id') + 'm', '');
+				if ((moveid in oc(winning_chain)) && $(m).text() == $(lmove).text() && !found) {
+					$(m).addClass('win').parent().prevAll('li').children('a').addClass('win');
+					found = true;
+				}
+			});
+		});
 }
 
 function centerLadder (set, ladder) {
@@ -214,9 +220,11 @@ $(document).ready(function () {
 		centerLadder($('#top-ladder'), $('.ladder-container:first'));
 		$('.move:last').click();
   } else {
+		highlightWinningLadders(lastmove, winningchain);
+
 		centerLadder($('#top-ladder a.win:first').closest('.ladder-set'), $('#top-ladder a.win:first').closest('.ladder-container'));
 		centerLadder($('#bottom-ladder a.win:first').closest('.ladder-set'), $('#bottom-ladder a.win:first').closest('.ladder-container'));
-		$('a.move:not(.win)').animate({opacity: 0.3}, 100);
+		$('a.move:not(.win)').animate({opacity: 0.5}, 100);
 	}
 });
 
@@ -231,7 +239,6 @@ function keybdNav (e) {
 			var activePos = $(active).closest('ul').children('li').index($(active));
 			var activeLadder = $(active).closest('.ladder-container');
 			var activeLadderSet = $(activeLadder).closest('.ladder-set');
-			var activeLadderPos = $(activeLadderSet).children('.ladder-container').index($(activeLadder));
 			
     	if (e.keyCode == 38) { // up
 				if ($(activeLadderSet).attr('id') == 'bottom-ladder' && activePos == 0) {
