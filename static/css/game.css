@@ -58,11 +58,15 @@ ul li a div.no-user {
 	display: inline-block;
 }
 div.ladder-container {
-	border-right: 1px grey dashed;
 	text-align: center;
 	display: block;
 	float: left;
 	vertical-align: top;
+	margin: 1em 0;
+}
+div.ladder-container.active {
+	border-left: 1px grey dashed;
+	border-right: 1px grey dashed;
 }
 div.ladder-width {
 	width: 8em;
@@ -72,9 +76,6 @@ div#bottom-ladder ul {
 	display: inline-block;
 	float: none;
 	vertical-align: bottom;
-}
-div.ladder-container {
-	margin: 1em 0;
 }
 div#top-ladder {
 	float: left;
@@ -97,7 +98,8 @@ ul#scores {
   -moz-border-radius: 5px;
   display: block;
 	background: white;
-	width: 30%;
+	text-align: left;
+	width: 25%;
 }
 ul#scores li {
   display: block;
@@ -147,6 +149,17 @@ form {
 	border: 1px solid dodgerblue;
 }
 
+.move.similar {
+	-moz-box-shadow: 0px 0px 5px palegreen;
+	-webkit-box-shadow: 0px 0px 5px palegreen;
+	border: 1px solid palegreen;
+	color: dimgray;
+}
+
+.move.similar img {
+	opacity: 0.8;
+}
+
 .timestamp {
   display: none;
 }
@@ -179,4 +192,11 @@ canvas.WireIt-Wire {
 
 .log {
   padding: 0.25em;
+}
+.faded {
+	color: grey;
+	border-color: grey;
+}
+.faded img {
+	opacity: 0.5;
 }

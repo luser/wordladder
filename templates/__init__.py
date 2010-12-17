@@ -38,11 +38,6 @@ def game(game, user):
         extend_([u'    </a>\n'])
         return self
     __lineoffset__ -= 3
-    def ts(t):
-        self = TemplateResult(); extend_ = self.extend
-        extend_([u'    <span class="timestamp">', escape_(t, True), u'</span>\n'])
-        return self
-    __lineoffset__ -= 3
     def drawladder(l, bottom):
         self = TemplateResult(); extend_ = self.extend
         if bottom == l.bottom:
@@ -56,7 +51,7 @@ def game(game, user):
                 extend_(['        ', u'    <li>\n'])
                 if bottom:
                     extend_(['            ', u'    ', escape_(form(l, r), False), u'\n'])
-                extend_(['        ', u'    ', escape_(word(l, r, r.word), False), u' ', escape_(ts(r.played), False), u'\n'])
+                extend_(['        ', u'    ', escape_(word(l, r, r.word), False), u'\n'])
                 if not bottom:
                     extend_(['            ', u'    ', escape_(form(l, r), False), u'\n'])
                 extend_(['        ', u'    </li>\n'])

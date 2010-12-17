@@ -24,8 +24,6 @@ $def word(l, m, w):
 		<div class="no-user"></div>
 	$w
 	</a>
-$def ts(t):
-	<span class="timestamp">$t</span>
 $def drawladder(l, bottom):
 	$if bottom == l.bottom:
 		<div class="ladder-container">
@@ -38,7 +36,7 @@ $def drawladder(l, bottom):
 			<li>
 			$if bottom:
 				$:form(l, r)
-			$:word(l, r, r.word) $:ts(r.played)
+			$:word(l, r, r.word)
 			$if not bottom:
 				$:form(l, r)
 			</li>

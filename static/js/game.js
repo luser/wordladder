@@ -116,16 +116,15 @@ function handleGameJSON (data, ladder) {
 				var newProp = $(document.createElement('div')).addClass('ladder-width');
 				$(newContainer).append(newProp).append(newLadder);
 				$(ladder).parent().after(newContainer);
-				$(newContainer).animate({width: 'show'}, {duration: 500, queue: true});
-				$(newContainer).animate({opacity: 1}, {duration: 500, queue: true});
-				centerLadder($(newContainer).closest('.ladder-set'), centered[$(newContainer).closest('.ladder-set').attr('id')]);
+				$(newContainer).animate({width: 'show'}, {duration: 300, queue: true});
+				$(newContainer).animate({opacity: 1}, {duration: 300, queue: true, complete: function () { centerLadder($(newContainer).closest('.ladder-set'), $(newContainer)); }});
 			}
 
 			// Hide the old form.
 			$('form').slideUp('fast');
 
 			// Set up handlers for new move.
-	    $('#' + newLadder.attr('id') + 'm' + m.id).attr('title', 'Click to add a word after this word').click(moveClick).siblings('form').submit(handleSubmit).children('input[name="word"]').keypress(keybdNav);;
+	    $('#' + newLadder.attr('id') + 'm' + m.id).attr('title', 'Click to add a word after this word').click(moveClick).siblings('form').submit(handleSubmit).children('input[name="word"]').keydown(keybdNav);;
 		}
 	});
   if ('done' in data) {
@@ -140,58 +139,52 @@ function handleGameJSON (data, ladder) {
 		// Center the winning ladders.
 		centerLadder($('#top-ladder'), $('#top-ladder a.win:first').closest('.ladder-container'));
 		centerLadder($('#bottom-ladder'), $('#bottom-ladder a.win:first').closest('.ladder-container'));
-		$('a.win').animate({opacity: 1}, 100);
-		$('a.move:not(.win)').animate({opacity: 0.5}, 100);
+		$('a.win').remoevClass('faded');
+		$('a.move:not(.win)').addClass('faded');
 	}
   if (data.lastmove > lastmove) lastmove = data.lastmove;
 }
 
 function highlightWinningLadders (last_move, winning_chain) {
-		var lmove = $('a.move' + last_move);
-		$(lmove).addClass('win').closest('li').siblings().children('a').addClass('win');
-		var found = false;
-		$(lmove).closest('.ladder-set').siblings('.ladder-set').children('.ladder-container').each(function(i, c) {
-			$(c).find('a.move').each(function (i, m) {
-				var moveid = String($(m).attr('id')).replace($(m).closest('ul').attr('id') + 'm', '');
-				if ((moveid in oc(winning_chain)) && $(m).text() == $(lmove).text() && !found) {
-					if ($(c).closest('.ladder-set').attr('id') == 'top-ladder') $(m).addClass('win').parent().prevAll('li').children('a').addClass('win');
-					else $(m).addClass('win').parent().nextAll('li').children('a').addClass('win');
-					found = true;
-				}
-			});
+	var lmove = $('a.move' + last_move);
+	$(lmove).addClass('win').closest('li').siblings().children('a').addClass('win');
+	var found = false;
+	$(lmove).closest('.ladder-set').siblings('.ladder-set').children('.ladder-container').each(function(i, c) {
+		$(c).find('a.move').each(function (i, m) {
+			var moveid = String($(m).attr('id')).replace($(m).closest('ul').attr('id') + 'm', '');
+			if ((moveid in oc(winning_chain)) && $(m).text() == $(lmove).text() && !found) {
+				if ($(c).closest('.ladder-set').attr('id') == 'top-ladder') $(m).addClass('win').parent().prevAll('li').children('a').addClass('win');
+				else $(m).addClass('win').parent().nextAll('li').children('a').addClass('win');
+				found = true;
+			}
 		});
+	});
 }
 
 function centerLadder (set, ladder) {
+	$(centered[set.attr('id')]).removeClass('active');
+	ladder.addClass('active');
 	var tPos = ladder.position();
   var tWidth = ladder.width();
   var wWidth = $(window).width();
-  set.animate({left: (wWidth / 2) - tPos.left - (tWidth / 2)}, 250);
+  set.animate({left: (wWidth / 2) - tPos.left - (tWidth / 2)}, {duration: 250, easing: 'swing', queue: true});
 	centered[set.attr('id')] = ladder;
 }
 
 function moveClick(event) {
-	var washidden = $(this).siblings('form').css('display') == 'none';
-  // Hide all inputs first
-	$('input').blur();
-  $('form').slideUp('fast');
-	$('img.addword').fadeIn();
-	$('a.move').removeClass('active');
+	var oldactive = $('a.active').removeClass('active');
+	oldactive.siblings('form').slideUp('fast').children('input[name="word"]').blur();
+	oldactive.children('img.addword').removeClass('faded');
 	// Fade all ladders
-	$('.move').animate({opacity: 0.5}, 100);
+	$('a.move').addClass('faded');
 	// Center this ladder
 	centerLadder($(this).closest('.ladder-set'), $(this).closest('.ladder-container'));
 	// Un-fade this ladder
-	$(this).parent().parent().parent().find('.move').animate({opacity: 1}, 100);
+	$(this).closest('ul').find('.move').removeClass('faded');
 	// Show the form
-  if (washidden) {
-		$(this).children('img.addword').fadeOut();
-		$(this).siblings('form').slideDown('fast', function () { $(this).children('input').get(2).focus(); });
-		$(this).addClass('active');
-  } else {
-    // Hidden now, blur it
-    $(this).siblings('form').children('input').get(2).blur();
-  }
+	$(this).children('img.addword').fadeOut();
+	$(this).siblings('form').slideDown('fast', function () { $(this).children('input').get(2).focus(); });
+	$(this).addClass('active');
 
   event.stopPropagation();
 }
@@ -218,24 +211,25 @@ $(document).ready(function () {
 			}, function(data) { handleGameJSON(data, false); }
 		);
 
-		centerLadder($('#bottom-ladder'), $('.ladder-container:first'));
+		centerLadder($('#bottom-ladder'), $('#bottom-ladder div.ladder-container:first'));
 		centerLadder($('#top-ladder'), $('.ladder-container:first'));
-		$('.move:last').click();
+		$('.move:first').click();
   } else {
 		highlightWinningLadders(lastmove, winningchain);
 
 		centerLadder($('#top-ladder'), $('#top-ladder a.win:first').closest('.ladder-container'));
 		centerLadder($('#bottom-ladder'), $('#bottom-ladder a.win:first').closest('.ladder-container'));
-		$('a.move:not(.win)').animate({opacity: 0.5}, 100);
+		$('a.move:not(.win)').addClass('faded');
 	}
 });
 
 function keybdNav (e) {
-		$('form input[name="word"]').removeClass('error');
+		$('li > a.active + form > input[name="word"]').removeClass('error');
 		var moveKeys = {38: 'up', 40: 'down', 39: 'right', 37: 'left'};
-		var active = $('a.move.active').closest('li');
+		var active = $('a.active').closest('li');
 		if (e.keyCode in moveKeys) {
-			$('input').blur();
+			active.siblings('form').children('input[name="word"]').blur();
+			$('a.similar').removeClass('similar');
 			
 			var activePos = $(active).closest('ul').children('li').index($(active));
 			var activeLadder = $(active).closest('.ladder-container');
@@ -248,10 +242,12 @@ function keybdNav (e) {
 					$(newActive).children('a').click();
 				} else $(active).prev('li').children('a').click();
 			} else if (e.keyCode == 40) { // down
-				var topCount = $(activeLadder).children('ul').children('li').length - 1;
-				if ($(activeLadderSet).attr('id') == 'top-ladder' && activePos == topCount) {
-					var newActive = $(centered['bottom-ladder']).children('ul').children('li').get(0);
-					$(newActive).children('a').click();
+				if ($(activeLadderSet).attr('id') == 'top-ladder') {
+					var topCount = $(activeLadder).children('ul').children('li').length - 1;
+					if (activePos == topCount) {
+						var newActive = $(centered['bottom-ladder']).children('ul').children('li').get(0);
+						$(newActive).children('a').click();
+					} else $(active).next('li').children('a').click();
 				} else $(active).next('li').children('a').click();
 			} else if (e.keyCode == 39) { // right
 				var rightLadder = $(active).closest('.ladder-container').next('.ladder-container').children('ul').get(0);
@@ -273,6 +269,8 @@ function keybdNav (e) {
 
 			active = $('a.move.active').closest('li');
 			active.children('form').children('input').focus();
+			var activeid = String($(active).children('a').attr('id')).replace($(active).closest('ul').attr('id') + 'm', '');
+			$('a.move' + activeid + ':not(.active)').addClass('similar');
 		}
 }
 
