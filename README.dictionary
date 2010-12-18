@@ -39,12 +39,8 @@ of how they were built, in steps.
  and used mungedict.py to remove them from the dictionary.
 
 -- For difficulty ratings:
-1) Get list of word frequencies from the British National Corpus, found
- at http://www.kilgarriff.co.uk/bnc-readme.html:
- wget http://www.kilgarriff.co.uk/BNClists/all.al.gz
- gunzip all.al.gz
-2) Run difficulty.py. This finds the length of the shortest path from each
+1) Run difficulty.py. This finds the length of the shortest path from each
  start word to a 3-letter word, since most ladders will end up going that
  route (even if it's not the optimal route), and if it takes a lot of steps
  to get to a 3-letter word, then it's obviously a more difficult word.
-3) Update your config.py to point to difficulty.dict instead of game.dict.
+2) Update your config.py to point to difficulty.dict instead of game.dict.
