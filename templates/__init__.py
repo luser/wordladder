@@ -192,7 +192,7 @@ def index(games, user):
         extend_([u'<ul>\n'])
         for g in loop.setup(gl):
             if g.done != active:
-                extend_(['  ', u'<li><a href="/game/', escape_(g.key().name(), True), u'">', escape_(g.start.word, True), u' &rarr; ', escape_(g.end.word, True), u'</a>\n'])
+                extend_(['  ', u'<li><a href="/game/', escape_(g.key().name(), True), u'">', escape_(g.start.word, True), u' &rarr; ', escape_(g.end.word, True), u' (', escape_(g.difficulty_rating, True), u')</a>\n'])
                 if user and user.key().name() in g.score:
                     extend_(['                          ', u'    (you earned ', escape_(g.score[user.key().name()]['score'], True), u' points)\n'])
                 extend_(['  ', u'                        </li>\n'])

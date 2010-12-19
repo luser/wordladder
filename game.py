@@ -2,10 +2,10 @@
 from __future__ import with_statement
 from google.appengine.ext import db
 from google.appengine.api import datastore_errors
-from words import getgame, validmove, LevenshteinDistance
+from words import getgame, validmove, LevenshteinDistance, difficulty as word_difficulty
 from user import User
 from time import *
-from config import DISTANCE_MATRIX, GAME_WORDLIST
+from config import DISTANCE_MATRIX, GAME_WORDLIST, DIFFICULTY_LEVELS, DIFFICULTY_SCORES
 import sys, os, math
 
 from json import dump_json, load_json
@@ -292,10 +292,55 @@ class Game(db.Model):
 			l = l + l2
 		return l
 
+	@property
+	def difficulty(self):
+		if hasattr(self, '_difficulty'):
+			return self._difficulty
+		start_difficulty = word_difficulty(self.start.word)
+		end_difficulty = word_difficulty(self.end.word)
+		if str(start_difficulty).isdigit() and str(end_difficulty).isdigit():
+			# Use actual difficulty ratings if available.
+			self._difficulty = int(start_difficulty) + int(end_difficulty)
+		# If not, guess based on the Leveshtein distance.
+		else:
+			self._difficulty = int(LevenshteinDistance(self.start.word, self.end.word) / 2)
+		return self._difficulty
+
+	@staticmethod
+	def word_difficulty_score(word):
+		d = int(word_difficulty(word))
+		score = 0
+		if str(d).isdigit():
+			for r in DIFFICULTY_SCORES:
+				if d in r:
+					score = DIFFICULTY_SCORES.index(r)
+		return score
+
+	@property
+	def difficulty_rating(self):
+		if hasattr(self, '_difficultyRating'):
+			return self._difficultyRating
+		ratings = {}
+		for r in DIFFICULTY_LEVELS:
+			ratings[DIFFICULTY_LEVELS[r][0]] = r
+		average_difficulty_score = int(math.ceil(float(sum([Game.word_difficulty_score(self.start.word), Game.word_difficulty_score(self.end.word)])) / float(2)))
+		self._difficultyRating = ratings[average_difficulty_score]
+		return self._difficultyRating
+
+	@property
+	def difficulty_multiplier(self):
+		return DIFFICULTY_LEVELS[self.difficulty_rating][1]
+
+	@property
+	def base_points(self):
+		if hasattr(self, '_basePoints'):
+			return self._basePoints
+		self._basePoints = max(self.difficulty * 10 * self.difficulty_multiplier, 10)
+		return self._basePoints
+
 	def scores(self):
 		if hasattr(self, '_scores'):
 			return self._scores
-		short = self.shortestChainLength()
 		win = self._findwinningchain()
 		winLen = len(win) - 2 # Subtract start and end moves.
 
@@ -311,22 +356,13 @@ class Game(db.Model):
 				else:
 					scores[u] = {'username': str(m.user), 'picture': m.user.picture, 'score': 0, 'winMoves': 1}
 
-		# Figure out base points based on difficulty.
-		# TODO: This is kind of arbitrary.
-		# TODO: If we start using different dictionaries for different skill levels, incorporate that here.
-		difficulty = (float(short) + float(LevenshteinDistance(self.start.word, self.end.word))) / float(10)
+		# Total possible points = base points + short ladder bonus
+		short_bonus = self.base_points * (float(winLen) / float(self.difficulty + 4))
+		possible_points = self.base_points + int(short_bonus)
 
-		# Determine base points based on difficulty.
-		basePoints = math.floor(2 * float(difficulty)) * 10
-
-		# Divvy up base points.
+		# Divvy up points.
 		for u in scores:
-			scores[u]['score'] = math.floor((float(scores[u]['winMoves']) / float(winLen)) * basePoints)
-
-		# Divvy up performance points.
-		for u in scores:
-			scores[u]['score'] += math.floor((float(scores[u]['winMoves']) / float(winLen)) * ((4 * difficulty * float(short)) - (winLen - short)))
-			scores[u]['score'] = int(scores[u]['score'])
+			scores[u]['score'] = int(math.floor((float(scores[u]['winMoves']) / float(winLen)) * possible_points))
 
 		self._scores = scores
 		return scores

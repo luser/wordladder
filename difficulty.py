@@ -2,7 +2,7 @@
 # Using the connectivity graph, find the shortest path from a word to the nearest 3-letter word.
 from __future__ import with_statement
 
-import sys, os, os.path, mmap, pickle
+import sys, os, os.path, mmap, cPickle
 from random import choice, sample, randint
 from config import GAME_WORDLIST, PLAY_WORDLIST
 
@@ -47,19 +47,24 @@ GRAPH_PICKLE = "./solution.pickle"
 if os.path.exists(GRAPH_PICKLE):
 	print "(pickled)",
 	with open(GRAPH_PICKLE, 'rb') as f:
-		graph = pickle.load(f)
+		graph = cPickle.load(f)
 else:
 	raise IOError("Graph pickle not found.")
 print "Done"
 
-difficulty = open("difficulty.dict", 'w')
+difficulty_table = {}
 
 for i, word in enumerate(sorted(gamewords)):
 	print "\t[%5d/%5d] Traversing graph from %s..." % (i+1, len(gamewords), word),
 	shortest, endword = find_shortest_path(wordmap[word])
 	print "\t\tDone (found path of length %d to %s)." % (shortest, endword)
-	difficulty.write(word + ' ' + str(shortest) + "\n")
-	difficulty.flush()
+	if shortest in difficulty_table:
+		difficulty_table[shortest].append(word)
+	else:
+		difficulty_table[shortest] = [word]
+
+difficulty = open("difficulty.dict", 'wb')
+cPickle.dump(difficulty_table, difficulty, -1)
+difficulty.close()
 
 print "Done."
-difficulty.close()

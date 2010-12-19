@@ -139,7 +139,7 @@ function handleGameJSON (data, ladder) {
 		// Center the winning ladders.
 		centerLadder($('#top-ladder'), $('#top-ladder a.win:first').closest('.ladder-container'));
 		centerLadder($('#bottom-ladder'), $('#bottom-ladder a.win:first').closest('.ladder-container'));
-		$('a.win').remoevClass('faded');
+		$('a.win').removeClass('faded');
 		$('a.move:not(.win)').addClass('faded');
 	}
   if (data.lastmove > lastmove) lastmove = data.lastmove;
@@ -152,7 +152,7 @@ function highlightWinningLadders (last_move, winning_chain) {
 	$(lmove).closest('.ladder-set').siblings('.ladder-set').children('.ladder-container').each(function(i, c) {
 		$(c).find('a.move').each(function (i, m) {
 			var moveid = String($(m).attr('id')).replace($(m).closest('ul').attr('id') + 'm', '');
-			if ((moveid in oc(winning_chain)) && $(m).text() == $(lmove).text() && !found) {
+			if ((moveid in oc(winning_chain)) && $.trim($(m).text()) == $.trim($(lmove).text()) && !found) {
 				if ($(c).closest('.ladder-set').attr('id') == 'top-ladder') $(m).addClass('win').parent().prevAll('li').children('a').addClass('win');
 				else $(m).addClass('win').parent().nextAll('li').children('a').addClass('win');
 				found = true;
