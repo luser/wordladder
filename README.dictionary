@@ -37,3 +37,10 @@ of how they were built, in steps.
  dictionary to produce a list of unconnected words:
  diff game.dict connected.dict | grep "^<" | sed "s/^< //" > unconnected
  and used mungedict.py to remove them from the dictionary.
+
+-- For difficulty ratings:
+1) Run difficulty.py. This finds the length of the shortest path from each
+ start word to a 3-letter word, since most ladders will end up going that
+ route (even if it's not the optimal route), and if it takes a lot of steps
+ to get to a 3-letter word, then it's obviously a more difficult word.
+2) Update your config.py to point to difficulty.dict instead of game.dict.

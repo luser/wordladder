@@ -104,7 +104,8 @@ class game:
 				lastmove = 1
 			return sendJSON(g, lastmove)
 		else:
-			return render.game(g)
+			user = User.currentUser()
+			return render.game(g, user)
 
 	def POST(self, game):
 		user = User.currentUser()

@@ -4,17 +4,17 @@
 	home - http://humanmsg.googlecode.com
 */
 
-html, body {
+* html, body {
 	height: 100%; /* Damn you IE! */
 }
 
 .humanMsg {
-	font: normal 20px/50px Helvetica, Arial, Sans-Serif;
+	font: normal 18px/20px Helvetica, Arial, Sans-Serif;
 	letter-spacing: -1px;
 	position: fixed;
-	top: 130px;
-	left: 25%;
-	width: 50%;
+	top: 30px;
+	left: 68%;
+	width: 30%;
 	color: white;
 	background-color: black;
 	text-align: center; 

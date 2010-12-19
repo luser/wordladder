@@ -50,6 +50,7 @@ div#statusBar div#actions {
 }
 div#body {
 	margin-top: 28px;
+	margin-bottom: -28px;
 	text-align: left;
 }
 span#newgame {

@@ -32,12 +32,12 @@ var humanMsg = {
 		jQuery('#'+humanMsg.msgID+' p').html(msg);
 	
 		// Show message
-		jQuery('#'+humanMsg.msgID+'').show().animate({ opacity: humanMsg.msgOpacity}, 200);
+		jQuery('#'+humanMsg.msgID+'').show().animate({ opacity: humanMsg.msgOpacity}, 100);
 
-		// Watch for mouse & keyboard in .5s
-		humanMsg.t1 = setTimeout("humanMsg.bindEvents()", 700)
-		// Remove message after 5s
-		humanMsg.t2 = setTimeout("humanMsg.removeMsg()", 5000)
+		// Watch for mouse & keyboard in .2s
+		humanMsg.t1 = setTimeout("humanMsg.bindEvents()", 200)
+		// Remove message after 1s
+		humanMsg.t2 = setTimeout("humanMsg.removeMsg()", 1000)
 	},
 
 	bindEvents: function() {
@@ -57,7 +57,7 @@ var humanMsg = {
 
 		// If message is fully transparent, fade it out
 		if (jQuery('#'+humanMsg.msgID).css('opacity') == humanMsg.msgOpacity)
-			jQuery('#'+humanMsg.msgID).animate({ opacity: 0 }, 500, function() { jQuery(this).hide() })
+			jQuery('#'+humanMsg.msgID).animate({ opacity: 0 }, 200, function() { jQuery(this).hide() })
 	}
 };
 

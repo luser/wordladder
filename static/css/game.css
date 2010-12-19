@@ -1,3 +1,13 @@
+body {
+	margin: 0;
+	padding: 0;
+}
+div#body {
+	float: left;
+	height: 100%;
+	width: 100%;
+	overflow: hidden;
+}
 h1#game {
 	text-align: center;
 }
@@ -13,24 +23,69 @@ ul {
   padding: 0;
   margin: 0;
   list-style: none;
+	width: 100%;
 }
 ul li {
   display: block;
   float: left;
+	clear: left;
   padding: 0;
-  margin: 0;
+  margin: 0 1px;
+	width: 100%;
 }
 ul li a img {
   width: 16px;
   vertical-align: middle;
-  margin: 2px 4px;
+  margin: 2px 4px 2px -16px;
   border: 1px black solid;
+}
+ul li a img.addword {
+	z-index: 10;
+	position: relative;
+	left: 3.8em;
+	 float: left;
+	top: 1.3em;
+	border: none;
+	cursor: pointer;
+}
+ul li a img.addword.bottom {
+	top: -1.15em;;
 }
 ul li a div.no-user {
   height: 16px;
   vertical-align: middle;
   margin: 2px 4px;
 	display: inline-block;
+}
+div.ladder-container {
+	text-align: center;
+	display: block;
+	float: left;
+	vertical-align: top;
+	margin: 1em 0;
+}
+div.ladder-container.active {
+	border-left: 1px grey dashed;
+	border-right: 1px grey dashed;
+}
+div.ladder-width {
+	width: 8em;
+	height: 0;
+}
+div#bottom-ladder ul {
+	display: inline-block;
+	float: none;
+	vertical-align: bottom;
+}
+div#top-ladder {
+	float: left;
+	width: 200%;
+	position: relative;	
+}
+div#bottom-ladder {
+	float: left;
+	with: 200%;
+	position: relative;
 }
 ul#scores {
   border: 1px grey solid;
@@ -39,10 +94,12 @@ ul#scores {
   top: 30px;
   right: 0;
   padding: 10px;
-  margin: 3px;
+  margin: 0 4px;
   -moz-border-radius: 5px;
   display: block;
-  float: left;
+	background: white;
+	text-align: left;
+	width: 25%;
 }
 ul#scores li {
   display: block;
@@ -58,15 +115,13 @@ ul#scores li img {
 [bottom] {
   clear: left;
 }
-input, .placeholder {
-  width: 9em;
-}
-.placeholder {
-  margin-top: 0.5em;
-  height: 1em;
+input {
+  width: 8em;
 }
 form {
-  margin: 0.6em 1px;
+  margin: 0 1px;
+	padding: 0;
+	width: 100%;
 }
 
 .hidden {
@@ -74,21 +129,46 @@ form {
 }
 
 .move {
-  position: relative;
-  border: 1px solid gray;
-  padding: 0.5em;
-  background: white;
-  -moz-border-radius: 10px;
-  -webkit-border-radius: 10px;
-  -moz-box-shadow: 2px 2px 2px gray;
+	-moz-box-shadow: 2px 2px 2px gray;
   -webkit-box-shadow: 2px 2px 2px gray;
+	-moz-border-radius: 3px;
+	-webkit-border-radius: 3px;
+	border-radius: 3px;
+	background: none repeat scroll 0 0 white;
+  border: 1px solid gray;
+  display: block;
+  margin: 0.3em auto;
+  padding: 0;
+  position: relative;
+  width: 80%;
 }
+
+.move.active {
+	-moz-box-shadow: 0px 0px 5px dodgerblue;
+	-webkit-box-shadow: 0px 0px 5px dodgerblue;
+	border: 1px solid dodgerblue;
+}
+
+.move.similar {
+	-moz-box-shadow: 0px 0px 5px palegreen;
+	-webkit-box-shadow: 0px 0px 5px palegreen;
+	border: 1px solid palegreen;
+	color: dimgray;
+}
+
+.move.similar img {
+	opacity: 0.8;
+}
+
 .timestamp {
   display: none;
 }
 
 .win {
-  border: 1px solid red;
+	-moz-box-shadow: 4px 4px 4px gray;
+	-webkit-box-shadow: 4px 4px 4px gray;
+	border: 2px solid darkgreen;
+	padding: 0.1em;
 }
 
 div.WireIt-Terminal {
@@ -104,7 +184,7 @@ canvas.WireIt-Wire {
   bottom: 0;
   right: 0;
   width: 20%;
-  height: 100%;
+  height: 90%;
   overflow: auto;
   overflow-x: auto;
 	display: none;
@@ -113,4 +193,10 @@ canvas.WireIt-Wire {
 .log {
   padding: 0.25em;
 }
-
+.faded {
+	color: grey;
+	border-color: grey;
+}
+.faded img {
+	opacity: 0.5;
+}

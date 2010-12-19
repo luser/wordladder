@@ -6,7 +6,7 @@ $def gamelist(gl, active, user=None):
   <ul>
     $for g in gl:
       $if g.done != active:
-        <li><a href="/game/$g.key().name()">$g.start.word &rarr; $g.end.word</a>
+        <li><a href="/game/$g.key().name()">$g.start.word &rarr; $g.end.word ($g.difficulty_rating)</a>
 				$if user and user.key().name() in g.score:
 					(you earned $g.score[user.key().name()]['score'] points)
 				</li>

@@ -1,27 +1,47 @@
 #!/usr/bin/env python
 
-import sys
+from __future__ import with_statement
+import sys, cPickle
 from random import choice
 
-from config import GAME_WORDLIST, PLAY_WORDLIST
+from config import GAME_WORDLIST, PLAY_WORDLIST, DIFFICULTY_TABLE
 
-def randomword():
-  """Return a random word from the dictionary."""
-  # lame, should know the length of the file in advance and
-  # just pick a random number from that length
-  return choice(open(GAME_WORDLIST, "r").readlines()).rstrip()
+difficulty_table = {}
+with open(DIFFICULTY_TABLE, "rb") as dt:
+	difficulty_table = cPickle.load(dt)
+
+def randomword(min_difficulty=float('-inf'), max_difficulty=float('inf')):
+	"""Return a random word from the dictionary."""
+	# lame, should know the length of the file in advance and
+	# just pick a random number from that length
+	global difficulty_table
+	words = []
+	for score in difficulty_table:
+		if score > min_difficulty and score < max_difficulty:
+			words.extend(difficulty_table[score])
+	word = choice(words)
+	return word
 
 def getgame():
-  """Return two random words (start, end) to be used for a game."""
-  start = randomword()
-  end = randomword()
-  while start == end: # just in case
-      end = randomword()
-  return (start, end)
+	"""Return two random words (start, end) to be used for a game."""
+	start = randomword()
+	end = randomword()
+	while start == end: # just in case
+		end = randomword()
+	return (start, end)
 
 def validword(word):
   """Return True if |word| is in the dictionary."""
-  return any(x.rstrip() == word for x in open(PLAY_WORDLIST, "r"))
+  return any(x.rstrip().split()[0] == word for x in open(PLAY_WORDLIST, "r"))
+
+def difficulty(word):
+	"""Return the difficulty rating of a particular word, if this dictionary contains difficulty ratings."""
+	global difficulty_table
+	for score in difficulty_table:
+		if word in difficulty_table[score]:
+			return score
+	
+	return False
 
 def validwordreason(word):
   """Return (valid, explanation) where |valid| is True or False if

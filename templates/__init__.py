@@ -2,7 +2,7 @@ from web.template import CompiledTemplate, ForLoop, TemplateResult
 
 
 # coding: utf-8
-def game(game):
+def game(game, user):
     __lineoffset__ = -4
     loop = ForLoop()
     self = TemplateResult(); extend_ = self.extend
@@ -11,85 +11,82 @@ def game(game):
             if game.done:
                     return "(finished)"
             return ""
-    def lasttenmoves(g):
-            return [g.moves[i] for i in sorted(g.moves.keys(), reverse=True)[:10]]
     def shortest(g):
             return g.shortestChainLength()
     __lineoffset__ -= 3
-    def form(m):
+    def form(l, m):
         self = TemplateResult(); extend_ = self.extend
         if not game.done:
-            extend_(['    ', u'    <form method="POST" action=""><input type="hidden" name="moveid" value="', escape_(m.id, True), u'"><input type="text" name="word" autocomplete="off" autocorrect="off" autocapitalize="off"></input></form>\n'])
+            extend_(['    ', u'    <form method="POST" autocomplete="off"><input type="hidden" name="moveid" value="', escape_(m.id, True), u'"><input type="hidden" name="ladderid" value="', escape_(l.id, True), u'"><input type="text" name="word" autocomplete="off" autocorrect="off" autocapitalize="off"></form>\n'])
         else:
             extend_(['    ', u'    <div class="placeholder"></div>\n'])
         return self
     __lineoffset__ -= 3
-    def word(m, w):
+    def word(l, m, w):
         self = TemplateResult(); extend_ = self.extend
-        extend_([u'            <a id="m', escape_((m.id), True), u'" class="move', escape_((m.id in game.winningchain and ' win' or ''), True), u'">\n'])
-        if m.user:
-            extend_(['            ', u'    <img src="', escape_(m.user.picture, True), u'" alt="', escape_(m.user.username, True), u'" title="', escape_(m.user.username, True), u'" />\n'])
-        else:
-            extend_(['            ', u'    <div class="no-user"></div>\n'])
-        extend_([u'            ', escape_(w, True), u'\n'])
-        extend_([u'            </a>\n'])
-        return self
-    __lineoffset__ -= 3
-    def ts(t):
-        self = TemplateResult(); extend_ = self.extend
-        extend_([u'    <span class="timestamp">', escape_(t, True), u'</span>\n'])
-        return self
-    __lineoffset__ -= 3
-    def move(m, s):
-        self = TemplateResult(); extend_ = self.extend
-        extend_([u'    <ul>\n'])
-        if not m.bottom:
-            extend_(['    ', u'    <li>\n'])
-            extend_(['    ', u'    ', escape_(word(m, m.word), False), u' ', escape_(ts(m.played), False), u' ', escape_(form(m), False), u'\n'])
-        if m.children:
-            for c in loop.setup(m.children):
-                extend_(['        ', u'    ', escape_(move(c, False), False), u'\n'])
-            extend_(['    ', u'    </li>\n'])
-        if m.bottom:
-            extend_(['    ', u'    <li bottom>', escape_(word(m, m.word), False), u' ', escape_(form(m), False), u'</li>\n'])
-        extend_([u'    </ul>\n'])
-        return self
-    __lineoffset__ -= 3
-    def plays():
-        self = TemplateResult(); extend_ = self.extend
-        for m in loop.setup(lasttenmoves(game)):
-            if m.hasValidUser:
-                extend_(['        ', u'    <span class="log">', escape_(m.user, True), u' played ', escape_(m.word, True), u'</span>\n'])
+        extend_([u'    <a id="l', escape_((l.id), True), u'm', escape_((m.id), True), u'" class="move move', escape_((m.id), True), u'">\n'])
+        if not game.done:
+            if m.bottom:
+                extend_(['        ', u'    <img src="/static/images/add.png" alt="Add a word" title="Add a word" class="addword bottom" />\n'])
             else:
-                extend_(['        ', u'    <span class="log">unknown user played ', escape_(m.word, True), u'</span>\n'])
+                extend_(['        ', u'    <img src="/static/images/add.png" alt="Add a word" title="Add a word" class="addword" />\n'])
+        if m.user:
+            extend_(['    ', u'    <img src="', escape_(m.user.picture, True), u'" alt="', escape_(m.user.username, True), u'" title="', escape_(m.user.username, True), u'" />\n'])
+        else:
+            extend_(['    ', u'    <div class="no-user"></div>\n'])
+        extend_([u'    ', escape_(w, True), u'\n'])
+        extend_([u'    </a>\n'])
+        return self
+    __lineoffset__ -= 3
+    def drawladder(l, bottom):
+        self = TemplateResult(); extend_ = self.extend
+        if bottom == l.bottom:
+            extend_(['    ', u'    <div class="ladder-container">\n'])
+            extend_(['    ', u'    <div class="ladder-width"></div>\n'])
+            ladder = l.ladder
+            if not bottom:
+                extend_(['        ', u'    ', escape_(ladder.reverse(), True), u'\n'])
+            extend_(['    ', u'    <ul id="l', escape_((l.id), True), u'">\n'])
+            for r in loop.setup(ladder):
+                extend_(['        ', u'    <li>\n'])
+                if bottom:
+                    extend_(['            ', u'    ', escape_(form(l, r), False), u'\n'])
+                extend_(['        ', u'    ', escape_(word(l, r, r.word), False), u'\n'])
+                if not bottom:
+                    extend_(['            ', u'    ', escape_(form(l, r), False), u'\n'])
+                extend_(['        ', u'    </li>\n'])
+            extend_(['    ', u'    </ul>\n'])
+            extend_(['    ', u'    </div>\n'])
         return self
     self['title'] = join_(escape_(game.start, True), u' &rarr; ', escape_(game.end, True), u' ', escape_(finished(), True))
     self['css'] = join_(u'/static/css/game.css')
-    self['js'] = join_(u'/static/js/jquery.periodicalupdater.js /static/js/jquery.shake.js /static/js/game.js /static/js/wire.js')
+    self['js'] = join_(u'/static/js/jquery.periodicalupdater.js /static/js/jquery.shake.js /static/js/game.js')
     extend_([u'<h1 id="game">', escape_(game.start, True), u' &rarr; ', escape_(game.end, True), u' ', escape_(finished(), True), u'</h1>\n'])
     if game.done:
         extend_([u'    <ul id="scores">\n'])
         for s in loop.setup(game.scores()):
             extend_(['            ', u'    <li><img src="', escape_(game.scores()[s]['picture'], True), u'" alt="" title="" border="0" height="32" /> ', escape_(game.scores()[s]['username'], True), u' earned ', escape_(game.scores()[s]['score'], True), u' points</li>\n'])
         extend_([u'    </ul>\n'])
-    extend_([escape_(move(game.moves[1], True), False), u'\n'])
-    extend_([u'<br style="clear: left">\n'])
-    extend_([escape_(move(game.moves[2], True), False), u'\n'])
+    extend_([u'<div id="top-ladder" class="ladder-set">\n'])
+    for l in loop.setup(game.leaves):
+        extend_([u'    ', escape_(drawladder(l, False), False), u'\n'])
+    extend_([u'</div>\n'])
+    extend_([u'<hr style="clear: both;"/>\n'])
+    extend_([u'<div id="bottom-ladder" class="ladder-set">\n'])
+    for l in loop.setup(game.leaves):
+        extend_([u'    ', escape_(drawladder(l, True), False), u'\n'])
+    extend_([u'</div>\n'])
     extend_([u'<p><a href="/">Back to game list</a>\n'])
-    extend_([u'<div id="playinfo">', escape_(plays(), False), u'</div>\n'])
     extend_([u'<script type="text/javascript">\n'])
-    extend_([u'var lastmove = ', escape_(game.lastmove, True), u';\n'])
-    extend_([u'var done = ', escape_((game.done and "true" or "false"), True), u';\n'])
+    extend_([u'        var lastmove = ', escape_(game.lastmove, True), u';\n'])
+    extend_([u'        var done = ', escape_((game.done and "true" or "false"), True), u';\n'])
+    extend_([u"        var userid = '", escape_(user.key().name(), False), u"';\n"])
+    extend_([u'        var users = {};\n'])
     for u in loop.setup(game.users):
         extend_([u"    users['", escape_((u), True), u"'] = {'username': '", escape_(game.users[u].username, False), u"', 'picture': '", escape_(game.users[u].picture, False), u"'};\n"])
     if game.done:
         extend_([u'    var winningchain = ', escape_((dump_json(game.done and game.winningchain or [])), True), u';\n'])
         extend_([u'    var scores = ', escape_((game.done and dump_json(game.score) or {}), False), u';\n'])
-    for m in loop.setup(game.moves.values()):
-        for c in loop.setup(m.children):
-            extend_(['    ', u'    addLink(', escape_(m.id, True), u', ', escape_(c.id, True), u", '", escape_(((m.id in game.winningchain and c.id in game.winningchain) and 'red' or 'blue'), True), u"');\n"])
-    if game.done:
-        extend_([u'    addLink(', escape_(game.lastmove, True), u', ', escape_((filter(lambda m: m.id != game.lastmove and m.word == game.moves[game.lastmove].word, game.moves.values())[0].id), True), u", 'red');\n"])
     extend_([u'</script>\n'])
 
     return self
@@ -169,18 +166,12 @@ def play(game, word, reason):
     __lineoffset__ = -4
     loop = ForLoop()
     self = TemplateResult(); extend_ = self.extend
-    extend_([u'<!DOCTYPE html>\n'])
-    extend_([u'<html><head><title>Word Ladder: ', escape_(game.start, True), u' &rarr; ', escape_(game.end, True), u' - Error</title>\n'])
-    extend_([u'<link rel="icon" href="/static/images/favicon.png">\n'])
-    extend_([u'<meta http-equiv="refresh" content="2;URL=/game/', escape_((game.start), True), u'-', escape_((game.end), True), u'">\n'])
-    extend_([u'<meta name="viewport" content="width = device-width">\n'])
-    extend_([u'</head>\n'])
-    extend_([u'<body>\n'])
+    self['title'] = join_(u'Word Ladder; ', escape_(game.start, True), u' &rarr; ', escape_(game.end, True), u' - Error')
+    self['css'] = join_()
+    self['js'] = join_()
     extend_([u'<h1>You cannot play the word ', escape_(word, True), u' there</h1>\n'])
-    extend_([u'<p>', escape_(reason, True), u'\n'])
-    extend_([u'<p><a href="/game/', escape_((game.start), True), u'-', escape_((game.end), True), u'">Back to the game</a>\n'])
-    extend_([u'</body>\n'])
-    extend_([u'</html>\n'])
+    extend_([u'<p>', escape_(reason, True), u'</p>\n'])
+    extend_([u'<p><a href="/game/', escape_((game.start), True), u'-', escape_((game.end), True), u'">Back to the game</a></p>\n'])
 
     return self
 
@@ -201,7 +192,7 @@ def index(games, user):
         extend_([u'<ul>\n'])
         for g in loop.setup(gl):
             if g.done != active:
-                extend_(['  ', u'<li><a href="/game/', escape_(g.key().name(), True), u'">', escape_(g.start.word, True), u' &rarr; ', escape_(g.end.word, True), u'</a>\n'])
+                extend_(['  ', u'<li><a href="/game/', escape_(g.key().name(), True), u'">', escape_(g.start.word, True), u' &rarr; ', escape_(g.end.word, True), u' (', escape_(g.difficulty_rating, True), u')</a>\n'])
                 if user and user.key().name() in g.score:
                     extend_(['                          ', u'    (you earned ', escape_(g.score[user.key().name()]['score'], True), u' points)\n'])
                 extend_(['  ', u'                        </li>\n'])
