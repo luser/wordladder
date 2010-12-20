@@ -12,8 +12,13 @@ $def gamelist(gl, active, user=None):
 				</li>
   </ul>
 <h1>Word Ladder</h1>
-<p>word &rarr; ward &rarr; wad &rarr; wade &rarr; waded &rarr; warded &rarr; wadder &rarr; ladder</p>
-<a href="/new"><span id="newgame">New Game</span></a>
+<p>word &rarr; ward &rarr; wared &rarr; warded &rarr; wadder &rarr; ladder</p>
+<a href="/new"><span id="newgame">New Game (Random)</span></a>
+<a href="/new/simple"><span id="newgame">New Game (Simple)</span></a>
+<a href="/new/easy"><span id="newgame">New Game (Easy)</span></a>
+<a href="/new/medium"><span id="newgame">New Game (Medium)</span></a>
+<a href="/new/hard"><span id="newgame">New Game (Hard)</span></a>
+<a href="/new/genius"><span id="newgame">New Game (Genius)</span></a>
 <h2>Unsolved Games:</h2>
 $:gamelist(games, True)
 <h2>Solved Games:</h2>

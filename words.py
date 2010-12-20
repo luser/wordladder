@@ -2,9 +2,9 @@
 
 from __future__ import with_statement
 import sys, cPickle
-from random import choice
+from random import choice, randint
 
-from config import GAME_WORDLIST, PLAY_WORDLIST, DIFFICULTY_TABLE
+from config import GAME_WORDLIST, PLAY_WORDLIST, DIFFICULTY_TABLE, DIFFICULTY_LEVELS, DIFFICULTY_SCORES
 
 difficulty_table = {}
 with open(DIFFICULTY_TABLE, "rb") as dt:
@@ -17,15 +17,25 @@ def randomword(min_difficulty=float('-inf'), max_difficulty=float('inf')):
 	global difficulty_table
 	words = []
 	for score in difficulty_table:
-		if score > min_difficulty and score < max_difficulty:
+		if score >= min_difficulty and score <= max_difficulty:
 			words.extend(difficulty_table[score])
 	word = choice(words)
 	return word
 
-def getgame():
+def getgame(level = False):
 	"""Return two random words (start, end) to be used for a game."""
-	start = randomword()
-	end = randomword()
+	if level in DIFFICULTY_LEVELS:
+		(s, m) = DIFFICULTY_LEVELS[level]
+		t = s
+		if s < 4 and randint(0, 100) > 50:
+			s += 1
+		if t > 0 and randint(0, 100) > 50:
+			t -= 1
+		start = randomword(min(DIFFICULTY_SCORES[s]), max(DIFFICULTY_SCORES[s]))
+		end = randomword(min(DIFFICULTY_SCORES[t]), max(DIFFICULTY_SCORES[t]))
+	else:
+		start = randomword()
+		end = randomword()
 	while start == end: # just in case
 		end = randomword()
 	return (start, end)

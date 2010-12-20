@@ -76,12 +76,15 @@ class newgame:
 		if game:
 			if type(game) is unicode:
 				game = game.encode("ascii")
-			words = game.split('-')
-			if len(words) != 2 or (words[0].strip() == '' or words[1].strip == ''):
-				# bad format
-				raise web.badrequest()
-			if not validword(words[0]) or not validword(words[1]):
-				# not valid words
+			if '-' in game:
+				words = game.split('-')
+				if len(words) != 2 or (words[0].strip() == '' or words[1].strip == ''):
+					# bad format
+					raise web.badrequest()
+				if not validword(words[0]) or not validword(words[1]):
+					# not valid words
+					raise web.badrequest()
+			elif game not in DIFFICULTY_LEVELS:
 				raise web.badrequest()
 		try:
 			g = db.run_in_transaction(creategame, game)

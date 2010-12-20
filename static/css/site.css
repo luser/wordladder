@@ -62,8 +62,9 @@ span#newgame {
 	border-radius: 15px;
 	border: 2px #333 solid;
 	display: inline-block;
-	padding: 1em 2em;
-	font-size: 120%;
+	padding: 1em;
+	margin: 0.15em 0;
+	font-size: 110%;
 	font-weight: bold;
 	text-align: center;
 	text-shadow: #67e063 1px 1px 0px;

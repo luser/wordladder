@@ -6,6 +6,7 @@ from google.appengine.ext import db
 from game import Game
 from words import getgame
 from user import *
+from config import DIFFICULTY_LEVELS
 
 class GameDoesNotExist(Exception):
 	pass
@@ -59,8 +60,14 @@ def creategame(game=None):
 			game = "%s-%s" % (start, end)
 			if Game.get_by_key_name(game) is None:
 				break
-	else:
+	elif '-' in game:
 		start, end = game.split('-')
+	elif game in DIFFICULTY_LEVELS:
+		while True:
+			start, end = getgame(game)
+			game = "%s-%s" % (start, end)
+			if Game.get_by_key_name(game) is None:
+				break
 
 	if Game.get_by_key_name(game) is not None:
 		raise GameAlreadyExists("Game already exists")

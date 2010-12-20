@@ -42,10 +42,10 @@ $def drawladder(l, bottom):
 			</li>
 		</ul>
 		</div>
-$var title: $game.start &rarr; $game.end $finished()
+$var title: $game.start &rarr; $game.end ($game.difficulty_rating) $finished()
 $var css: /static/css/game.css
 $var js: /static/js/jquery.periodicalupdater.js /static/js/jquery.shake.js /static/js/game.js
-<h1 id="game">$game.start &rarr; $game.end $finished()</h1>
+<h1 id="game">$game.start &rarr; $game.end ($game.difficulty_rating) $finished()</h1>
 $if game.done:
 	<ul id="scores">
 		$for s in game.scores():

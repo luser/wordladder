@@ -58,10 +58,10 @@ def game(game, user):
             extend_(['    ', u'    </ul>\n'])
             extend_(['    ', u'    </div>\n'])
         return self
-    self['title'] = join_(escape_(game.start, True), u' &rarr; ', escape_(game.end, True), u' ', escape_(finished(), True))
+    self['title'] = join_(escape_(game.start, True), u' &rarr; ', escape_(game.end, True), u' (', escape_(game.difficulty_rating, True), u') ', escape_(finished(), True))
     self['css'] = join_(u'/static/css/game.css')
     self['js'] = join_(u'/static/js/jquery.periodicalupdater.js /static/js/jquery.shake.js /static/js/game.js')
-    extend_([u'<h1 id="game">', escape_(game.start, True), u' &rarr; ', escape_(game.end, True), u' ', escape_(finished(), True), u'</h1>\n'])
+    extend_([u'<h1 id="game">', escape_(game.start, True), u' &rarr; ', escape_(game.end, True), u' (', escape_(game.difficulty_rating, True), u') ', escape_(finished(), True), u'</h1>\n'])
     if game.done:
         extend_([u'    <ul id="scores">\n'])
         for s in loop.setup(game.scores()):
@@ -199,8 +199,13 @@ def index(games, user):
         extend_([u'</ul>\n'])
         return self
     extend_([u'<h1>Word Ladder</h1>\n'])
-    extend_([u'<p>word &rarr; ward &rarr; wad &rarr; wade &rarr; waded &rarr; warded &rarr; wadder &rarr; ladder</p>\n'])
-    extend_([u'<a href="/new"><span id="newgame">New Game</span></a>\n'])
+    extend_([u'<p>word &rarr; ward &rarr; wared &rarr; warded &rarr; wadder &rarr; ladder</p>\n'])
+    extend_([u'<a href="/new"><span id="newgame">New Game (Random)</span></a>\n'])
+    extend_([u'<a href="/new/simple"><span id="newgame">New Game (Simple)</span></a>\n'])
+    extend_([u'<a href="/new/easy"><span id="newgame">New Game (Easy)</span></a>\n'])
+    extend_([u'<a href="/new/medium"><span id="newgame">New Game (Medium)</span></a>\n'])
+    extend_([u'<a href="/new/hard"><span id="newgame">New Game (Hard)</span></a>\n'])
+    extend_([u'<a href="/new/genius"><span id="newgame">New Game (Genius)</span></a>\n'])
     extend_([u'<h2>Unsolved Games:</h2>\n'])
     extend_([escape_(gamelist(games, True), False), u'\n'])
     extend_([u'<h2>Solved Games:</h2>\n'])
