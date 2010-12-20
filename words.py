@@ -27,12 +27,13 @@ def getgame(level = False):
 	if level in DIFFICULTY_LEVELS:
 		(s, m) = DIFFICULTY_LEVELS[level]
 		t = s
-		if s < 4 and randint(0, 100) > 50:
+		mod = randint(0, 100) > 50
+		if s < 4 and mod:
 			s += 1
-		if t > 0 and randint(0, 100) > 50:
+		if t > 0 and mod:
 			t -= 1
-		start = randomword(min(DIFFICULTY_SCORES[s]), max(DIFFICULTY_SCORES[s]))
-		end = randomword(min(DIFFICULTY_SCORES[t]), max(DIFFICULTY_SCORES[t]))
+		start = randomword(min(DIFFICULTY_SCORES[s]) / 2, max(DIFFICULTY_SCORES[s]) / 2)
+		end = randomword(min(DIFFICULTY_SCORES[t]) / 2, max(DIFFICULTY_SCORES[t]) / 2)
 	else:
 		start = randomword()
 		end = randomword()

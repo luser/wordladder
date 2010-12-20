@@ -301,30 +301,24 @@ class Game(db.Model):
 		if str(start_difficulty).isdigit() and str(end_difficulty).isdigit():
 			# Use actual difficulty ratings if available.
 			self._difficulty = int(start_difficulty) + int(end_difficulty)
-		# If not, guess based on the Leveshtein distance.
+		# If not, guess based on the Levenshtein distance.
 		else:
-			self._difficulty = int(LevenshteinDistance(self.start.word, self.end.word) / 2)
+			self._difficulty = int(LevenshteinDistance(self.start.word, self.end.word))
 		return self._difficulty
-
-	@staticmethod
-	def word_difficulty_score(word):
-		d = int(word_difficulty(word))
-		score = 0
-		if str(d).isdigit():
-			for r in DIFFICULTY_SCORES:
-				if d in r:
-					score = DIFFICULTY_SCORES.index(r)
-		return score
 
 	@property
 	def difficulty_rating(self):
 		if hasattr(self, '_difficultyRating'):
 			return self._difficultyRating
+		total_difficulty = int(sum([word_difficulty(self.start.word), word_difficulty(self.end.word)]))
+		score = 4
+		for r in DIFFICULTY_SCORES:
+			if total_difficulty in r:
+				score = DIFFICULTY_SCORES.index(r)
 		ratings = {}
 		for r in DIFFICULTY_LEVELS:
 			ratings[DIFFICULTY_LEVELS[r][0]] = r
-		average_difficulty_score = int(math.ceil(float(sum([Game.word_difficulty_score(self.start.word), Game.word_difficulty_score(self.end.word)])) / float(2)))
-		self._difficultyRating = ratings[average_difficulty_score]
+		self._difficultyRating = ratings[score]
 		return self._difficultyRating
 
 	@property
