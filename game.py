@@ -311,6 +311,13 @@ class Game(db.Model):
 		if hasattr(self, '_difficultyRating'):
 			return self._difficultyRating
 		total_difficulty = int(sum([word_difficulty(self.start.word), word_difficulty(self.end.word)]))
+
+		# Some special cases
+		if int(LevenshteinDistance(self.start.word, self.end.word)) <= 2:
+			total_difficulty = max(0, total_difficulty - 2)
+		if sorted(self.start.word) == sorted(self.end.word):
+			total_difficulty = 0
+
 		score = 4
 		for r in DIFFICULTY_SCORES:
 			if total_difficulty in r:

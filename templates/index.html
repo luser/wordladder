@@ -3,14 +3,21 @@ $var title: Welcome
 $var css:
 $var js:
 $def gamelist(gl, active, user=None):
-  <ul>
+  <dl>
     $for g in gl:
       $if g.done != active:
-        <li><a href="/game/$g.key().name()">$g.start.word &rarr; $g.end.word ($g.difficulty_rating)</a>
-				$if user and user.key().name() in g.score:
-					(you earned $g.score[user.key().name()]['score'] points)
-				</li>
-  </ul>
+        <dt><a href="/game/$g.key().name()">$g.start.word &rarr; $g.end.word</a></dt>
+				<dd>
+				<ul>
+				<li>Difficulty: <strong>$g.difficulty_rating</strong></li>
+				<li>Started: <strong>$g.start.played</strong></li>
+				$if g.done:
+					<li>Completed: <strong>$g.moves[g.lastmove].played</strong></li>
+					$if user and user.key().name() in g.score:
+						<li>You earned: <strong>$g.score[user.key().name()]['score']</strong> points</li>
+				</ul>
+				</dd>
+  </dl>
 <h1>Word Ladder</h1>
 <p>word &rarr; ward &rarr; wared &rarr; warded &rarr; wadder &rarr; ladder</p>
 <a href="/new"><span id="newgame">New Game (Random)</span></a>

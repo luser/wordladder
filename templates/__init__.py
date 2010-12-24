@@ -189,14 +189,21 @@ def index(games, user):
     __lineoffset__ -= 3
     def gamelist(gl, active, user=None):
         self = TemplateResult(); extend_ = self.extend
-        extend_([u'<ul>\n'])
+        extend_([u'<dl>\n'])
         for g in loop.setup(gl):
             if g.done != active:
-                extend_(['  ', u'<li><a href="/game/', escape_(g.key().name(), True), u'">', escape_(g.start.word, True), u' &rarr; ', escape_(g.end.word, True), u' (', escape_(g.difficulty_rating, True), u')</a>\n'])
-                if user and user.key().name() in g.score:
-                    extend_(['                          ', u'    (you earned ', escape_(g.score[user.key().name()]['score'], True), u' points)\n'])
-                extend_(['  ', u'                        </li>\n'])
-        extend_([u'</ul>\n'])
+                extend_(['  ', u'<dt><a href="/game/', escape_(g.key().name(), True), u'">', escape_(g.start.word, True), u' &rarr; ', escape_(g.end.word, True), u'</a></dt>\n'])
+                extend_(['  ', u'                        <dd>\n'])
+                extend_(['  ', u'                        <ul>\n'])
+                extend_(['  ', u'                        <li>Difficulty: <strong>', escape_(g.difficulty_rating, True), u'</strong></li>\n'])
+                extend_(['  ', u'                        <li>Started: <strong>', escape_(g.start.played, True), u'</strong></li>\n'])
+                if g.done:
+                    extend_(['                          ', u'    <li>Completed: <strong>', escape_(g.moves[g.lastmove].played, True), u'</strong></li>\n'])
+                    if user and user.key().name() in g.score:
+                        extend_(['                              ', u'    <li>You earned: <strong>', escape_(g.score[user.key().name()]['score'], True), u'</strong> points</li>\n'])
+                extend_(['  ', u'                        </ul>\n'])
+                extend_(['  ', u'                        </dd>\n'])
+        extend_([u'</dl>\n'])
         return self
     extend_([u'<h1>Word Ladder</h1>\n'])
     extend_([u'<p>word &rarr; ward &rarr; wared &rarr; warded &rarr; wadder &rarr; ladder</p>\n'])
