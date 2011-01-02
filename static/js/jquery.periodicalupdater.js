@@ -19,9 +19,11 @@
 
 (function($) {
     var pu_log = function(msg) {
-      try {
+      /*
+			try {
         console.log(msg);
       } catch(err) {}
+			*/
     }
 
     // Now back to our regularly scheduled work
@@ -35,7 +37,7 @@
           maxTimeout: 8000, // maximum length of time between requests
           multiplier: 2,    // if set to 2, timerInterval will double each time the response hasn't changed (up to maxTimeout)
           maxCalls: 0,      // maximum number of calls. 0 = no limit.
-          autoStop: 0       // automatically stop requests after this many returns of the same data. 0 = disabled
+          autoStop: 0,      // automatically stop requests after this many returns of the same data. 0 = disabled
         }, options);
 
         // set some initial values, then begin

@@ -195,7 +195,7 @@ $(document).ready(function () {
   
 	// handle keypresses
   $('form input[name="word"]').keydown(keybdNav);
-  $(document).keydown(function (e) { if (e.keyCode == 9) { e.preventDefault(); e.stopPropagation(); } else keybdNav(e); });
+  $(document).keydown(function (e) { if (e.which == 9) { e.preventDefault(); e.stopPropagation(); } else keybdNav(e); });
 
   if (!done) {
     $('form').css('display', 'none').submit(handleSubmit);
@@ -227,7 +227,7 @@ function keybdNav (e) {
 		$('li > a.active + form > input[name="word"]').removeClass('error');
 		var moveKeys = {38: 'up', 40: 'down', 39: 'right', 37: 'left'};
 		var active = $('a.active').closest('li');
-		if (e.keyCode in moveKeys) {
+		if (e.which in moveKeys) {
 			active.siblings('form').children('input[name="word"]').blur();
 			$('a.similar').removeClass('similar');
 			
@@ -235,13 +235,13 @@ function keybdNav (e) {
 			var activeLadder = $(active).closest('.ladder-container');
 			var activeLadderSet = $(activeLadder).closest('.ladder-set');
 			
-    	if (e.keyCode == 38) { // up
+    	if (e.which == 38) { // up
 				if ($(activeLadderSet).attr('id') == 'bottom-ladder' && activePos == 0) {
 					var topCount = $(centered['top-ladder']).children('ul').children('li').length - 1;
 					var newActive = $(centered['top-ladder']).children('ul').children('li').get(topCount);
 					$(newActive).children('a').click();
 				} else $(active).prev('li').children('a').click();
-			} else if (e.keyCode == 40) { // down
+			} else if (e.which == 40) { // down
 				if ($(activeLadderSet).attr('id') == 'top-ladder') {
 					var topCount = $(activeLadder).children('ul').children('li').length - 1;
 					if (activePos == topCount) {
@@ -249,14 +249,14 @@ function keybdNav (e) {
 						$(newActive).children('a').click();
 					} else $(active).next('li').children('a').click();
 				} else $(active).next('li').children('a').click();
-			} else if (e.keyCode == 39) { // right
+			} else if (e.which == 39) { // right
 				var rightLadder = $(active).closest('.ladder-container').next('.ladder-container').children('ul').get(0);
 				if (rightLadder) {
 					var newCount = $(rightLadder).children('li').length - 1;
 					var newActive = $(rightLadder).children('li').get(Math.min(activePos, newCount));
 					$(newActive).children('a').click();
 				}
-			} else if (e.keyCode == 37) { // left
+			} else if (e.which == 37) { // left
 				var leftLadder = $(active).closest('.ladder-container').prev('.ladder-container').children('ul').get(0);
 				if (leftLadder) {
 					var newCount = $(leftLadder).children('li').length - 1;

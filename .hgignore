@@ -3,3 +3,4 @@
 ~$
 ^\.openid_secret_key$
 ladder_distance.*
+solution.pickle
